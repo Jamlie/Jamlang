@@ -1,15 +1,16 @@
 package main
 
 import (
-    "fmt"
-    "os"
+	"fmt"
+	"os"
 
-    "github.com/Jamlee977/CustomLanguage/parser"
+	"github.com/Jamlee977/CustomLanguage/parser"
+	"github.com/Jamlee977/CustomLanguage/runtimelang"
 )
 
 func repl() {
     parser := parser.NewParser()
-    fmt.Println("REPL v0.1")
+    fmt.Println("REPL v0.2")
     for {
         fmt.Print("> ")
         var input string
@@ -20,10 +21,12 @@ func repl() {
 
         program := parser.ProduceAST(input)
 
-        for _, statement := range program.Body {
-            fmt.Println(statement.Kind())
-            fmt.Println(statement.ToString())
+        runtimeValue, err := runtimelang.Evaluate(&program)
+        if err != nil {
+            fmt.Println(err)
+            os.Exit(1)
         }
+        fmt.Println(runtimeValue.Get(), runtimeValue.Type())
     }
 }
 

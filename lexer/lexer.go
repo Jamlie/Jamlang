@@ -1,4 +1,4 @@
-package token
+package lexer
 
 import (
     "github.com/Jamlee977/CustomLanguage/tokentype"
@@ -14,6 +14,7 @@ type Token struct {
 
 var Keywords map[string]tokentype.TokenType = map[string]tokentype.TokenType{
     "let": tokentype.Let,
+    "null": tokentype.Null,
 }
 
 

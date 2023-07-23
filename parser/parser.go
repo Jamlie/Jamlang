@@ -5,12 +5,12 @@ import (
     "fmt"
 
     "github.com/Jamlee977/CustomLanguage/ast"
-    "github.com/Jamlee977/CustomLanguage/token"
+    "github.com/Jamlee977/CustomLanguage/lexer"
     "github.com/Jamlee977/CustomLanguage/tokentype"
 )
 
 type Parser struct {
-    tokens []token.Token
+    tokens []lexer.Token
 }
 
 func NewParser() *Parser {
@@ -18,7 +18,7 @@ func NewParser() *Parser {
 }
 
 func (p *Parser) ProduceAST(sourceCode string) ast.Program {
-    p.tokens = token.Tokenize(sourceCode)
+    p.tokens = lexer.Tokenize(sourceCode)
     program := ast.Program{
         Body: []ast.Statement{},
     }
@@ -85,6 +85,9 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
         return &ast.Identifier{
             Symbol: p.eat().Value,
         }
+    case tokentype.Null:
+        p.eat()
+        return &ast.NullLiteral{}
     case tokentype.Number:
         value, err := strconv.ParseFloat(p.eat().Value, 64)
         if err != nil {
@@ -104,11 +107,11 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
     }
 }
 
-func (p *Parser) at() token.Token {
+func (p *Parser) at() lexer.Token {
     return p.tokens[0]
 }
 
-func (p *Parser) eat() token.Token {
+func (p *Parser) eat() lexer.Token {
     prev := p.tokens[0]
     p.tokens = p.tokens[1:]
     return prev

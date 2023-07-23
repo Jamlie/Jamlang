@@ -4,6 +4,7 @@ type TokenType int
 
 const (
     Number TokenType = iota
+    Null
     Identifier
     Equals
     OpenParen

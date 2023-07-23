@@ -7,6 +7,7 @@ type NodeType string
 const (
     ProgramType NodeType = "Program"
     NumericLiteralType NodeType = "NumericLiteral"
+    NullLiteralType NodeType = "NullLiteral"
     IdentifierType NodeType = "Identifier"
     BinaryExpressionType NodeType = "BinaryExpression"
 )
@@ -74,4 +75,14 @@ func (n *NumericLiteral) Kind() NodeType {
 
 func (n *NumericLiteral) ToString() string {
     return strconv.FormatFloat(n.Value, 'f', -1, 64)
+}
+
+type NullLiteral struct {}
+
+func (n *NullLiteral) Kind() NodeType {
+    return NullLiteralType
+}
+
+func (n *NullLiteral) ToString() string {
+    return "null"
 }
