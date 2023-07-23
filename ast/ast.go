@@ -10,6 +10,7 @@ const (
     NullLiteralType NodeType = "NullLiteral"
     IdentifierType NodeType = "Identifier"
     BinaryExpressionType NodeType = "BinaryExpression"
+    StringLiteralType NodeType = "StringLiteral"
 )
 
 
@@ -85,4 +86,16 @@ func (n *NullLiteral) Kind() NodeType {
 
 func (n *NullLiteral) ToString() string {
     return "null"
+}
+
+type StringLiteral struct {
+    Value string
+}
+
+func (s *StringLiteral) Kind() NodeType {
+    return StringLiteralType
+}
+
+func (s *StringLiteral) ToString() string {
+    return "\"" + s.Value + "\""
 }

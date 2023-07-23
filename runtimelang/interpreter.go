@@ -4,6 +4,7 @@ import (
     "fmt"
     "math"
     "os"
+    "strconv"
 
     "github.com/Jamlee977/CustomLanguage/ast"
 )
@@ -12,6 +13,8 @@ func Evaluate(astNode ast.Statement) (RuntimeValue, error) {
     switch astNode.Kind() {
     case ast.NumericLiteralType:
         return NumberValue{astNode.(*ast.NumericLiteral).Value}, nil
+    case ast.StringLiteralType:
+        return StringValue{astNode.(*ast.StringLiteral).Value}, nil
     case ast.NullLiteralType:
         return NullValue{"null"}, nil
     case ast.BinaryExpressionType:
@@ -48,9 +51,46 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression) RuntimeValu
 
     if lhs.Type() == "number" && rhs.Type() == "number" {
         return EvaluateNumericBinaryExpression(lhs.(NumberValue), rhs.(NumberValue), binaryExpression.Operator)
+    } else if lhs.Type() == "string" && rhs.Type() == "string" {
+        return EvaluateStringBinaryExpression(lhs.(StringValue), rhs.(StringValue), binaryExpression.Operator)
+    } else if lhs.Type() == "string" && rhs.Type() == "number" {
+        return EvaluateStringNumericBinaryExpression(lhs.(StringValue), rhs.(NumberValue), binaryExpression.Operator)
+    } else if lhs.Type() == "number" && rhs.Type() == "string" {
+        return EvaluateNumericStringBinaryExpression(lhs.(NumberValue), rhs.(StringValue), binaryExpression.Operator)
     }
 
     return NullValue{"null"}
+}
+
+func EvaluateStringNumericBinaryExpression(lhs StringValue, rhs NumberValue, op string) RuntimeValue {
+    if op == "+" {
+        rhsAsString := strconv.FormatFloat(rhs.Value, 'f', -1, 64)
+
+        return StringValue{lhs.Value + rhsAsString}
+    }
+
+    err := fmt.Errorf("Unknown operator %s for string", op)
+    panic(err)
+}
+
+func EvaluateNumericStringBinaryExpression(lhs NumberValue, rhs StringValue, op string) RuntimeValue {
+    if op == "+" {
+        lhsAsString := strconv.FormatFloat(lhs.Value, 'f', -1, 64)
+
+        return StringValue{lhsAsString + rhs.Value}
+    }
+
+    err := fmt.Errorf("Unknown operator %s for string", op)
+    panic(err)
+}
+
+func EvaluateStringBinaryExpression(lhs, rhs StringValue, op string) RuntimeValue {
+    if op == "+" {
+        return StringValue{lhs.Value + rhs.Value}
+    }
+
+    err := fmt.Errorf("Unknown operator %s for string", op)
+    panic(err)
 }
 
 func EvaluateNumericBinaryExpression(lhs, rhs NumberValue, op string) RuntimeValue {
@@ -78,7 +118,7 @@ func EvaluateNumericBinaryExpression(lhs, rhs NumberValue, op string) RuntimeVal
 }
 
 func EvaluateProgram(program ast.Program) RuntimeValue {
-    var lastEvaluated RuntimeValue = NullValue{"null"}
+    var lastEvaluated RuntimeValue = &InitialValue{}
     for _, statement := range program.Body {
         lastEvaluated, _ = Evaluate(statement)
     }

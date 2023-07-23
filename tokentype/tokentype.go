@@ -4,7 +4,7 @@ type TokenType int
 
 const (
     Number TokenType = iota
-    Null
+    String
     Identifier
     Equals
     OpenParen
@@ -13,6 +13,7 @@ const (
     Whitespace
 
     Let
+    Null
 
     EndOfFile
 )

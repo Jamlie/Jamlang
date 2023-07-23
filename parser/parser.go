@@ -96,6 +96,13 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
         return &ast.NumericLiteral{
             Value: value,
         }
+    case tokentype.String:
+        return &ast.StringLiteral{
+            Value: p.eat().Value,
+        }
+    case tokentype.Whitespace:
+        p.eat()
+        return p.parsePrimaryExpression()
     case tokentype.OpenParen:
         p.eat()
         value := p.parseExpression()

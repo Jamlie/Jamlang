@@ -54,6 +54,21 @@ func Tokenize(sourceCode string) []Token {
         } else if src[0] == "=" {
             tokens = append(tokens, createToken(src[0], tokentype.Equals))
             src = src[1:]
+        } else if src[0] == "\"" {
+            src = src[1:]
+            str := ""
+            for len(src) > 0 && src[0] != "\"" {
+                str += src[0]
+                src = src[1:]
+            }
+
+            if len(src) == 0 {
+                fmt.Println("Error: Unterminated string")
+                os.Exit(1)
+            }
+
+            tokens = append(tokens, createToken(str, tokentype.String))
+            src = src[1:]
         } else {
             if isInt(src[0]) {
                 num := ""
@@ -77,7 +92,6 @@ func Tokenize(sourceCode string) []Token {
                     tokens = append(tokens, createToken(identifier, tokentype.Identifier))
                 }
             } else if isWhitespace(src[0]) {
-                tokens = append(tokens, createToken(src[0], tokentype.Whitespace))
                 src = src[1:]
             } else {
                 fmt.Println("Unknown token: " + src[0])
