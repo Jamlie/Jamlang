@@ -9,7 +9,10 @@ const (
     OpenParen
     CloseParen
     BinaryOperator
+    Whitespace
 
     Let
+
+    EndOfFile
 )
 

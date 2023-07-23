@@ -3,6 +3,8 @@ package token
 import (
     "github.com/Jamlee977/CustomLanguage/tokentype"
     "strings"
+    "fmt"
+    "os"
 )
 
 type Token struct {
@@ -45,7 +47,7 @@ func Tokenize(sourceCode string) []Token {
         } else if src[0] == ")" {
             tokens = append(tokens, createToken(src[0], tokentype.CloseParen))
             src = src[1:]
-        } else if src[0] == "+" || src[0] == "-" || src[0] == "*" || src[0] == "/" {
+        } else if src[0] == "+" || src[0] == "-" || src[0] == "*" || src[0] == "/" || src[0] == "%" {
             tokens = append(tokens, createToken(src[0], tokentype.BinaryOperator))
             src = src[1:]
         } else if src[0] == "=" {
@@ -74,11 +76,15 @@ func Tokenize(sourceCode string) []Token {
                     tokens = append(tokens, createToken(identifier, tokentype.Identifier))
                 }
             } else if isWhitespace(src[0]) {
+                tokens = append(tokens, createToken(src[0], tokentype.Whitespace))
                 src = src[1:]
             } else {
-                panic("Unexpected character: " + src[0])
+                fmt.Println("Unknown token: " + src[0])
+                os.Exit(1)
             }
         }
     }
+
+    tokens = append(tokens, createToken("EndOfFile", tokentype.EndOfFile))
     return tokens
 }

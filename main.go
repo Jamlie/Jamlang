@@ -2,13 +2,31 @@ package main
 
 import (
     "fmt"
-    "github.com/Jamlee977/CustomLanguage/token"
+    "os"
+
+    "github.com/Jamlee977/CustomLanguage/parser"
 )
 
-func main() {
-    source := "let x = 5 + (foo * bar)"
-    tokens := token.Tokenize(source)
-    for _, token := range tokens {
-        fmt.Println(token)
+func repl() {
+    parser := parser.NewParser()
+    fmt.Println("REPL v0.1")
+    for {
+        fmt.Print("> ")
+        var input string
+        fmt.Scanln(&input)
+        if input == "exit" {
+            os.Exit(0)
+        }
+
+        program := parser.ProduceAST(input)
+
+        for _, statement := range program.Body {
+            fmt.Println(statement.Kind())
+            fmt.Println(statement.ToString())
+        }
     }
+}
+
+func main() {
+    repl()
 }
