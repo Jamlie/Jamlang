@@ -18,9 +18,6 @@ var (
 func repl() {
     parser := parser.NewParser()
     fmt.Println("Repl mode. Type 'exit' to exit.")
-    // env.DeclareVariable("null", runtimelang.MakeNullValue(), true)
-    // env.DeclareVariable("true", runtimelang.MakeBoolValue(true), true)
-    // env.DeclareVariable("false", runtimelang.MakeBoolValue(false), true)
     for {
         fmt.Print("> ")
         scanner := bufio.NewScanner(os.Stdin)
@@ -59,8 +56,8 @@ func main() {
                 os.Exit(1)
             }
 
-            if !strings.HasSuffix(args[1], ".e") {
-                fmt.Println("File must have .e extension")
+            if !strings.HasSuffix(args[1], ".jam") {
+                fmt.Println("File must have .jam extension")
                 os.Exit(1)
             }
             
