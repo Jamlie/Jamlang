@@ -6,11 +6,14 @@ type NodeType string
 
 const (
     ProgramType NodeType = "Program"
+    VariableDeclarationType NodeType = "VariableDeclaration"
+    AssignmentExpressionType NodeType = "AssignmentExpression"
+
     NumericLiteralType NodeType = "NumericLiteral"
-    NullLiteralType NodeType = "NullLiteral"
     IdentifierType NodeType = "Identifier"
     BinaryExpressionType NodeType = "BinaryExpression"
     StringLiteralType NodeType = "StringLiteral"
+    NullLiteralType NodeType = "NullLiteral"
 )
 
 
@@ -21,6 +24,29 @@ type Statement interface {
 
 type Program struct {
     Body []Statement
+}
+
+type VariableDeclaration struct{
+    Constant bool
+    Identifier string
+    Value Expression
+}
+
+func (v *VariableDeclaration) Kind() NodeType {
+    return VariableDeclarationType
+}
+
+func (v *VariableDeclaration) ToString() string {
+    s := ""
+    if v.Constant {
+        s += "const "
+    } else {
+        s += "let "
+    }
+
+    s += v.Identifier + " = " + v.Value.ToString() + ";\n"
+
+    return s
 }
 
 func (p *Program) Kind() NodeType {
@@ -38,6 +64,19 @@ func (p *Program) ToString() string {
 
 type Expression interface {
     Statement
+}
+
+type AssignmentExpression struct {
+    Assigne Expression
+    Value Expression
+}
+
+func (a *AssignmentExpression) Kind() NodeType {
+    return AssignmentExpressionType
+}
+
+func (a *AssignmentExpression) ToString() string {
+    return a.Assigne.ToString() + " = " + a.Value.ToString()
 }
 
 type BinaryExpression struct {
@@ -78,16 +117,6 @@ func (n *NumericLiteral) ToString() string {
     return strconv.FormatFloat(n.Value, 'f', -1, 64)
 }
 
-type NullLiteral struct {}
-
-func (n *NullLiteral) Kind() NodeType {
-    return NullLiteralType
-}
-
-func (n *NullLiteral) ToString() string {
-    return "null"
-}
-
 type StringLiteral struct {
     Value string
 }
@@ -98,4 +127,14 @@ func (s *StringLiteral) Kind() NodeType {
 
 func (s *StringLiteral) ToString() string {
     return "\"" + s.Value + "\""
+}
+
+type NullLiteral struct {}
+
+func (n *NullLiteral) Kind() NodeType {
+    return NullLiteralType
+}
+
+func (n *NullLiteral) ToString() string {
+    return "null"
 }

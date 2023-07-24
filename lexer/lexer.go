@@ -14,7 +14,10 @@ type Token struct {
 
 var Keywords map[string]tokentype.TokenType = map[string]tokentype.TokenType{
     "let": tokentype.Let,
-    "null": tokentype.Null,
+    "const": tokentype.Constant,
+    "if": tokentype.If,
+    "then": tokentype.Then,
+    "end": tokentype.End,
 }
 
 
@@ -53,6 +56,9 @@ func Tokenize(sourceCode string) []Token {
             src = src[1:]
         } else if src[0] == "=" {
             tokens = append(tokens, createToken(src[0], tokentype.Equals))
+            src = src[1:]
+        } else if src[0] == ";" {
+            tokens = append(tokens, createToken(src[0], tokentype.SemiColon))
             src = src[1:]
         } else if src[0] == "\"" {
             src = src[1:]

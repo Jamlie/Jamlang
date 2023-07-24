@@ -11,9 +11,13 @@ const (
     CloseParen
     BinaryOperator
     Whitespace
+    SemiColon
 
     Let
-    Null
+    Constant
+    If
+    Then
+    End
 
     EndOfFile
 )

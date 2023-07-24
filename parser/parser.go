@@ -3,6 +3,7 @@ package parser
 import (
     "strconv"
     "fmt"
+    "os"
 
     "github.com/Jamlee977/CustomLanguage/ast"
     "github.com/Jamlee977/CustomLanguage/lexer"
@@ -35,11 +36,68 @@ func (p *Parser) ProduceAST(sourceCode string) ast.Program {
 }
 
 func (p *Parser) parseStatement() ast.Statement {
-    return p.parseExpression()
+    switch p.at().Type {
+    case tokentype.Let:
+        return p.parseVariableDeclaration()
+    case tokentype.Constant:
+        return p.parseVariableDeclaration()
+    case tokentype.SemiColon:
+        p.eat()
+        return &ast.NullLiteral{}
+    default:
+        return p.parseExpression()
+    }
+}
+
+func (p *Parser) parseVariableDeclaration() ast.Statement {
+    isConstant := p.eat().Type == tokentype.Constant
+    identifier := p.expect(tokentype.Identifier, "Expected identifier name after let/const keyword").Value
+
+    if p.at().Type == tokentype.SemiColon {
+        p.eat()
+        if isConstant {
+            fmt.Println("Constant declaration without assignment is not allowed")
+            os.Exit(1)
+            return nil
+        }
+
+        return &ast.VariableDeclaration{
+            Identifier: identifier,
+            Constant: isConstant,
+            Value: &ast.NullLiteral{},
+        }
+    }
+
+    p.expect(tokentype.Equals, "Expected = after identifier name")
+    declaration := &ast.VariableDeclaration{
+        Identifier: identifier,
+        Constant: isConstant,
+        Value: p.parseExpression(),
+    }
+
+    if p.at().Type == tokentype.SemiColon {
+        p.eat()
+    }
+    return declaration
 }
 
 func (p *Parser) parseExpression() ast.Expression {
-    return p.parseAdditiveExpression()
+    return p.parseAssignmentExpression()
+}
+
+func (p *Parser) parseAssignmentExpression() ast.Expression {
+    left := p.parseAdditiveExpression()
+
+    if p.at().Type == tokentype.Equals {
+        p.eat()
+        value := p.parseAssignmentExpression()
+        return &ast.AssignmentExpression{
+            Assigne: left,
+            Value: value,
+        }
+    }
+
+    return left
 }
 
 func (p *Parser) parseAdditiveExpression() ast.Expression {
@@ -85,9 +143,6 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
         return &ast.Identifier{
             Symbol: p.eat().Value,
         }
-    case tokentype.Null:
-        p.eat()
-        return &ast.NullLiteral{}
     case tokentype.Number:
         value, err := strconv.ParseFloat(p.eat().Value, 64)
         if err != nil {
@@ -106,7 +161,7 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
     case tokentype.OpenParen:
         p.eat()
         value := p.parseExpression()
-        p.expect(")")
+        p.expect(tokentype.CloseParen, "Expected closing parenthesis")
         return value
     default:
         fmt.Println("Unexpected token found: ", p.at())
@@ -124,12 +179,12 @@ func (p *Parser) eat() lexer.Token {
     return prev
 }
 
-func (p *Parser) expect(value string) {
-    if p.at().Value != value {
-        fmt.Println("Expected ", value, " but found ", p.at().Value)
-        panic("Expected " + value + " but found " + p.at().Value)
+func (p *Parser) expect(token tokentype.TokenType, message string) lexer.Token {
+    if p.at().Type != token {
+        fmt.Println(message)
+        os.Exit(1)
     }
-    p.eat()
+    return p.eat()
 }
 
 func (p *Parser) notEndOfFile() bool {

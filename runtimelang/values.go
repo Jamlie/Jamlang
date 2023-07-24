@@ -6,6 +6,7 @@ const (
     Number ValueType = "number"
     Null ValueType = "null"
     String ValueType = "string"
+    Bool ValueType = "bool"
 )
 
 type RuntimeValue interface {
@@ -35,6 +36,10 @@ func (v NullValue) Get() any {
     return v.Value
 }
 
+func MakeNullValue() NullValue {
+    return NullValue{Value: "null"}
+}
+
 type NumberValue struct {
     Value float64
 }
@@ -47,6 +52,10 @@ func (v NumberValue) Get() any {
     return v.Value
 }
 
+func MakeNumberValue(value float64) NumberValue {
+    return NumberValue{Value: value}
+}
+
 type StringValue struct {
     Value string
 }
@@ -57,4 +66,24 @@ func (v StringValue) Type() ValueType {
 
 func (v StringValue) Get() any {
     return v.Value
+}
+
+func MakeStringValue(value string) StringValue {
+    return StringValue{Value: value}
+}
+
+type BoolValue struct {
+    Value bool
+}
+
+func (v BoolValue) Type() ValueType {
+    return Bool
+}
+
+func (v BoolValue) Get() any {
+    return v.Value
+}
+
+func MakeBoolValue(value bool) BoolValue {
+    return BoolValue{Value: value}
 }
