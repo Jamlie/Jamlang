@@ -13,10 +13,16 @@ const (
     Whitespace
     SemiColon
 
+    Comma
+    Colon
+    LSquirly
+    RSquirly
+
     Let
     Constant
     If
     Then
+    Else
     End
 
     EndOfFile

@@ -1,6 +1,7 @@
 package ast
 
 import "strconv"
+import "bytes"
 
 type NodeType string
 
@@ -8,7 +9,10 @@ const (
     ProgramType NodeType = "Program"
     VariableDeclarationType NodeType = "VariableDeclaration"
     AssignmentExpressionType NodeType = "AssignmentExpression"
+    ConditionalExpressionType NodeType = "ConditionalExpression"
 
+    PropertyType NodeType = "Property"
+    ObjectLiteralType NodeType = "ObjectLiteral"
     NumericLiteralType NodeType = "NumericLiteral"
     IdentifierType NodeType = "Identifier"
     BinaryExpressionType NodeType = "BinaryExpression"
@@ -24,6 +28,19 @@ type Statement interface {
 
 type Program struct {
     Body []Statement
+}
+
+func (p *Program) Kind() NodeType {
+    return ProgramType
+}
+
+func (p *Program) ToString() string {
+    s := ""
+    for _, statement := range p.Body {
+        s += statement.ToString()
+    }
+
+    return s
 }
 
 type VariableDeclaration struct{
@@ -49,21 +66,25 @@ func (v *VariableDeclaration) ToString() string {
     return s
 }
 
-func (p *Program) Kind() NodeType {
-    return ProgramType
-}
-
-func (p *Program) ToString() string {
-    s := ""
-    for _, statement := range p.Body {
-        s += statement.ToString()
-    }
-
-    return s
-}
-
 type Expression interface {
     Statement
+}
+
+type ConditionalExpression struct {
+    Condition Expression
+    Consequent Statement
+    Alternate Statement
+}
+
+func (c *ConditionalExpression) Kind() NodeType {
+    return ConditionalExpressionType
+}
+
+func (c *ConditionalExpression) ToString() string {
+    s := "if " + c.Condition.ToString() + " then"
+    s += c.Consequent.ToString()
+    s += "end"
+    return s
 }
 
 type AssignmentExpression struct {
@@ -137,4 +158,38 @@ func (n *NullLiteral) Kind() NodeType {
 
 func (n *NullLiteral) ToString() string {
     return "null"
+}
+
+type Property struct {
+    Key string
+    Value Expression
+}
+
+func (p *Property) Kind() NodeType {
+    return PropertyType
+}
+
+func (p *Property) ToString() string {
+    return p.Key + ": " + p.Value.ToString()
+}
+
+type ObjectLiteral struct {
+    Properties []Property
+}
+
+func (o *ObjectLiteral) Kind() NodeType {
+    return ObjectLiteralType
+}
+
+func (o *ObjectLiteral) ToString() string {
+    var buffer bytes.Buffer
+    buffer.WriteString("{")
+    for i, p := range o.Properties {
+        buffer.WriteString(p.ToString())
+        if i < len(o.Properties) - 1 {
+            buffer.WriteString(", ")
+        }
+    }
+    buffer.WriteString("}")
+    return buffer.String()
 }

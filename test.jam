@@ -1,5 +1,9 @@
-let x = 19;
-let y = "years old"
-let z = x + " " + y;
-
-z
+const obj = {
+    num: 1,
+    str: "hi",
+    foo: {
+        x: 21,
+        y: 69,
+        z: 420,
+    },
+}

@@ -11,6 +11,16 @@ type Environment struct {
     constants map[string]bool
 }
 
+func CreateGlobalEnvironment() *Environment {
+    env := NewEnvironment(nil)
+    env.DeclareVariable("true", MakeBoolValue(true), true)
+    env.DeclareVariable("false", MakeBoolValue(false), true)
+    env.DeclareVariable("null", MakeNullValue(), true)
+
+    return env
+}
+
+
 func NewEnvironment(parent *Environment) *Environment {
     return &Environment{parent, make(map[string]RuntimeValue), make(map[string]bool)}
 }

@@ -12,7 +12,7 @@ import (
 )
 
 var (
-    env = runtimelang.NewEnvironment(nil)
+    env = runtimelang.CreateGlobalEnvironment()
 )
 
 func repl() {
@@ -41,9 +41,6 @@ func repl() {
 }
 
 func main() {
-    env.DeclareVariable("null", runtimelang.MakeNullValue(), true)
-    env.DeclareVariable("true", runtimelang.MakeBoolValue(true), true)
-    env.DeclareVariable("false", runtimelang.MakeBoolValue(false), true)
     flag.Parse()
     args := flag.Args()
     if len(args) == 0 {
@@ -69,20 +66,18 @@ func main() {
             defer file.Close()
 
             scanner := bufio.NewScanner(file)
+            parser := parser.NewParser()
+            var text string
             for scanner.Scan() {
-                text := scanner.Text()
-                if text == "" {
-                    continue
-                }
-                parser := parser.NewParser()
-                program := parser.ProduceAST(text)
-                runtimeValue, err := runtimelang.Evaluate(&program, *env)
-                if err != nil {
-                    fmt.Println(err)
-                    os.Exit(1)
-                }
-                fmt.Println(runtimeValue.Get())
+                text += scanner.Text() + "\n"
             }
+            program := parser.ProduceAST(text)
+            runtimeValue, err := runtimelang.Evaluate(&program, *env)
+            if err != nil {
+                fmt.Println(err)
+                os.Exit(1)
+            }
+            fmt.Println(runtimeValue.Get())
         } else {
             fmt.Println("Unknown option")
             fmt.Println("Usage: elang [run] [file]")

@@ -41,11 +41,42 @@ func (p *Parser) parseStatement() ast.Statement {
         return p.parseVariableDeclaration()
     case tokentype.Constant:
         return p.parseVariableDeclaration()
+    case tokentype.If:
+        return p.parseIfStatement()
+    case tokentype.Else:
+        return p.parseIfStatement()
     case tokentype.SemiColon:
         p.eat()
         return &ast.NullLiteral{}
     default:
         return p.parseExpression()
+    }
+}
+
+func (p *Parser) parseIfStatement() ast.Statement {
+    p.eat()
+    condition := p.parseExpression()
+
+    p.expect(tokentype.Then, "Expected 'then' keyword after if condition")
+
+    consequent := p.parseStatement()
+
+    if p.at().Type == tokentype.Else {
+        p.eat()
+        alternate := p.parseStatement()
+        p.expect(tokentype.End, "Expected 'end' keyword after else block")
+        return &ast.ConditionalExpression{
+            Condition:  condition,
+            Consequent: consequent,
+            Alternate:  alternate,
+        }
+    }
+
+    p.expect(tokentype.End, "Expected 'end' keyword after if block")
+
+    return &ast.ConditionalExpression{
+        Condition:  condition,
+        Consequent: consequent,
     }
 }
 
@@ -86,7 +117,7 @@ func (p *Parser) parseExpression() ast.Expression {
 }
 
 func (p *Parser) parseAssignmentExpression() ast.Expression {
-    left := p.parseAdditiveExpression()
+    left := p.parseObjectExpression()
 
     if p.at().Type == tokentype.Equals {
         p.eat()
@@ -98,6 +129,48 @@ func (p *Parser) parseAssignmentExpression() ast.Expression {
     }
 
     return left
+}
+
+func (p *Parser) parseObjectExpression() ast.Expression {
+    if p.at().Type != tokentype.LSquirly {
+        return p.parseAdditiveExpression()
+    }
+
+    p.eat()
+    properties := []ast.Property{}
+
+    for p.notEndOfFile() && p.at().Type != tokentype.RSquirly {
+        key := p.expect(tokentype.Identifier, "Expected identifier as object key").Value
+
+        if p.at().Type == tokentype.Comma {
+            p.eat()
+            properties = append(properties, ast.Property{
+                Key: key,
+            })
+            continue
+        } else if p.at().Type == tokentype.RSquirly {
+            properties = append(properties, ast.Property{
+                Key: key,
+            })
+            continue
+        }
+
+        p.expect(tokentype.Colon, "Expected : after object key")
+        value := p.parseExpression()
+        properties = append(properties, ast.Property{
+            Key: key,
+            Value: value,
+        })
+
+        if p.at().Type != tokentype.RSquirly {
+            p.expect(tokentype.Comma, "Expected , after object property")
+        }
+    }
+
+    p.expect(tokentype.RSquirly, "Object literal must end with a }")
+    return &ast.ObjectLiteral{
+        Properties: properties,
+    }
 }
 
 func (p *Parser) parseAdditiveExpression() ast.Expression {

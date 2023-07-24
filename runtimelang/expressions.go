@@ -9,6 +9,60 @@ import (
     "github.com/Jamlee977/CustomLanguage/ast"
 )
 
+func EvaluateObjectExpression(obj ast.ObjectLiteral, env Environment) RuntimeValue {
+    object := ObjectValue{
+        Properties: make(map[string]RuntimeValue),
+    }
+
+    for _, property := range obj.Properties {
+        key := property.Key
+        value, err := Evaluate(property.Value, env)
+        if err != nil {
+            fmt.Println(err)
+            os.Exit(1)
+        }
+
+        var runtimeValue RuntimeValue
+        if value == nil {
+            runtimeValue = env.LookupVariable(key)
+        } else {
+            runtimeValue = value
+        }
+
+        object.Properties[key] = runtimeValue
+    }
+
+    return object
+}
+
+func EvaluateConditionalExpression(expr ast.ConditionalExpression, env Environment) RuntimeValue {
+    condition, err := Evaluate(expr.Condition, env)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+
+    conditionValue, ok := condition.(BoolValue)
+    if !ok {
+        fmt.Println("Condition must be a boolean value")
+        os.Exit(1)
+    }
+
+    if conditionValue.Value {
+        return EvaluateStatement(expr.Consequent, env)
+    } else {
+        if expr.Alternate == nil {
+            return NullValue{}
+        }
+        return EvaluateStatement(expr.Alternate, env)
+    }
+}
+
+func EvaluateStatement(statement ast.Statement, env Environment) RuntimeValue {
+    value, _ := Evaluate(statement, env)
+    return value
+}
+
 func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environment) RuntimeValue {
     lhs, err := Evaluate(binaryExpression.Left, env)
     if err != nil {

@@ -16,6 +16,7 @@ var Keywords map[string]tokentype.TokenType = map[string]tokentype.TokenType{
     "let": tokentype.Let,
     "const": tokentype.Constant,
     "if": tokentype.If,
+    "else": tokentype.Else,
     "then": tokentype.Then,
     "end": tokentype.End,
 }
@@ -37,7 +38,7 @@ func isInt(src string) bool {
 }
 
 func isWhitespace(src string) bool {
-    return src == " " || src == "\t" || src == "\n"
+    return src == " " || src == "\t" || src == "\n" || src == "\r"
 }
 
 func Tokenize(sourceCode string) []Token {
@@ -51,6 +52,12 @@ func Tokenize(sourceCode string) []Token {
         } else if src[0] == ")" {
             tokens = append(tokens, createToken(src[0], tokentype.CloseParen))
             src = src[1:]
+        }  else if src[0] == "{" {
+            tokens = append(tokens, createToken(src[0], tokentype.LSquirly))
+            src = src[1:]
+        }  else if src[0] == "}" {
+            tokens = append(tokens, createToken(src[0], tokentype.RSquirly))
+            src = src[1:]
         } else if src[0] == "+" || src[0] == "-" || src[0] == "*" || src[0] == "/" || src[0] == "%" {
             tokens = append(tokens, createToken(src[0], tokentype.BinaryOperator))
             src = src[1:]
@@ -59,6 +66,12 @@ func Tokenize(sourceCode string) []Token {
             src = src[1:]
         } else if src[0] == ";" {
             tokens = append(tokens, createToken(src[0], tokentype.SemiColon))
+            src = src[1:]
+        } else if src[0] == "," {
+            tokens = append(tokens, createToken(src[0], tokentype.Comma))
+            src = src[1:]
+        } else if src[0] == ":" {
+            tokens = append(tokens, createToken(src[0], tokentype.Colon))
             src = src[1:]
         } else if src[0] == "\"" {
             src = src[1:]

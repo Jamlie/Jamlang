@@ -28,8 +28,14 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
             err := fmt.Errorf("Expected Identifier, got %T", astNode)
             panic(err)
         }
-
         return EvaluateIdentifier(identifier, env), nil
+    case ast.ObjectLiteralType:
+        objectLiteral, ok := astNode.(*ast.ObjectLiteral)
+        if !ok {
+            err := fmt.Errorf("Expected ObjectLiteral, got %T", astNode)
+            panic(err)
+        }
+        return EvaluateObjectExpression(*objectLiteral, env), nil
     case ast.AssignmentExpressionType:
         assignmentExpression, ok := astNode.(*ast.AssignmentExpression)
         if !ok {
@@ -51,6 +57,13 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
             panic(err)
         }
         return EvaluateVariableDeclaration(*variableDeclaration, env), nil
+    case ast.ConditionalExpressionType:
+        conditionalExpression, ok := astNode.(*ast.ConditionalExpression)
+        if !ok {
+            err := fmt.Errorf("Expected ConditionalExpression, got %T", astNode)
+            panic(err)
+        }
+        return EvaluateConditionalExpression(*conditionalExpression, env), nil
     default:
         fmt.Printf("Unknown AST node type %T\n", astNode)
         os.Exit(1)
