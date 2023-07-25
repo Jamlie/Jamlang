@@ -1,24 +1,34 @@
-fn checkX(x) {
-    if x == 69 {
-        println("oh", x, "nice choice")
-    } else {
-        if x == 420 {
-            println("could've chosen better.")
-        } else {
-            println("fuck you")
-        }
+fn fibonacci(n) {
+    let first = 0
+    let second = 1
+    let sum;
+    let i = 2
+
+    if n <= 0 {
+        return "Input should be higher than 0"
     }
+    if n == 1 {
+        return 0
+    }
+    if n == 2 {
+        return 1
+    }
+    while i < n {
+        sum = first + second
+        first = second
+        second = sum
+        i = i + 1
+    }
+    return second
 }
 
-let x = 69
-checkX(x)
-sleep(500)
-x = 420
-checkX(x)
-sleep(500)
-x = 21
-checkX(x)
-sleep(69)
-const y = 48
-checkX(x + y)
-
+println(fibonacci(1))
+println(fibonacci(2))
+println(fibonacci(3))
+println(fibonacci(4))
+println(fibonacci(5))
+println(fibonacci(6))
+println(fibonacci(7))
+println(fibonacci(8))
+println(fibonacci(9))
+println(fibonacci(10))

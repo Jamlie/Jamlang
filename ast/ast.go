@@ -12,7 +12,11 @@ const (
     MemberExpressionType NodeType = "MemberExpression"
     CallExpressionType NodeType = "CallExpression"
     ConditionalStatementType NodeType = "ConditionalStatement"
+    WhileStatementType NodeType = "WhileStatement"
+    LoopStatementType NodeType = "LoopStatement"
     FunctionDeclarationType NodeType = "FunctionDeclaration"
+    ReturnStatementType NodeType = "ReturnStatement"
+    BreakStatementType NodeType = "BreakStatement"
 
     PropertyType NodeType = "Property"
     ObjectLiteralType NodeType = "ObjectLiteral"
@@ -98,6 +102,28 @@ func (f *FunctionDeclaration) ToString() string {
     return s
 }
 
+type ReturnStatement struct {
+    Value Expression
+}
+
+func (r *ReturnStatement) Kind() NodeType {
+    return ReturnStatementType
+}
+
+func (r *ReturnStatement) ToString() string {
+    return "return " + r.Value.ToString()
+}
+
+type BreakStatement struct {}
+
+func (b *BreakStatement) Kind() NodeType {
+    return BreakStatementType
+}
+
+func (b *BreakStatement) ToString() string {
+    return "break"
+}
+
 type Expression interface {
     Statement
 }
@@ -119,6 +145,43 @@ func (c *ConditionalStatement) ToString() string {
     }
     s += "} else {\n"
     for _, statement := range c.Alternate {
+        s += statement.ToString()
+    }
+    s += "}\n"
+
+    return s
+}
+
+type WhileStatement struct {
+    Condition Expression
+    Body []Statement
+}
+
+func (w *WhileStatement) Kind() NodeType {
+    return WhileStatementType
+}
+
+func (w *WhileStatement) ToString() string {
+    s := "while (" + w.Condition.ToString() + ") {\n"
+    for _, statement := range w.Body {
+        s += statement.ToString()
+    }
+    s += "}\n"
+
+    return s
+}
+
+type LoopStatement struct {
+    Body []Statement
+}
+
+func (l *LoopStatement) Kind() NodeType {
+    return LoopStatementType
+}
+
+func (l *LoopStatement) ToString() string {
+    s := "loop {\n"
+    for _, statement := range l.Body {
         s += statement.ToString()
     }
     s += "}\n"

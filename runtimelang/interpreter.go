@@ -55,6 +55,22 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
             return nil, nil
         }
         return EvaluateCallExpression(*callExpression, env), nil
+    case ast.ReturnStatementType:
+        returnStatement, ok := astNode.(*ast.ReturnStatement)
+        if !ok {
+            fmt.Printf("Error: Expected ReturnStatement, got %T\n", astNode)
+            os.Exit(1)
+            return nil, nil
+        }
+        return EvaluateReturnStatement(*returnStatement, env), nil
+    case ast.BreakStatementType:
+        breakStatement, ok := astNode.(*ast.BreakStatement)
+        if !ok {
+            fmt.Printf("Error: Expected BreakStatement, got %T\n", astNode)
+            os.Exit(1)
+            return nil, nil
+        }
+        return EvaluateBreakStatement(*breakStatement, env), nil
     case ast.AssignmentExpressionType:
         assignmentExpression, ok := astNode.(*ast.AssignmentExpression)
         if !ok {
@@ -94,8 +110,74 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
             os.Exit(1)
             return nil, nil
         }
-        return EvaluateConditionalExpression(*conditionalStatement, env), nil
-        // return EvaluateConditionalStatement(*conditionalStatement, env), nil
+
+        result, err := EvaluateConditionalExpression(*conditionalStatement, env)
+
+        if err == IsReturnError {
+            return result, IsReturnError
+        }
+
+        if err == IsBreakError {
+            return result, IsBreakError
+        }
+
+        if err != nil {
+            fmt.Printf("Error: %s\n", err.Error())
+            os.Exit(1)
+            return nil, nil
+        }
+
+        return result, nil
+    case ast.WhileStatementType:
+        whileStatement, ok := astNode.(*ast.WhileStatement)
+        if !ok {
+            fmt.Printf("Error: Expected WhileStatement, got %T\n", astNode)
+            os.Exit(1)
+            return nil, nil
+        }
+
+        result, err := EvaluateWhileExpression(*whileStatement, env)
+
+        if err == IsReturnError {
+            return result, IsReturnError
+        }
+
+        if err == IsBreakError {
+            return result, nil
+        }
+
+        if err != nil {
+            fmt.Printf("Error: %s\n", err.Error())
+            os.Exit(1)
+            return nil, nil
+        }
+
+        return result, nil
+    case ast.LoopStatementType:
+        loopStatement, ok := astNode.(*ast.LoopStatement)
+        if !ok {
+            fmt.Printf("Error: Expected LoopStatement, got %T\n", astNode)
+            os.Exit(1)
+            return nil, nil
+        }
+
+        result, err := EvaluateLoopExpression(*loopStatement, env)
+
+        if err == IsReturnError {
+            return result, IsReturnError
+        }
+
+        if err == IsBreakError {
+            return result, nil
+        }
+
+        if err != nil {
+            fmt.Printf("Error: %s\n", err.Error())
+            os.Exit(1)
+            return nil, nil
+        }
+
+        return result, nil
     default:
         fmt.Printf("Unknown AST node type %T\n", astNode)
         os.Exit(1)

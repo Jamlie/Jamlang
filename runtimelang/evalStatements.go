@@ -15,38 +15,14 @@ func EvaluateProgram(program ast.Program, env Environment) RuntimeValue {
     return lastEvaluated
 }
 
-// func EvaluateCondition(condition RuntimeValue) bool {
-//     if condition == nil {
-//         return false
-//     }
-//     switch condition.(type) {
-//     case BoolValue:
-//         return condition.(BoolValue).Value
-//     case NumberValue:
-//         return condition.(NumberValue).Value != 0
-//     case StringValue:
-//         return condition.(StringValue).Value != ""
-//     case NullValue:
-//         return false
-//     default:
-//         return true
-//     }
-// }
+func EvaluateBreakStatement(statement ast.BreakStatement, env Environment) RuntimeValue {
+    return &BreakType{}
+}
 
-// func EvaluateConditionalStatement(statement ast.ConditionalStatement, env Environment) RuntimeValue {
-//     condition, _ := Evaluate(statement.Condition, env)
-//     if EvaluateCondition(condition) {
-//         for _, statement := range statement.Body {
-//             Evaluate(statement, env)
-//         }
-//     } else {
-//         for _, statement := range statement.Alternate {
-//             Evaluate(statement, env)
-//         }
-//     }
-//     
-//     return MakeNullValue()
-// }
+func EvaluateReturnStatement(statement ast.ReturnStatement, env Environment) RuntimeValue {
+    returnValue, _ := Evaluate(statement.Value, env)
+    return returnValue
+}
 
 func EvaluateFunctionDeclaration(declaration ast.FunctionDeclaration, env Environment) RuntimeValue {
     fn := FunctionValue{

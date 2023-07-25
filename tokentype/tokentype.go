@@ -28,6 +28,10 @@ const (
     Constant
     If
     Else
+    While
+    Loop
+    Break
+    Continue
 
     EndOfFile
 )

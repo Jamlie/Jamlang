@@ -9,7 +9,81 @@ import (
     "github.com/Jamlee977/CustomLanguage/ast"
 )
 
-func EvaluateConditionalExpression(expr ast.ConditionalStatement, env Environment) RuntimeValue {
+var (
+    IsReturnError = fmt.Errorf("return statement error")
+    IsBreakError = fmt.Errorf("break statement error")
+)
+
+func EvaluateLoopExpression(expr ast.LoopStatement, env Environment) (RuntimeValue, error) {
+    scope := NewEnvironment(&env)
+
+    for {
+        for _, statement := range expr.Body {
+            if statement.Kind() == ast.ReturnStatementType {
+                result, err := Evaluate(statement, *scope)
+                if err != nil {
+                    fmt.Println(err)
+                    os.Exit(1)
+                }
+                return result, IsReturnError
+            }
+            if statement.Kind() == ast.BreakStatementType {
+                return MakeNullValue(), IsBreakError
+            }
+            _, err := Evaluate(statement, *scope)
+            if err == IsBreakError {
+                return MakeNullValue(), nil
+            }
+            if err != nil {
+                fmt.Println(err)
+                os.Exit(1)
+            }
+        }
+    }
+}
+
+func EvaluateWhileExpression(expr ast.WhileStatement, env Environment) (RuntimeValue, error) {
+    condition, err := Evaluate(expr.Condition, env)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+
+    scope := NewEnvironment(&env)
+
+    for condition.Get() == true {
+        for _, statement := range expr.Body {
+            if statement.Kind() == ast.ReturnStatementType {
+                result, err := Evaluate(statement, *scope)
+                if err != nil {
+                    fmt.Println(err)
+                    os.Exit(1)
+                }
+                return result, IsReturnError
+            }
+            if statement.Kind() == ast.BreakStatementType {
+                return MakeNullValue(), IsBreakError
+            }
+            _, err := Evaluate(statement, *scope)
+            if err == IsBreakError {
+                return MakeNullValue(), nil
+            }
+            if err != nil {
+                fmt.Println(err)
+                os.Exit(1)
+            }
+        }
+        condition, err = Evaluate(expr.Condition, env)
+        if err != nil {
+            fmt.Println(err)
+            os.Exit(1)
+        }
+    }
+
+    return MakeNullValue(), nil
+}
+
+func EvaluateConditionalExpression(expr ast.ConditionalStatement, env Environment) (RuntimeValue, error) {
     condition, err := Evaluate(expr.Condition, env)
     if err != nil {
         fmt.Println(err)
@@ -20,15 +94,52 @@ func EvaluateConditionalExpression(expr ast.ConditionalStatement, env Environmen
 
     if condition.Get() == true {
         for _, statement := range expr.Body {
-            Evaluate(statement, *scope)
+            if statement.Kind() == ast.ReturnStatementType {
+                result, err := Evaluate(statement, *scope)
+                if err != nil {
+                    fmt.Println(err)
+                    os.Exit(1)
+                }
+
+                // IsReturnError is a special error that is used to indicate that a return statement has been reached
+                return result, IsReturnError
+            } else if statement.Kind() == ast.BreakStatementType {
+                return MakeNullValue(), IsBreakError
+            }
+            _, err := Evaluate(statement, *scope)
+            if err == IsBreakError {
+                return MakeNullValue(), nil
+            }
+            if err != nil {
+                fmt.Println(err)
+                os.Exit(1)
+            }
         }
     } else {
         for _, statement := range expr.Alternate {
-            Evaluate(statement, *scope)
+            if statement.Kind() == ast.ReturnStatementType {
+                result, err := Evaluate(statement, *scope)
+                if err != nil {
+                    fmt.Println(err)
+                    os.Exit(1)
+                }
+
+                return result, IsReturnError
+            } else if statement.Kind() == ast.BreakStatementType {
+                return MakeNullValue(), IsBreakError
+            }
+            _, err := Evaluate(statement, *scope)
+            if err == IsBreakError {
+                return MakeNullValue(), nil
+            }
+            if err != nil {
+                fmt.Println(err)
+                os.Exit(1)
+            }
         }
     }
 
-    return MakeNullValue()
+    return MakeNullValue(), nil
 }
 
 func EvaluateCallExpression(expr ast.CallExpression, env Environment) RuntimeValue {
@@ -67,7 +178,18 @@ func EvaluateCallExpression(expr ast.CallExpression, env Environment) RuntimeVal
 
         var result RuntimeValue = MakeNullValue()
         for _, stmt := range fn.Body {
+            if stmt.Kind() == ast.ReturnStatementType {
+                result, err = Evaluate(stmt, *scope)
+                if err != nil {
+                    fmt.Println(err)
+                    os.Exit(1)
+                }
+                return result
+            }
             result, err = Evaluate(stmt, *scope)
+            if err == IsReturnError {
+                return result
+            }
             if err != nil {
                 fmt.Println(err)
                 os.Exit(1)

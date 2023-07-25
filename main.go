@@ -74,30 +74,6 @@ func main() {
                 os.Exit(1)
             }
 
-            // fmt.Println(runtimeValue.Get())
-            
-            // file, err := os.Open(args[1])
-            // if err != nil {
-            //     fmt.Println(err)
-            //     os.Exit(1)
-            // }
-            // defer file.Close()
-
-            // scanner := bufio.NewScanner(file)
-            // for scanner.Scan() {
-            //     text := scanner.Text()
-            //     if text == "" {
-            //         continue
-            //     }
-            //     parser := parser.NewParser()
-            //     program := parser.ProduceAST(text)
-            //     runtimeValue, err := runtimelang.Evaluate(&program, *env)
-            //     if err != nil {
-            //         fmt.Println(err)
-            //         os.Exit(1)
-            //     }
-            //     fmt.Println(runtimeValue.Get())
-            // }
         } else {
             fmt.Println("Unknown option")
             fmt.Println("Usage: elang [run] [file]")

@@ -12,6 +12,8 @@ import (
 
 type Parser struct {
     tokens []lexer.Token
+    isFunction bool
+    isLoop bool
 }
 
 func NewParser() *Parser {
@@ -43,15 +45,67 @@ func (p *Parser) parseStatement() ast.Statement {
         return p.parseVariableDeclaration()
     case tokentype.Function:
         return p.parseFunctionDeclaration()
+    case tokentype.Return:
+        if !p.isFunction {
+            fmt.Println("Error: Return statement outside of function")
+            os.Exit(1)
+        }
+        return p.parseReturnStatement()
+    case tokentype.Break:
+        if !p.isLoop {
+            fmt.Println("Error: Break statement outside of loop")
+            os.Exit(1)
+        }
+        return p.parseBreakStatement()
     case tokentype.If:
         return p.parseIfStatement()
     case tokentype.Else:
         return p.parseIfStatement()
+    case tokentype.While:
+        return p.parseWhileStatement()
+    case tokentype.Loop:
+        return p.parseLoopStatement()
     case tokentype.SemiColon:
         p.eat()
         return &ast.NullLiteral{}
     default:
         return p.parseExpression()
+    }
+}
+
+func (p *Parser) parseLoopStatement() ast.Statement {
+    p.eat()
+    p.expect(tokentype.LSquirly, "Error: Expected { after loop statement")
+
+    p.isLoop = true
+    defer func() { p.isLoop = false }()
+    var body []ast.Statement
+    for p.at().Type != tokentype.RSquirly {
+        body = append(body, p.parseStatement())
+    }
+
+    p.expect(tokentype.RSquirly, "Error: Expected } after loop statement")
+
+    return &ast.LoopStatement{Body: body}
+}
+
+func (p *Parser) parseWhileStatement() ast.Statement {
+    p.eat()
+    condition := p.parseExpression()
+    p.expect(tokentype.LSquirly, "Error: Expected { after while statement")
+
+    p.isLoop = true
+    defer func() { p.isLoop = false }()
+    var body []ast.Statement
+    for p.at().Type != tokentype.RSquirly {
+        body = append(body, p.parseStatement())
+    }
+
+    p.expect(tokentype.RSquirly, "Error: Expected } after while statement")
+
+    return &ast.WhileStatement{
+        Condition: condition,
+        Body: body,
     }
 }
 
@@ -110,8 +164,10 @@ func (p *Parser) parseFunctionDeclaration() ast.Statement {
 
     p.expect(tokentype.LSquirly, "Error: Expected '{' after function declaration")
 
+    p.isFunction = true
+    defer func() { p.isFunction = false }()
     body := []ast.Statement{}
-    for p.at().Type != tokentype.EndOfFile && p.at().Type != tokentype.RSquirly {
+    for (p.at().Type != tokentype.EndOfFile && p.at().Type != tokentype.RSquirly) {
         body = append(body, p.parseStatement())
     }
 
@@ -123,6 +179,19 @@ func (p *Parser) parseFunctionDeclaration() ast.Statement {
         Body: body,
     }
 }
+
+func (p *Parser) parseBreakStatement() ast.Statement {
+    p.eat()
+    return &ast.BreakStatement{}
+}
+
+func (p *Parser) parseReturnStatement() ast.Statement {
+    p.eat()
+    return &ast.ReturnStatement{
+        Value: p.parseExpression(),
+    }
+}
+
 
 func (p *Parser) parseVariableDeclaration() ast.Statement {
     isConstant := p.eat().Type == tokentype.Constant

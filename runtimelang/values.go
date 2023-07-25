@@ -16,6 +16,7 @@ const (
     Object ValueType = "object"
     NativeFunction ValueType = "native_function"
     Function ValueType = "function"
+    Break ValueType = "break"
 )
 
 type RuntimeValue interface {
@@ -209,3 +210,20 @@ func (v FunctionValue) ToString() string {
     return "function"
 }
 
+type ReturnValue struct {
+    Value RuntimeValue
+}
+
+type BreakType struct {}
+
+func (v BreakType) Type() ValueType {
+    return Break
+}
+
+func (v BreakType) Get() any {
+    return nil
+}
+
+func (v BreakType) ToString() string {
+    return "break"
+}
