@@ -9,6 +9,83 @@ import (
     "github.com/Jamlee977/CustomLanguage/ast"
 )
 
+func EvaluateConditionalExpression(expr ast.ConditionalStatement, env Environment) RuntimeValue {
+    condition, err := Evaluate(expr.Condition, env)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+
+    scope := NewEnvironment(&env)
+
+    if condition.Get() == true {
+        for _, statement := range expr.Body {
+            Evaluate(statement, *scope)
+        }
+    } else {
+        for _, statement := range expr.Alternate {
+            Evaluate(statement, *scope)
+        }
+    }
+
+    return MakeNullValue()
+}
+
+func EvaluateCallExpression(expr ast.CallExpression, env Environment) RuntimeValue {
+    var args []RuntimeValue
+    for _, arg := range expr.Args {
+        value, err := Evaluate(arg, env)
+        if err != nil {
+            fmt.Println(err)
+            os.Exit(1)
+        }
+
+        args = append(args, value)
+    }
+
+    function, err := Evaluate(expr.Caller, env)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(1)
+    }
+
+    if function.Type() == NativeFunction {
+        result := function.(NativeFunctionValue).Call(args, env)
+        return result
+    } else if function.Type() == Function {
+        fn := function.(*FunctionValue)
+        scope := NewEnvironment(&fn.DeclarationEnvironment)
+
+        for i := 0; i < len(fn.Parameters); i++ {
+            if i >= len(args) {
+                fmt.Println("Error: Not enough arguments")
+                os.Exit(1)
+            }
+            varname := fn.Parameters[i]
+            scope.DeclareVariable(varname, args[i], false)
+        }
+
+        var result RuntimeValue = MakeNullValue()
+        for _, stmt := range fn.Body {
+            result, err = Evaluate(stmt, *scope)
+            if err != nil {
+                fmt.Println(err)
+                os.Exit(1)
+            }
+        }
+
+        return result
+    }
+
+    fmt.Println("Error: Not a function")
+    os.Exit(1)
+    return nil
+}
+
+func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) RuntimeValue {
+    panic("Not implemented")
+}
+
 func EvaluateObjectExpression(obj ast.ObjectLiteral, env Environment) RuntimeValue {
     object := ObjectValue{
         Properties: make(map[string]RuntimeValue),
@@ -23,8 +100,8 @@ func EvaluateObjectExpression(obj ast.ObjectLiteral, env Environment) RuntimeVal
         }
 
         var runtimeValue RuntimeValue
-        if value == nil {
-            runtimeValue = env.LookupVariable(key)
+        if _, ok := value.(RuntimeValue); ok {
+            runtimeValue = value
         } else {
             runtimeValue = value
         }
@@ -33,29 +110,6 @@ func EvaluateObjectExpression(obj ast.ObjectLiteral, env Environment) RuntimeVal
     }
 
     return object
-}
-
-func EvaluateConditionalExpression(expr ast.ConditionalExpression, env Environment) RuntimeValue {
-    condition, err := Evaluate(expr.Condition, env)
-    if err != nil {
-        fmt.Println(err)
-        os.Exit(1)
-    }
-
-    conditionValue, ok := condition.(BoolValue)
-    if !ok {
-        fmt.Println("Condition must be a boolean value")
-        os.Exit(1)
-    }
-
-    if conditionValue.Value {
-        return EvaluateStatement(expr.Consequent, env)
-    } else {
-        if expr.Alternate == nil {
-            return NullValue{}
-        }
-        return EvaluateStatement(expr.Alternate, env)
-    }
 }
 
 func EvaluateStatement(statement ast.Statement, env Environment) RuntimeValue {
@@ -95,8 +149,9 @@ func EvaluateStringNumericBinaryExpression(lhs StringValue, rhs NumberValue, op 
         return StringValue{lhs.Value + rhsAsString}
     }
 
-    err := fmt.Errorf("Unknown operator %s for string", op)
-    panic(err)
+    fmt.Printf("Unknown operator %s for string\n", op)
+    os.Exit(1)
+    return nil
 }
 
 func EvaluateNumericStringBinaryExpression(lhs NumberValue, rhs StringValue, op string) RuntimeValue {
@@ -106,8 +161,10 @@ func EvaluateNumericStringBinaryExpression(lhs NumberValue, rhs StringValue, op 
         return StringValue{lhsAsString + rhs.Value}
     }
 
-    err := fmt.Errorf("Unknown operator %s for string", op)
-    panic(err)
+    fmt.Printf("Unknown operator %s for string\n", op)
+    os.Exit(1)
+    return nil
+
 }
 
 func EvaluateStringBinaryExpression(lhs, rhs StringValue, op string) RuntimeValue {
@@ -115,8 +172,10 @@ func EvaluateStringBinaryExpression(lhs, rhs StringValue, op string) RuntimeValu
         return StringValue{lhs.Value + rhs.Value}
     }
 
-    err := fmt.Errorf("Unknown operator %s for string", op)
-    panic(err)
+    fmt.Printf("Unknown operator %s for string\n", op)
+    os.Exit(1)
+    return nil
+
 }
 
 func EvaluateNumericBinaryExpression(lhs, rhs NumberValue, op string) RuntimeValue {
@@ -129,15 +188,54 @@ func EvaluateNumericBinaryExpression(lhs, rhs NumberValue, op string) RuntimeVal
         result = lhs.Value * rhs.Value
     } else if op == "/" {
         if rhs.Value == 0 {
-            err := fmt.Errorf("Division by zero")
-            panic(err)
+            fmt.Printf("Division by zero\n")
+            os.Exit(1)
+            return nil
         }
         result = lhs.Value / rhs.Value
     } else if op == "%" {
         result = math.Mod(lhs.Value, rhs.Value)
+    } else if op == ">" {
+        isGreaterThan := lhs.Value > rhs.Value
+        if isGreaterThan {
+            return BoolValue{true}
+        }
+        return BoolValue{false}
+    } else if op == "<" {
+        isLessThan := lhs.Value < rhs.Value
+        if isLessThan {
+            return BoolValue{true}
+        }
+        return BoolValue{false}
+    } else if op == ">=" {
+        isGreaterThanOrEqual := lhs.Value >= rhs.Value
+        if isGreaterThanOrEqual {
+            return BoolValue{true}
+        }
+        return BoolValue{false}
+    } else if op == "<=" {
+        isLessThanOrEqual := lhs.Value <= rhs.Value
+        if isLessThanOrEqual {
+            return BoolValue{true}
+        }
+        return BoolValue{false}
+    } else if op == "==" {
+        isEqual := lhs.Value == rhs.Value
+        if isEqual {
+            return BoolValue{true}
+        }
+        return BoolValue{false}
+    } else if op == "!=" {
+        isNotEqual := lhs.Value != rhs.Value
+        if isNotEqual {
+            return BoolValue{true}
+        }
+        return BoolValue{false}
     } else {
-        err := fmt.Errorf("Unknown operator: %s", op)
-        panic(err)
+        fmt.Printf("Error: Unknown operator: %s\n", op)
+        os.Exit(1)
+        return nil
+
     }
 
     return NumberValue{result}

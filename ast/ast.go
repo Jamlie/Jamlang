@@ -9,7 +9,10 @@ const (
     ProgramType NodeType = "Program"
     VariableDeclarationType NodeType = "VariableDeclaration"
     AssignmentExpressionType NodeType = "AssignmentExpression"
-    ConditionalExpressionType NodeType = "ConditionalExpression"
+    MemberExpressionType NodeType = "MemberExpression"
+    CallExpressionType NodeType = "CallExpression"
+    ConditionalStatementType NodeType = "ConditionalStatement"
+    FunctionDeclarationType NodeType = "FunctionDeclaration"
 
     PropertyType NodeType = "Property"
     ObjectLiteralType NodeType = "ObjectLiteral"
@@ -66,24 +69,60 @@ func (v *VariableDeclaration) ToString() string {
     return s
 }
 
+type FunctionDeclaration struct {
+    Parameters []string
+    Name string
+    Body []Statement
+}
+
+func (f *FunctionDeclaration) Kind() NodeType {
+    return FunctionDeclarationType
+}
+
+func (f *FunctionDeclaration) ToString() string {
+    s := "function " + f.Name + "("
+    for i, param := range f.Parameters {
+        if i > 0 {
+            s += ", "
+        }
+        s += param
+    }
+    s += ") {\n"
+
+    for _, statement := range f.Body {
+        s += statement.ToString()
+    }
+
+    s += "}\n"
+
+    return s
+}
+
 type Expression interface {
     Statement
 }
 
-type ConditionalExpression struct {
+type ConditionalStatement struct {
     Condition Expression
-    Consequent Statement
-    Alternate Statement
+    Body []Statement
+    Alternate []Statement
 }
 
-func (c *ConditionalExpression) Kind() NodeType {
-    return ConditionalExpressionType
+func (c *ConditionalStatement) Kind() NodeType {
+    return ConditionalStatementType
 }
 
-func (c *ConditionalExpression) ToString() string {
-    s := "if " + c.Condition.ToString() + " then"
-    s += c.Consequent.ToString()
-    s += "end"
+func (c *ConditionalStatement) ToString() string {
+    s := "if (" + c.Condition.ToString() + ") {\n"
+    for _, statement := range c.Body {
+        s += statement.ToString()
+    }
+    s += "} else {\n"
+    for _, statement := range c.Alternate {
+        s += statement.ToString()
+    }
+    s += "}\n"
+
     return s
 }
 
@@ -192,4 +231,45 @@ func (o *ObjectLiteral) ToString() string {
     }
     buffer.WriteString("}")
     return buffer.String()
+}
+
+type CallExpression struct {
+    Args []Expression
+    Caller Expression
+}
+
+func (c *CallExpression) Kind() NodeType {
+    return CallExpressionType
+}
+
+func (c *CallExpression) ToString() string {
+    var buffer bytes.Buffer
+    buffer.WriteString(c.Caller.ToString())
+    buffer.WriteString("(")
+    for i, arg := range c.Args {
+        buffer.WriteString(arg.ToString())
+        if i < len(c.Args) - 1 {
+            buffer.WriteString(", ")
+        }
+    }
+    buffer.WriteString(")")
+    return buffer.String()
+}
+
+type MemberExpression struct {
+    Object Expression
+    Property Expression
+    Computed bool
+}
+
+func (m *MemberExpression) Kind() NodeType {
+    return MemberExpressionType
+}
+
+func (m *MemberExpression) ToString() string {
+    if m.Computed {
+        return m.Object.ToString() + "[" + m.Property.ToString() + "]"
+    } else {
+        return m.Object.ToString() + "." + m.Property.ToString()
+    }
 }

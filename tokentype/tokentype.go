@@ -10,20 +10,24 @@ const (
     OpenParen
     CloseParen
     BinaryOperator
+    ComparisonOperator
     Whitespace
     SemiColon
 
     Comma
     Colon
+    Dot
     LSquirly
     RSquirly
+    OpenBracket
+    CloseBracket
 
+    Function
+    Return
     Let
     Constant
     If
-    Then
     Else
-    End
 
     EndOfFile
 )

@@ -1,9 +1,24 @@
-const obj = {
-    num: 1,
-    str: "hi",
-    foo: {
-        x: 21,
-        y: 69,
-        z: 420,
-    },
+fn checkX(x) {
+    if x == 69 {
+        println("oh", x, "nice choice")
+    } else {
+        if x == 420 {
+            println("could've chosen better.")
+        } else {
+            println("fuck you")
+        }
+    }
 }
+
+let x = 69
+checkX(x)
+sleep(500)
+x = 420
+checkX(x)
+sleep(500)
+x = 21
+checkX(x)
+sleep(69)
+const y = 48
+checkX(x + y)
+

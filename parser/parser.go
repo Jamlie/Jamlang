@@ -41,6 +41,8 @@ func (p *Parser) parseStatement() ast.Statement {
         return p.parseVariableDeclaration()
     case tokentype.Constant:
         return p.parseVariableDeclaration()
+    case tokentype.Function:
+        return p.parseFunctionDeclaration()
     case tokentype.If:
         return p.parseIfStatement()
     case tokentype.Else:
@@ -56,38 +58,80 @@ func (p *Parser) parseStatement() ast.Statement {
 func (p *Parser) parseIfStatement() ast.Statement {
     p.eat()
     condition := p.parseExpression()
+    p.expect(tokentype.LSquirly, "Error: Expected { after if statement")
 
-    p.expect(tokentype.Then, "Expected 'then' keyword after if condition")
+    var body []ast.Statement
+    for p.at().Type != tokentype.RSquirly {
+        body = append(body, p.parseStatement())
+    }
 
-    consequent := p.parseStatement()
+    p.expect(tokentype.RSquirly, "Error: Expected } after if statement")
 
     if p.at().Type == tokentype.Else {
         p.eat()
-        alternate := p.parseStatement()
-        p.expect(tokentype.End, "Expected 'end' keyword after else block")
-        return &ast.ConditionalExpression{
-            Condition:  condition,
-            Consequent: consequent,
-            Alternate:  alternate,
+        p.expect(tokentype.LSquirly, "Error: Expected { after else statement")
+
+        var elseBody []ast.Statement
+        for p.at().Type != tokentype.RSquirly {
+            elseBody = append(elseBody, p.parseStatement())
+        }
+
+        p.expect(tokentype.RSquirly, "Error: Expected } after else statement")
+
+        return &ast.ConditionalStatement{
+            Condition: condition,
+            Body: body,
+            Alternate: elseBody,
         }
     }
 
-    p.expect(tokentype.End, "Expected 'end' keyword after if block")
+    return &ast.ConditionalStatement{
+        Condition: condition,
+        Body:      body,
+    }
+}
 
-    return &ast.ConditionalExpression{
-        Condition:  condition,
-        Consequent: consequent,
+func (p *Parser) parseFunctionDeclaration() ast.Statement {
+    p.eat()
+    name := p.expect(tokentype.Identifier, "Error: Expected function name after fn keyword").Value
+
+    args := p.parseArgs()
+    var params []string
+
+    for _, arg := range args {
+        if arg.Kind() != ast.IdentifierType {
+            fmt.Printf("Error: Expected function parameter to be of type string, got %s\n", arg.Kind())
+            os.Exit(1)
+            return nil
+        }
+
+        params = append(params, arg.(*ast.Identifier).Symbol)
+    }
+
+    p.expect(tokentype.LSquirly, "Error: Expected '{' after function declaration")
+
+    body := []ast.Statement{}
+    for p.at().Type != tokentype.EndOfFile && p.at().Type != tokentype.RSquirly {
+        body = append(body, p.parseStatement())
+    }
+
+    p.expect(tokentype.RSquirly, "Error: Expected '}' after function declaration")
+    
+    return &ast.FunctionDeclaration{
+        Name: name,
+        Parameters: params,
+        Body: body,
     }
 }
 
 func (p *Parser) parseVariableDeclaration() ast.Statement {
     isConstant := p.eat().Type == tokentype.Constant
-    identifier := p.expect(tokentype.Identifier, "Expected identifier name after let/const keyword").Value
+    identifier := p.expect(tokentype.Identifier, "Error: Expected identifier name after let/const keyword").Value
 
     if p.at().Type == tokentype.SemiColon {
         p.eat()
         if isConstant {
-            fmt.Println("Constant declaration without assignment is not allowed")
+            fmt.Println("Error: Constant declaration without assignment is not allowed")
             os.Exit(1)
             return nil
         }
@@ -117,7 +161,7 @@ func (p *Parser) parseExpression() ast.Expression {
 }
 
 func (p *Parser) parseAssignmentExpression() ast.Expression {
-    left := p.parseObjectExpression()
+    left := p.parseLogicalExpression()
 
     if p.at().Type == tokentype.Equals {
         p.eat()
@@ -173,6 +217,27 @@ func (p *Parser) parseObjectExpression() ast.Expression {
     }
 }
 
+func (p *Parser) parseLogicalExpression() ast.Expression {
+    left := p.parseObjectExpression()
+
+    for p.at().Value == ">" || p.at().Value == "<" || (p.at().Value == "=" && p.peek().Value == "=") || p.at().Value == "!=" {
+        operator := p.eat().Value
+        if p.at().Value == "=" {
+            operator += p.eat().Value
+        }
+
+        right := p.parseObjectExpression()
+
+        left = &ast.BinaryExpression{
+            Left: left,
+            Operator: operator,
+            Right: right,
+        }
+    }
+
+    return left
+}
+
 func (p *Parser) parseAdditiveExpression() ast.Expression {
     left := p.parseMultiplicativeExpression()
 
@@ -191,12 +256,12 @@ func (p *Parser) parseAdditiveExpression() ast.Expression {
 }
 
 func (p *Parser) parseMultiplicativeExpression() ast.Expression {
-    left := p.parsePrimaryExpression()
+    left := p.parseCallMemberExpression()
 
     for p.at().Value == "*" || p.at().Value == "/" || p.at().Value == "%" {
         operator := p.eat().Value
 
-        right := p.parsePrimaryExpression()
+        right := p.parseCallMemberExpression()
         left = &ast.BinaryExpression{
             Left: left,
             Operator: operator,
@@ -207,6 +272,88 @@ func (p *Parser) parseMultiplicativeExpression() ast.Expression {
     return left
 }
 
+func (p *Parser) parseCallMemberExpression() ast.Expression {
+    member := p.parseMemberExpression()
+
+    if p.at().Type == tokentype.OpenParen {
+        return p.parseCallExpression(member)
+    }
+
+    return member
+}
+
+func (p *Parser) parseCallExpression(caller ast.Expression) ast.Expression {
+    var callExpression ast.Expression = &ast.CallExpression{
+        Caller: caller,
+        Args: p.parseArgs(),
+    }
+
+    if p.at().Type == tokentype.OpenParen {
+        callExpression = p.parseCallExpression(callExpression)
+    }
+
+    return callExpression
+}
+
+func (p *Parser) parseArgs() []ast.Expression {
+    p.expect(tokentype.OpenParen, "Expected '(' after function name")
+
+    var args []ast.Expression
+    if p.at().Type == tokentype.CloseParen {
+        args = []ast.Expression{}
+    } else {
+        args = p.parseArgumentsList()
+    }
+
+    p.expect(tokentype.CloseParen, "Expected ')' after function arguments")
+
+    return args
+}
+
+func (p *Parser) parseArgumentsList() []ast.Expression {
+    args := []ast.Expression{p.parseAssignmentExpression()}
+
+
+    for p.at().Type == tokentype.Comma {
+        p.eat()
+        args = append(args, p.parseAssignmentExpression())
+    }
+
+    return args
+}
+
+func (p *Parser) parseMemberExpression() ast.Expression {
+    object := p.parsePrimaryExpression()
+
+    for p.at().Type == tokentype.Dot || p.at().Type == tokentype.OpenBracket {
+        operator := p.eat()
+        var property ast.Expression
+        var computed bool
+
+        if operator.Type == tokentype.Dot {
+            computed = false
+            property = p.parsePrimaryExpression()
+
+            if property.Kind() != ast.IdentifierType {
+                fmt.Println("Expected identifier after '.'")
+                os.Exit(1)
+                return nil
+            }
+        } else {
+            computed = true
+            property = p.parseExpression()
+            p.expect(tokentype.CloseBracket, "Expected ']' after computed property")
+        }
+
+        object = &ast.MemberExpression{
+            Object: object,
+            Property: property,
+            Computed: computed,
+        }
+    }
+
+    return object
+}
 
 func (p *Parser) parsePrimaryExpression() ast.Expression {
     token := p.at().Type
@@ -219,7 +366,9 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
     case tokentype.Number:
         value, err := strconv.ParseFloat(p.eat().Value, 64)
         if err != nil {
-            panic(err)
+            fmt.Println(err.Error())
+            os.Exit(1)
+            return nil
         }
         return &ast.NumericLiteral{
             Value: value,
@@ -238,7 +387,8 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
         return value
     default:
         fmt.Println("Unexpected token found: ", p.at())
-        panic("Unexpected token found")
+        os.Exit(1)
+        return nil
     }
 }
 
@@ -250,6 +400,10 @@ func (p *Parser) eat() lexer.Token {
     prev := p.tokens[0]
     p.tokens = p.tokens[1:]
     return prev
+}
+
+func (p *Parser) peek() lexer.Token {
+    return p.tokens[1]
 }
 
 func (p *Parser) expect(token tokentype.TokenType, message string) lexer.Token {

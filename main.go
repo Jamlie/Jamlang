@@ -1,14 +1,15 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
-	"os"
+    "fmt"
+    "os"
     "flag"
     "strings"
-
-	"github.com/Jamlee977/CustomLanguage/parser"
-	"github.com/Jamlee977/CustomLanguage/runtimelang"
+    "bufio"
+    "io/ioutil"
+    
+    "github.com/Jamlee977/CustomLanguage/parser"
+    "github.com/Jamlee977/CustomLanguage/runtimelang"
 )
 
 var (
@@ -57,27 +58,46 @@ func main() {
                 fmt.Println("File must have .jam extension")
                 os.Exit(1)
             }
-            
-            file, err := os.Open(args[1])
-            if err != nil {
-                fmt.Println(err)
-                os.Exit(1)
-            }
-            defer file.Close()
 
-            scanner := bufio.NewScanner(file)
-            parser := parser.NewParser()
-            var text string
-            for scanner.Scan() {
-                text += scanner.Text() + "\n"
-            }
-            program := parser.ProduceAST(text)
-            runtimeValue, err := runtimelang.Evaluate(&program, *env)
+            data, err := ioutil.ReadFile(args[1])
             if err != nil {
                 fmt.Println(err)
                 os.Exit(1)
             }
-            fmt.Println(runtimeValue.Get())
+
+            parser := parser.NewParser()
+            program := parser.ProduceAST(string(data))
+
+            _, err = runtimelang.Evaluate(&program, *env)
+            if err != nil {
+                fmt.Println(err)
+                os.Exit(1)
+            }
+
+            // fmt.Println(runtimeValue.Get())
+            
+            // file, err := os.Open(args[1])
+            // if err != nil {
+            //     fmt.Println(err)
+            //     os.Exit(1)
+            // }
+            // defer file.Close()
+
+            // scanner := bufio.NewScanner(file)
+            // for scanner.Scan() {
+            //     text := scanner.Text()
+            //     if text == "" {
+            //         continue
+            //     }
+            //     parser := parser.NewParser()
+            //     program := parser.ProduceAST(text)
+            //     runtimeValue, err := runtimelang.Evaluate(&program, *env)
+            //     if err != nil {
+            //         fmt.Println(err)
+            //         os.Exit(1)
+            //     }
+            //     fmt.Println(runtimeValue.Get())
+            // }
         } else {
             fmt.Println("Unknown option")
             fmt.Println("Usage: elang [run] [file]")

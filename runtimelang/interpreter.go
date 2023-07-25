@@ -18,52 +18,84 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.BinaryExpressionType:
         binaryExpression, ok := astNode.(*ast.BinaryExpression)
         if !ok {
-            err := fmt.Errorf("Expected BinaryExpression, got %T", astNode)
-            panic(err)
+            fmt.Printf("Error: Expected BinaryExpression, got %T\n", astNode)
+            os.Exit(1)
+            return nil, nil
         }
         return EvaluateBinaryExpression(*binaryExpression, env), nil
     case ast.IdentifierType:
         identifier, ok := astNode.(*ast.Identifier)
         if !ok {
-            err := fmt.Errorf("Expected Identifier, got %T", astNode)
-            panic(err)
+            fmt.Printf("Error: Expected Identifier, got %T\n", astNode)
+            os.Exit(1)
+            return nil, nil
         }
         return EvaluateIdentifier(identifier, env), nil
     case ast.ObjectLiteralType:
         objectLiteral, ok := astNode.(*ast.ObjectLiteral)
         if !ok {
-            err := fmt.Errorf("Expected ObjectLiteral, got %T", astNode)
-            panic(err)
+            fmt.Printf("Error: Expected ObjectLiteral, got %T\n", astNode)
+            os.Exit(1)
+            return nil, nil
         }
         return EvaluateObjectExpression(*objectLiteral, env), nil
+    case ast.MemberExpressionType:
+        memberExpression, ok := astNode.(*ast.MemberExpression)
+        if !ok {
+            fmt.Printf("Error: Expected MemberExpression, got %T\n", astNode)
+            os.Exit(1)
+            return nil, nil
+        }
+        return EvaluateMemberExpression(*memberExpression, env), nil
+    case ast.CallExpressionType:
+        callExpression, ok := astNode.(*ast.CallExpression)
+        if !ok {
+            fmt.Printf("Error: Expected CallExpression, got %T\n", astNode)
+            os.Exit(1)
+            return nil, nil
+        }
+        return EvaluateCallExpression(*callExpression, env), nil
     case ast.AssignmentExpressionType:
         assignmentExpression, ok := astNode.(*ast.AssignmentExpression)
         if !ok {
-            err := fmt.Errorf("Expected AssignmentExpression, got %T", astNode)
-            panic(err)
+            fmt.Printf("Error: Expected AssignmentExpression, got %T\n", astNode)
+            os.Exit(1)
+            return nil, nil
         }
         return EvaluateAssignment(*assignmentExpression, env), nil
     case ast.ProgramType:
         program, ok := astNode.(*ast.Program)
         if !ok {
-            err := fmt.Errorf("Expected Program, got %T", astNode)
-            panic(err)
+            fmt.Printf("Error: Expected Program, got %T\n", astNode)
+            os.Exit(1)
+            return nil, nil
         }
         return EvaluateProgram(*program, env), nil
     case ast.VariableDeclarationType:
         variableDeclaration, ok := astNode.(*ast.VariableDeclaration)
         if !ok {
-            err := fmt.Errorf("Expected VariableDeclaration, got %T", astNode)
-            panic(err)
+            fmt.Printf("Error: Expected VariableDeclaration, got %T\n", astNode)
+            os.Exit(1)
+            return nil, nil
         }
         return EvaluateVariableDeclaration(*variableDeclaration, env), nil
-    case ast.ConditionalExpressionType:
-        conditionalExpression, ok := astNode.(*ast.ConditionalExpression)
+    case ast.FunctionDeclarationType:
+        functionDeclaration, ok := astNode.(*ast.FunctionDeclaration)
         if !ok {
-            err := fmt.Errorf("Expected ConditionalExpression, got %T", astNode)
-            panic(err)
+            fmt.Printf("Error: Expected FunctionDeclaration, got %T\n", astNode)
+            os.Exit(1)
+            return nil, nil
         }
-        return EvaluateConditionalExpression(*conditionalExpression, env), nil
+        return EvaluateFunctionDeclaration(*functionDeclaration, env), nil
+    case ast.ConditionalStatementType:
+        conditionalStatement, ok := astNode.(*ast.ConditionalStatement)
+        if !ok {
+            fmt.Printf("Error: Expected ConditionalStatement, got %T\n", astNode)
+            os.Exit(1)
+            return nil, nil
+        }
+        return EvaluateConditionalExpression(*conditionalStatement, env), nil
+        // return EvaluateConditionalStatement(*conditionalStatement, env), nil
     default:
         fmt.Printf("Unknown AST node type %T\n", astNode)
         os.Exit(1)

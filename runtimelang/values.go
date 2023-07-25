@@ -1,6 +1,10 @@
 package runtimelang
 
-import "strconv"
+import (
+    "strconv"
+    
+    "github.com/Jamlee977/CustomLanguage/ast"
+)
 
 type ValueType string
 
@@ -10,6 +14,8 @@ const (
     String ValueType = "string"
     Bool ValueType = "bool"
     Object ValueType = "object"
+    NativeFunction ValueType = "native_function"
+    Function ValueType = "function"
 )
 
 type RuntimeValue interface {
@@ -153,3 +159,53 @@ func (v ObjectValue) Get() any {
 func (v ObjectValue) ToString() string {
     return v.Get().(string)
 }
+
+type FunctionCall func(args []RuntimeValue, env Environment) RuntimeValue
+
+type NativeFunctionValue struct {
+    Call FunctionCall
+}
+
+func (v NativeFunctionValue) Type() ValueType {
+    return NativeFunction
+}
+
+func (v NativeFunctionValue) Get() any {
+    return v.Call
+}
+
+func (v NativeFunctionValue) ToString() string {
+    return "native function"
+}
+
+func MakeNativeFunction(call FunctionCall) NativeFunctionValue {
+    return NativeFunctionValue{Call: call}
+}
+
+type FunctionValue struct {
+    Name string
+    Parameters []string
+    DeclarationEnvironment Environment
+    Body []ast.Statement
+}
+
+func (v FunctionValue) Type() ValueType {
+    return Function
+}
+
+func (v FunctionValue) Get() any {
+    str := "fn " + v.Name + "("
+    for i, param := range v.Parameters {
+        str += param
+        if i < len(v.Parameters) - 1 {
+            str += ", "
+        }
+    }
+    str += ") { ... }"
+    return str
+}
+
+func (v FunctionValue) ToString() string {
+    return "function"
+}
+
