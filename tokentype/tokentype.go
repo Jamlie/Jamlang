@@ -10,6 +10,8 @@ const (
     OpenParen
     CloseParen
     BinaryOperator
+    UnaryOperator
+    LogicalOperator
     ComparisonOperator
     Whitespace
     SemiColon
@@ -32,6 +34,10 @@ const (
     Loop
     Break
     Continue
+    Not
+    And
+    Or
+    Xor
 
     EndOfFile
 )

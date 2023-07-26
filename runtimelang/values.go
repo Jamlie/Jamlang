@@ -145,6 +145,8 @@ func (v ObjectValue) Get() any {
             str += value.ToString()
         case Object:
             str += value.ToString()            
+        case Function:
+            str += value.Get().(string)
         default:
             str += "unknown"
         }

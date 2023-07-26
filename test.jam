@@ -1,34 +1,29 @@
-fn fibonacci(n) {
-    let first = 0
-    let second = 1
-    let sum;
-    let i = 2
-
-    if n <= 0 {
-        return "Input should be higher than 0"
+fn factorial(number) {
+    if number < 0 {
+        return "Factorial is not defined for negative numbers"
     }
-    if n == 1 {
-        return 0
-    }
-    if n == 2 {
+    if number == 0 or number == 1 {
         return 1
     }
-    while i < n {
-        sum = first + second
-        first = second
-        second = sum
-        i = i + 1
+
+    let result = 1
+    while number > 1 {
+        result = result * number
+        --number
     }
-    return second
+
+    return result
 }
 
-println(fibonacci(1))
-println(fibonacci(2))
-println(fibonacci(3))
-println(fibonacci(4))
-println(fibonacci(5))
-println(fibonacci(6))
-println(fibonacci(7))
-println(fibonacci(8))
-println(fibonacci(9))
-println(fibonacci(10))
+let minNumber = 1
+--minNumber
+--minNumber
+
+let maxNumber = 10
+let result;
+
+while maxNumber > minNumber {
+    result = factorial(maxNumber)
+    println("Factorial of", maxNumber, "is", result)
+    --maxNumber
+}

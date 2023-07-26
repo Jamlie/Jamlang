@@ -23,6 +23,8 @@ const (
     NumericLiteralType NodeType = "NumericLiteral"
     IdentifierType NodeType = "Identifier"
     BinaryExpressionType NodeType = "BinaryExpression"
+    UnaryExpressionType NodeType = "UnaryExpression"
+    LogicalExpressionType NodeType = "LogicalExpression"
     StringLiteralType NodeType = "StringLiteral"
     NullLiteralType NodeType = "NullLiteral"
 )
@@ -214,6 +216,37 @@ func (b *BinaryExpression) Kind() NodeType {
 
 func (b *BinaryExpression) ToString() string {
     return "(" + b.Left.ToString() + " " + b.Operator + " " + b.Right.ToString() + ")"
+}
+
+type UnaryExpression struct {
+    Value Expression
+    Operator string
+}
+
+func (u *UnaryExpression) Kind() NodeType {
+    return UnaryExpressionType
+}
+
+func (u *UnaryExpression) ToString() string {
+    return u.Operator + u.Value.ToString()
+}
+
+type LogicalExpression struct {
+    Left Expression
+    Right Expression
+    Operator string
+}
+
+func (l *LogicalExpression) Kind() NodeType {
+    return LogicalExpressionType
+}
+
+func (l *LogicalExpression) ToString() string {
+    if l.Operator == "not" {
+        return l.Operator + l.Right.ToString()
+    } else {
+        return "(" + l.Left.ToString() + " " + l.Operator + " " + l.Right.ToString() + ")"
+    }
 }
 
 type Identifier struct {

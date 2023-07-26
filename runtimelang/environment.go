@@ -3,7 +3,6 @@ package runtimelang
 import (
     "fmt"
     "os"
-    "time"
 )
 
 type Environment struct {
@@ -21,38 +20,11 @@ func CreateGlobalEnvironment() *Environment {
     env.DeclareVariable("println", MakeNativeFunction(jamlangPrintln), true)
     env.DeclareVariable("print", MakeNativeFunction(jamlangPrint), true)
     env.DeclareVariable("sleep", MakeNativeFunction(jamlangSleep), true)
+    env.DeclareVariable("typeof", MakeNativeFunction(jamlangTypeof), true)
+    env.DeclareVariable("exit", MakeNativeFunction(jamlangExit), true)
+    env.DeclareVariable("input", MakeNativeFunction(jamlangInput), true)
 
     return env
-}
-
-func jamlangPrintln(args []RuntimeValue, environment Environment) RuntimeValue { 
-    for _, arg := range args {
-        fmt.Print(arg.Get(), " ")
-    }
-    fmt.Println()
-    return MakeNullValue()
-}
-
-func jamlangPrint(args []RuntimeValue, environment Environment) RuntimeValue { 
-    for _, arg := range args {
-        fmt.Print(arg.Get(), " ")
-    }
-    return MakeNullValue()
-}
-
-func jamlangSleep(args []RuntimeValue, environment Environment) RuntimeValue {
-    if len(args) != 1 {
-        fmt.Println("sleep takes 1 argument")
-        os.Exit(1)
-    }
-
-    if args[0].Type() != "number" {
-        fmt.Println("sleep takes a number - time in milliseconds")
-        os.Exit(1)
-    }
-
-    time.Sleep(time.Duration(args[0].Get().(float64)) * time.Millisecond)
-    return MakeNullValue()
 }
 
 func NewEnvironment(parent *Environment) *Environment {
@@ -62,7 +34,7 @@ func NewEnvironment(parent *Environment) *Environment {
 func (e *Environment) DeclareVariable(name string, value RuntimeValue, constant bool) RuntimeValue {
     if _, ok := e.variables[name]; ok {
         fmt.Printf("Variable %s already declared\n", name)
-        os.Exit(1)
+        os.Exit(0)
         return nil
     }
 
@@ -79,13 +51,13 @@ func (e *Environment) AssignVariable(name string, value RuntimeValue) RuntimeVal
     env := e.Resolve(name)
     if env == nil {
         fmt.Printf("Variable %s not declared\n", name)
-        os.Exit(1)
+        os.Exit(0)
         return nil
     }
 
     if env.constants[name] {
         fmt.Printf("Variable %s is constant. Cannot reassign a constant.\n", name)
-        os.Exit(1)
+        os.Exit(0)
         return nil
     }
 
@@ -100,8 +72,6 @@ func (e *Environment) Resolve(name string) *Environment {
     }
 
     if e.parent == nil {
-        fmt.Printf("Variable %s not declared\n", name)
-        os.Exit(1)
         return nil
     }
 
@@ -112,7 +82,7 @@ func (e *Environment) LookupVariable(name string) RuntimeValue {
     env := e.Resolve(name)
     if env == nil {
         fmt.Printf("Variable %s not declared\n", name)
-        os.Exit(1)
+        os.Exit(0)
         return nil
     }
 

@@ -46,7 +46,7 @@ func EvaluateIdentifier(identifier *ast.Identifier, env Environment) RuntimeValu
     value := env.LookupVariable(identifier.Symbol)
     if value == nil {
         fmt.Printf("Undefined variable %s\n", identifier.Symbol)
-        os.Exit(1)
+        os.Exit(0)
         return nil
     }
 

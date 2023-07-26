@@ -48,13 +48,13 @@ func (p *Parser) parseStatement() ast.Statement {
     case tokentype.Return:
         if !p.isFunction {
             fmt.Println("Error: Return statement outside of function")
-            os.Exit(1)
+            os.Exit(0)
         }
         return p.parseReturnStatement()
     case tokentype.Break:
         if !p.isLoop {
             fmt.Println("Error: Break statement outside of loop")
-            os.Exit(1)
+            os.Exit(0)
         }
         return p.parseBreakStatement()
     case tokentype.If:
@@ -155,7 +155,7 @@ func (p *Parser) parseFunctionDeclaration() ast.Statement {
     for _, arg := range args {
         if arg.Kind() != ast.IdentifierType {
             fmt.Printf("Error: Expected function parameter to be of type string, got %s\n", arg.Kind())
-            os.Exit(1)
+            os.Exit(0)
             return nil
         }
 
@@ -201,7 +201,7 @@ func (p *Parser) parseVariableDeclaration() ast.Statement {
         p.eat()
         if isConstant {
             fmt.Println("Error: Constant declaration without assignment is not allowed")
-            os.Exit(1)
+            os.Exit(0)
             return nil
         }
 
@@ -229,8 +229,69 @@ func (p *Parser) parseExpression() ast.Expression {
     return p.parseAssignmentExpression()
 }
 
+func (p *Parser) parseLogicalExpression() ast.Expression {
+    return p.parseOrExpression()
+}
+
+func (p *Parser) parseOrExpression() ast.Expression {
+    left := p.parseAndExpression()
+
+    for p.at().Value == "or" {
+        p.eat()
+        right := p.parseAndExpression()
+        left = &ast.LogicalExpression{
+            Operator: "or",
+            Left: left,
+            Right: right,
+        }
+    }
+
+    return left
+}
+
+func (p *Parser) parseAndExpression() ast.Expression {
+    left := p.parseXorExpression()
+
+    for p.at().Value == "and" {
+        p.eat()
+        right := p.parseXorExpression()
+        left = &ast.LogicalExpression{
+            Operator: "and",
+            Left: left,
+            Right: right,
+        }
+    }
+    return left
+}
+
+func (p *Parser) parseXorExpression() ast.Expression {
+    left := p.parseNotExpression()
+
+    for p.at().Value == "xor" {
+        p.eat()
+        right := p.parseNotExpression()
+        left = &ast.LogicalExpression{
+            Operator: "xor",
+            Left: left,
+            Right: right,
+        }
+    }
+    return left
+}
+
+func (p *Parser) parseNotExpression() ast.Expression {
+    if p.at().Value == "not" {
+        p.eat()
+        return &ast.LogicalExpression{
+            Operator: "not",
+            Right: p.parseNotExpression(),
+        }
+    }
+    return p.parseComparisonExpression()
+}
+
 func (p *Parser) parseAssignmentExpression() ast.Expression {
-    left := p.parseLogicalExpression()
+    left := p.parseOrExpression()
 
     if p.at().Type == tokentype.Equals {
         p.eat()
@@ -286,7 +347,7 @@ func (p *Parser) parseObjectExpression() ast.Expression {
     }
 }
 
-func (p *Parser) parseLogicalExpression() ast.Expression {
+func (p *Parser) parseComparisonExpression() ast.Expression {
     left := p.parseObjectExpression()
 
     for p.at().Value == ">" || p.at().Value == "<" || (p.at().Value == "=" && p.peek().Value == "=") || p.at().Value == "!=" {
@@ -405,7 +466,7 @@ func (p *Parser) parseMemberExpression() ast.Expression {
 
             if property.Kind() != ast.IdentifierType {
                 fmt.Println("Expected identifier after '.'")
-                os.Exit(1)
+                os.Exit(0)
                 return nil
             }
         } else {
@@ -436,7 +497,7 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
         value, err := strconv.ParseFloat(p.eat().Value, 64)
         if err != nil {
             fmt.Println(err.Error())
-            os.Exit(1)
+            os.Exit(0)
             return nil
         }
         return &ast.NumericLiteral{
@@ -454,9 +515,16 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
         value := p.parseExpression()
         p.expect(tokentype.CloseParen, "Expected closing parenthesis")
         return value
+    case tokentype.UnaryOperator:
+        operator := p.eat().Value
+        value := p.parsePrimaryExpression()
+        return &ast.UnaryExpression{
+            Operator: operator,
+            Value: value,
+        }
     default:
         fmt.Println("Unexpected token found: ", p.at())
-        os.Exit(1)
+        os.Exit(0)
         return nil
     }
 }
@@ -478,7 +546,7 @@ func (p *Parser) peek() lexer.Token {
 func (p *Parser) expect(token tokentype.TokenType, message string) lexer.Token {
     if p.at().Type != token {
         fmt.Println(message)
-        os.Exit(1)
+        os.Exit(0)
     }
     return p.eat()
 }

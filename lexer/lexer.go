@@ -5,6 +5,7 @@ import (
     "strings"
     "fmt"
     "os"
+    "strconv"
 )
 
 type Token struct {
@@ -22,6 +23,9 @@ var Keywords map[string]tokentype.TokenType = map[string]tokentype.TokenType{
     "while": tokentype.While,
     "loop": tokentype.Loop,
     "break": tokentype.Break,
+    "not": tokentype.LogicalOperator,
+    "and": tokentype.LogicalOperator,
+    "or": tokentype.LogicalOperator,
     "continue": tokentype.Continue,
 }
 
@@ -34,11 +38,17 @@ func createToken(value string, tokenType tokentype.TokenType) Token {
 }
 
 func isAlpha(src string) bool {
-    return strings.ToUpper(src) != strings.ToLower(src)
+    return strings.ContainsAny(src, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_")
 }
 
 func isInt(src string) bool {
-    return src[0] >= 48 && src[0] <= 57
+    _, err := strconv.Atoi(src)
+    return err == nil
+}
+
+func isFloat(src string) bool {
+    _, err := strconv.ParseFloat(src, 64)
+    return err == nil
 }
 
 func isWhitespace(src string) bool {
@@ -69,6 +79,21 @@ func Tokenize(sourceCode string) []Token {
             tokens = append(tokens, createToken(src[0], tokentype.CloseBracket))
             src = src[1:]
         } else if src[0] == "+" || src[0] == "-" || src[0] == "*" || src[0] == "/" || src[0] == "%" {
+            if src[0] == "-" && len(tokens) == 0 {
+                tokens = append(tokens, createToken(src[0], tokentype.UnaryOperator))
+                src = src[1:]
+                continue
+            }
+            if src[0] == "+" && src[1] == "+" {
+                tokens = append(tokens, createToken("++", tokentype.UnaryOperator))
+                src = src[2:]
+                continue
+            }
+            if src[0] == "-" && src[1] == "-" {
+                tokens = append(tokens, createToken("--", tokentype.UnaryOperator))
+                src = src[2:]
+                continue
+            }
             tokens = append(tokens, createToken(src[0], tokentype.BinaryOperator))
             src = src[1:]
         } else if src[0] == "=" {
@@ -114,14 +139,24 @@ func Tokenize(sourceCode string) []Token {
 
             if len(src) == 0 {
                 fmt.Println("Error: Unterminated string")
-                os.Exit(1)
+                os.Exit(0)
             }
 
             tokens = append(tokens, createToken(str, tokentype.String))
             src = src[1:]
         } else {
-            if isInt(src[0]) {
+            if isInt(src[0]) || (src[0] == "-" && isInt(src[1])) {
                 num := ""
+                isFloatNum := false
+
+                for len(src) > 0 && (isInt(src[0]) || (!isFloatNum && src[0] == "." && len(src) > 1 && isInt(src[1]))) {
+                    if src[0] == "." {
+                        isFloatNum = true
+                    }
+                    num += src[0]
+                    src = src[1:]
+                }
+
                 for len(src) > 0 && isInt(src[0]) {
                     num += src[0]
                     src = src[1:]
@@ -144,8 +179,8 @@ func Tokenize(sourceCode string) []Token {
             } else if isWhitespace(src[0]) {
                 src = src[1:]
             } else {
-                fmt.Println("Unknown token: " + src[0])
-                os.Exit(1)
+                fmt.Println("Error: Invalid character '" + string(src[0]) + "'")
+                os.Exit(0)
             }
         }
     }

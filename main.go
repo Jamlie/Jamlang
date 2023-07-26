@@ -35,7 +35,7 @@ func repl() {
         runtimeValue, err := runtimelang.Evaluate(&program, *env)
         if err != nil {
             fmt.Println(err)
-            os.Exit(1)
+            os.Exit(0)
         }
         fmt.Println(runtimeValue.Get())
     }
@@ -51,18 +51,18 @@ func main() {
         if option == "run" {
             if len(args) < 2 {
                 fmt.Println("No file specified")
-                os.Exit(1)
+                os.Exit(0)
             }
 
             if !strings.HasSuffix(args[1], ".jam") {
                 fmt.Println("File must have .jam extension")
-                os.Exit(1)
+                os.Exit(0)
             }
 
             data, err := ioutil.ReadFile(args[1])
             if err != nil {
                 fmt.Println(err)
-                os.Exit(1)
+                os.Exit(0)
             }
 
             parser := parser.NewParser()
@@ -71,7 +71,7 @@ func main() {
             _, err = runtimelang.Evaluate(&program, *env)
             if err != nil {
                 fmt.Println(err)
-                os.Exit(1)
+                os.Exit(0)
             }
 
         } else {
