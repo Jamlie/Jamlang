@@ -42,41 +42,67 @@ func repl() {
 }
 
 func main() {
+    runFlag := flag.Bool("r", false, "Run a file")
     flag.Parse()
     args := flag.Args()
-    if len(args) == 0 {
+    if flag.NFlag() == 0 && len(args) == 0 {
         repl()
     } else {
-        option := args[0]
-        if option == "run" {
-            if len(args) < 2 {
+        if *runFlag {
+            if len(args) < 1 {
                 fmt.Println("No file specified")
                 os.Exit(0)
             }
 
-            if !strings.HasSuffix(args[1], ".jam") {
+            if !strings.HasSuffix(args[0], ".jam") {
                 fmt.Println("File must have .jam extension")
                 os.Exit(0)
             }
 
-            data, err := ioutil.ReadFile(args[1])
+            data, err := ioutil.ReadFile(args[0])
             if err != nil {
                 fmt.Println(err)
                 os.Exit(0)
             }
 
-            parser := parser.NewParser()
-            program := parser.ProduceAST(string(data))
-
+            program := parser.NewParser().ProduceAST(string(data))
             _, err = runtimelang.Evaluate(&program, *env)
             if err != nil {
                 fmt.Println(err)
                 os.Exit(0)
             }
-
         } else {
-            fmt.Println("Unknown option")
-            fmt.Println("Usage: elang [run] [file]")
+             option := args[0]
+            if option == "run" {
+                if len(args) < 2 {
+                    fmt.Println("No file specified")
+                    os.Exit(0)
+                }
+
+                if !strings.HasSuffix(args[1], ".jam") {
+                    fmt.Println("File must have .jam extension")
+                    os.Exit(0)
+                }
+
+                data, err := ioutil.ReadFile(args[1])
+                if err != nil {
+                    fmt.Println(err)
+                    os.Exit(0)
+                }
+
+                parser := parser.NewParser()
+                program := parser.ProduceAST(string(data))
+
+                _, err = runtimelang.Evaluate(&program, *env)
+                if err != nil {
+                    fmt.Println(err)
+                    os.Exit(0)
+                }
+
+            } else {
+                fmt.Println("Unknown option")
+                fmt.Println("Usage: elang [run] [file]")
+            }
         }
     }
 }

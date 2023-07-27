@@ -17,30 +17,38 @@ var (
 func EvaluateLoopExpression(expr ast.LoopStatement, env *Environment) (RuntimeValue, error) {
     scope := NewEnvironment(env)
 
-    for _, statement := range expr.Body {
-        if statement.Kind() == ast.ReturnStatementType {
-            result, err := Evaluate(statement, *scope)
+    for {
+        for _, statement := range expr.Body {
+            if statement.Kind() == ast.ReturnStatementType {
+                result, err := Evaluate(statement, *scope)
+                if err != nil {
+                    fmt.Println(err)
+                    os.Exit(0)
+                }
+                return result, IsReturnError
+            }
+            if statement.Kind() == ast.BreakStatementType {
+                return MakeNullValue(), nil
+            }
+
+            _, err := Evaluate(statement, *scope)
+            if err == IsBreakError {
+                return MakeNullValue(), nil
+            }
             if err != nil {
                 fmt.Println(err)
                 os.Exit(0)
             }
-            return result, IsReturnError
-        }
-        if statement.Kind() == ast.BreakStatementType {
-            return MakeNullValue(), IsBreakError
         }
 
-        _, err := Evaluate(statement, *scope)
-        if err == IsBreakError {
-            return MakeNullValue(), nil
+        for k, v := range scope.variables {
+            if _, ok := env.variables[k]; ok {
+                env.variables[k] = v
+            }
         }
-        if err != nil {
-            fmt.Println(err)
-            os.Exit(0)
-        }
+
+        scope = NewEnvironment(env)
     }
-
-    return MakeNullValue(), nil
 }
 
 func EvaluateWhileExpression(expr ast.WhileStatement, env *Environment) (RuntimeValue, error) {
@@ -79,11 +87,6 @@ func EvaluateWhileExpression(expr ast.WhileStatement, env *Environment) (Runtime
                 os.Exit(0)
             }
         }
-        condition, err = Evaluate(expr.Condition, *env)
-        if err != nil {
-            fmt.Println(err)
-            os.Exit(0)
-        }
         for k, v := range scope.variables {
             if _, ok := env.variables[k]; ok {
                 env.variables[k] = v
@@ -91,6 +94,11 @@ func EvaluateWhileExpression(expr ast.WhileStatement, env *Environment) (Runtime
         }
 
         scope = NewEnvironment(env)
+        condition, err = Evaluate(expr.Condition, *env)
+        if err != nil {
+            fmt.Println(err)
+            os.Exit(0)
+        }
     }
 
     return MakeNullValue(), nil
@@ -300,7 +308,6 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
 func EvaluateStringNumericBinaryExpression(lhs StringValue, rhs NumberValue, op string) RuntimeValue {
     if op == "+" {
         rhsAsString := strconv.FormatFloat(rhs.Value, 'f', -1, 64)
-
         return StringValue{lhs.Value + rhsAsString}
     }
 
@@ -324,6 +331,10 @@ func EvaluateNumericStringBinaryExpression(lhs NumberValue, rhs StringValue, op 
 func EvaluateStringBinaryExpression(lhs, rhs StringValue, op string) RuntimeValue {
     if op == "+" {
         return StringValue{lhs.Value + rhs.Value}
+    } else if op == "==" {
+        return BoolValue{lhs.Value == rhs.Value}
+    } else if op == "!=" {
+        return BoolValue{lhs.Value != rhs.Value}
     }
 
     fmt.Printf("Unknown operator %s for string\n", op)

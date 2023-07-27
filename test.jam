@@ -1,29 +1,29 @@
-fn factorial(number) {
-    if number < 0 {
-        return "Factorial is not defined for negative numbers"
-    }
-    if number == 0 or number == 1 {
-        return 1
+fn calculator(operator, num1, num2) {
+    let result;
+
+    if operator == "+" {
+        result = num1 + num2
+    } else {
+        if operator == "-" {
+            result = num1 - num2
+        } else {
+            if operator == "*" {
+                result = num1 * num2
+            } else {
+                if operator == "/" {
+                    result = num1 / num2
+                } else {
+                    println("Invalid operator. Please use +, -, *, /")
+                    return null
+                }
+            }
+        }
     }
 
-    let result = 1
-    while number > 1 {
-        result = result * number
-        --number
-    }
-
-    return result
+    println("Result:", result)
 }
 
-let minNumber = 1
---minNumber
---minNumber
-
-let maxNumber = 10
-let result;
-
-while maxNumber > minNumber {
-    result = factorial(maxNumber)
-    println("Factorial of", maxNumber, "is", result)
-    --maxNumber
-}
+const operator = "+";
+const number1 = 10;
+const number2 = 5;
+calculator(operator, number1, number2);
