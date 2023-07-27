@@ -101,7 +101,9 @@ func main() {
 
             } else {
                 fmt.Println("Unknown option")
-                fmt.Println("Usage: elang [run] [file]")
+                fmt.Println("Usage: jamlang [run] [file]")
+                fmt.Println("Usage: jamlang -r [file]")
+                fmt.Println("Usage: jamlang")
             }
         }
     }
