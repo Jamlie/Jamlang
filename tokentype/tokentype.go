@@ -17,6 +17,7 @@ const (
     SemiColon
 
     Comma
+    ColonColon
     Colon
     Dot
     LSquirly
@@ -33,11 +34,11 @@ const (
     While
     Loop
     Break
-    Continue
     Not
     And
     Or
     Xor
+    Import
 
     EndOfFile
 )

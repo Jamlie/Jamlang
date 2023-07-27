@@ -17,6 +17,8 @@ const (
     FunctionDeclarationType NodeType = "FunctionDeclaration"
     ReturnStatementType NodeType = "ReturnStatement"
     BreakStatementType NodeType = "BreakStatement"
+    ImportStatementType NodeType = "ImportStatement"
+
 
     PropertyType NodeType = "Property"
     ObjectLiteralType NodeType = "ObjectLiteral"
@@ -124,6 +126,18 @@ func (b *BreakStatement) Kind() NodeType {
 
 func (b *BreakStatement) ToString() string {
     return "break"
+}
+
+type ImportStatement struct {
+    Path string
+}
+
+func (i *ImportStatement) Kind() NodeType {
+    return ImportStatementType
+}
+
+func (i *ImportStatement) ToString() string {
+    return "import " + i.Path
 }
 
 type Expression interface {

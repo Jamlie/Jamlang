@@ -1,29 +1,5 @@
-fn calculator(operator, num1, num2) {
-    let result;
+import "sumOfEvenNumbers.jam"
 
-    if operator == "+" {
-        result = num1 + num2
-    } else {
-        if operator == "-" {
-            result = num1 - num2
-        } else {
-            if operator == "*" {
-                result = num1 * num2
-            } else {
-                if operator == "/" {
-                    result = num1 / num2
-                } else {
-                    println("Invalid operator. Please use +, -, *, /")
-                    return null
-                }
-            }
-        }
-    }
-
-    println("Result:", result)
-}
-
-const operator = "+";
-const number1 = 10;
-const number2 = 5;
-calculator(operator, number1, number2);
+let target = 10;
+const result = sumOfEvenNumbers(target);
+println("The sum of even numbers from 1 to", target, "is", result)

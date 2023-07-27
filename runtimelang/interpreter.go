@@ -194,6 +194,22 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
         }
 
         return result, nil
+    case ast.ImportStatementType:
+        importStatement, ok := astNode.(*ast.ImportStatement)
+        if !ok {
+            fmt.Printf("Error: Expected ImportStatement, got %T\n", astNode)
+            os.Exit(0)
+            return nil, nil
+        }
+
+        result, err := EvaluateImportExpression(*importStatement, &env)
+        if err != nil {
+            fmt.Printf("Error: %s\n", err.Error())
+            os.Exit(0)
+            return nil, nil
+        }
+
+        return result, nil
     default:
         fmt.Printf("Unknown AST node type %T\n", astNode)
         os.Exit(0)

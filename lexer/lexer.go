@@ -26,7 +26,7 @@ var Keywords map[string]tokentype.TokenType = map[string]tokentype.TokenType{
     "not": tokentype.LogicalOperator,
     "and": tokentype.LogicalOperator,
     "or": tokentype.LogicalOperator,
-    "continue": tokentype.Continue,
+    "import": tokentype.Import,
 }
 
 
@@ -79,7 +79,7 @@ func Tokenize(sourceCode string) []Token {
             tokens = append(tokens, createToken(src[0], tokentype.CloseBracket))
             src = src[1:]
         } else if src[0] == "+" || src[0] == "-" || src[0] == "*" || src[0] == "/" || src[0] == "%" {
-            if src[0] == "-" && len(tokens) == 0 {
+            if (src[0] == "-" && isInt(src[1])) || (src[0] == "-" && isFloat(src[1])) || (src[0] == "-" && isAlpha(src[1])) {
                 tokens = append(tokens, createToken(src[0], tokentype.UnaryOperator))
                 src = src[1:]
                 continue
@@ -127,6 +127,11 @@ func Tokenize(sourceCode string) []Token {
             tokens = append(tokens, createToken(src[0], tokentype.Dot))
             src = src[1:]
         } else if src[0] == ":" {
+            if src[1] == ":" {
+                tokens = append(tokens, createToken("::", tokentype.ColonColon))
+                src = src[2:]
+                continue
+            }
             tokens = append(tokens, createToken(src[0], tokentype.Colon))
             src = src[1:]
         } else if src[0] == "\"" {

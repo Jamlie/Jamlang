@@ -5,14 +5,64 @@ import (
     "os"
     "strconv"
     "math"
+    "io/ioutil"
 
     "github.com/Jamlee977/CustomLanguage/ast"
+    "github.com/Jamlee977/CustomLanguage/parser"
 )
 
 var (
     IsReturnError = fmt.Errorf("return statement error")
     IsBreakError = fmt.Errorf("break statement error")
 )
+
+func EvaluateImportExpression(expr ast.ImportStatement, env *Environment) (RuntimeValue, error) {
+    file, err := os.Open(expr.Path)
+    if err != nil {
+        return MakeNullValue(), err
+    }
+    defer file.Close()
+
+    parser := parser.NewParser()
+    var fileString string
+    if fileBytes, err := ioutil.ReadAll(file); err != nil {
+        return MakeNullValue(), err
+    } else {
+        fileString = string(fileBytes)
+    }
+
+    path := expr.Path
+    if path[0] == '.' {
+        path = path[1:]
+    }
+    path = path[:len(path)-4]
+    if path[0] == '/' {
+        path = path[1:]
+    }
+
+
+    program := parser.ProduceAST(fileString)
+    for _, statement := range program.Body {
+        if statement.Kind() == ast.FunctionDeclarationType {
+            function := statement.(*ast.FunctionDeclaration)
+            fn, _ := Evaluate(function, *env)
+            if _, ok := fn.(FunctionValue); !ok {
+                continue
+            }
+            env.DeclareVariable(function.Name, fn, true)            
+        }
+        if statement.Kind() == ast.VariableDeclarationType {
+            variable := statement.(*ast.VariableDeclaration)
+            value, _ := Evaluate(variable.Value, *env)
+            if _, ok := value.(RuntimeValue); !ok {
+                continue
+            }
+            env.DeclareVariable(variable.Identifier, value, true)
+        }
+    }
+
+    return MakeNullValue(), nil
+}
 
 func EvaluateLoopExpression(expr ast.LoopStatement, env *Environment) (RuntimeValue, error) {
     scope := NewEnvironment(env)

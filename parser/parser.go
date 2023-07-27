@@ -65,12 +65,20 @@ func (p *Parser) parseStatement() ast.Statement {
         return p.parseWhileStatement()
     case tokentype.Loop:
         return p.parseLoopStatement()
+    case tokentype.Import:
+        return p.parseImportStatement()
     case tokentype.SemiColon:
         p.eat()
         return &ast.NullLiteral{}
     default:
         return p.parseExpression()
     }
+}
+
+func (p *Parser) parseImportStatement() ast.Statement {
+    p.eat()
+    path := p.expect(tokentype.String, "Error: Expected string after import statement").Value
+    return &ast.ImportStatement{Path: path}
 }
 
 func (p *Parser) parseLoopStatement() ast.Statement {
