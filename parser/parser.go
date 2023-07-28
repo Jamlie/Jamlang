@@ -51,6 +51,8 @@ func (p *Parser) parseStatement() ast.Statement {
             os.Exit(0)
         }
         return p.parseReturnStatement()
+    case tokentype.Class:
+        return p.parseClassDeclaration()
     case tokentype.Break:
         if !p.isLoop {
             fmt.Println("Error: Break statement outside of loop")
@@ -150,6 +152,24 @@ func (p *Parser) parseIfStatement() ast.Statement {
     return &ast.ConditionalStatement{
         Condition: condition,
         Body:      body,
+    }
+}
+
+func (p *Parser) parseClassDeclaration() ast.Statement {
+    p.eat()
+    name := p.expect(tokentype.Identifier, "Error: Expected class name after class keyword").Value
+    p.expect(tokentype.LSquirly, "Error: Expected { after class name")
+
+    var body []ast.Statement
+    for p.at().Type != tokentype.RSquirly {
+        body = append(body, p.parseStatement())
+    }
+
+    p.expect(tokentype.RSquirly, "Error: Expected } after class declaration")
+
+    return &ast.ClassDeclaration{
+        Name: name,
+        Body: body,
     }
 }
 

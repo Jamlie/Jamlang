@@ -16,6 +16,56 @@ var (
     IsBreakError = fmt.Errorf("break statement error")
 )
 
+func EvaluateClassDeclaration(expr ast.ClassDeclaration, env *Environment) (RuntimeValue, error) {
+    class := ObjectValue{map[string]RuntimeValue{}}
+    actualClass := ClassValue{
+        Name: expr.Name,
+        Methods: make(map[string]*FunctionValue),
+    }
+
+    scope := NewEnvironment(env)
+
+    for _, method := range expr.Body {
+        if method.Kind() == ast.FunctionDeclarationType {
+            if method.(*ast.FunctionDeclaration).Name == "constructor" {
+                method := method.(*ast.FunctionDeclaration)
+                actualClass.Constructor = &FunctionValue{
+                    Name: method.Name,
+                    Body: method.CloneBody(),
+                    Parameters: method.CloneParameters(),
+                    DeclarationEnvironment: *scope,
+                }
+
+                env.DeclareVariable(expr.Name, actualClass.Constructor, true)
+                continue
+            }
+            method := method.(*ast.FunctionDeclaration)
+            class.Properties[method.Name] = &FunctionValue{
+                Name: method.Name,
+                Body: method.CloneBody(),
+                Parameters: method.CloneParameters(),
+                DeclarationEnvironment: *scope,
+            }
+
+            actualClass.Methods[method.Name] = class.Properties[method.Name].(*FunctionValue)
+        } else if method.Kind() == ast.VariableDeclarationType {
+            method := method.(*ast.VariableDeclaration)
+            value, err := Evaluate(method.Value, *scope)
+            if err != nil {
+                return MakeNullValue(), err
+            }
+            class.Properties[method.Identifier] = value.Clone()
+            actualClass.Fields[method.Identifier] = class.Properties[method.Identifier]
+        } else {
+            return MakeNullValue(), fmt.Errorf("unexpected method type")
+        }
+    }
+
+    scope.DeclareVariable("this", class, true)
+
+    return class.Clone(), nil
+}
+
 func EvaluateImportExpression(expr ast.ImportStatement, env *Environment) (RuntimeValue, error) {
     file, err := os.Open(expr.Path)
     if err != nil {

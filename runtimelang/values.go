@@ -2,7 +2,7 @@ package runtimelang
 
 import (
     "strconv"
-    
+
     "github.com/Jamlee977/CustomLanguage/ast"
 )
 
@@ -17,12 +17,14 @@ const (
     NativeFunction ValueType = "native_function"
     Function ValueType = "function"
     Break ValueType = "break"
+    Class ValueType = "class"
 )
 
 type RuntimeValue interface {
     Get() any
     Type() ValueType
     ToString() string
+    Clone() RuntimeValue
 }
 
 type InitialValue struct {}
@@ -39,6 +41,10 @@ func (v InitialValue) ToString() string {
     return ""
 }
 
+func (v InitialValue) Clone() RuntimeValue {
+    return v
+}
+
 type NullValue struct {
     Value string
 }
@@ -53,6 +59,10 @@ func (v NullValue) Get() any {
 
 func (v NullValue) ToString() string {
     return "null"
+}
+
+func (v NullValue) Clone() RuntimeValue {
+    return v
 }
 
 func MakeNullValue() NullValue {
@@ -75,6 +85,10 @@ func (v NumberValue) ToString() string {
     return strconv.FormatFloat(v.Value, 'f', -1, 64)
 }
 
+func (v NumberValue) Clone() RuntimeValue {
+    return v
+}
+
 func MakeNumberValue(value float64) NumberValue {
     return NumberValue{Value: value}
 } 
@@ -95,6 +109,10 @@ func (v StringValue) ToString() string {
     return v.Value
 }
 
+func (v StringValue) Clone() RuntimeValue {
+    return v
+}
+
 func MakeStringValue(value string) StringValue {
     return StringValue{Value: value}
 }
@@ -113,6 +131,10 @@ func (v BoolValue) Get() any {
 
 func (v BoolValue) ToString() string {
     return strconv.FormatBool(v.Value)
+}
+
+func (v BoolValue) Clone() RuntimeValue {
+    return v
 }
 
 func MakeBoolValue(value bool) BoolValue {
@@ -163,6 +185,14 @@ func (v ObjectValue) ToString() string {
     return v.Get().(string)
 }
 
+func (v ObjectValue) Clone() RuntimeValue {
+    newObject := ObjectValue{Properties: make(map[string]RuntimeValue)}
+    for key, value := range v.Properties {
+        newObject.Properties[key] = value.Clone()
+    }
+    return newObject
+}
+
 type FunctionCall func(args []RuntimeValue, env Environment) RuntimeValue
 
 type NativeFunctionValue struct {
@@ -179,6 +209,10 @@ func (v NativeFunctionValue) Get() any {
 
 func (v NativeFunctionValue) ToString() string {
     return "native function"
+}
+
+func (v NativeFunctionValue) Clone() RuntimeValue {
+    return v
 }
 
 func MakeNativeFunction(call FunctionCall) NativeFunctionValue {
@@ -208,8 +242,23 @@ func (v FunctionValue) Get() any {
     return str
 }
 
+
 func (v FunctionValue) ToString() string {
     return "function"
+}
+
+func (v FunctionValue) Clone() RuntimeValue {
+    name := v.Name
+    parameters := make([]string, len(v.Parameters))
+    copy(parameters, v.Parameters)
+    body := make([]ast.Statement, len(v.Body))
+    copy(body, v.Body)
+    return &FunctionValue{
+        Name: name,
+        Parameters: parameters,
+        DeclarationEnvironment: v.DeclarationEnvironment,
+        Body: body,
+    }
 }
 
 type ReturnValue struct {
@@ -228,4 +277,45 @@ func (v BreakType) Get() any {
 
 func (v BreakType) ToString() string {
     return "break"
+}
+
+func (v BreakType) Clone() RuntimeValue {
+    return v
+}
+
+type ClassValue struct {
+    Name string
+    Constructor *FunctionValue
+    Methods map[string]*FunctionValue
+    Fields map[string]RuntimeValue
+}
+
+func (v ClassValue) Type() ValueType {
+    return Class
+}
+
+func (v ClassValue) Get() any {
+    return v.Methods
+}
+
+func (v ClassValue) ToString() string {
+    return "class"
+}
+
+func (v ClassValue) Clone() RuntimeValue {
+    methods := make(map[string]*FunctionValue)
+    for k, v := range v.Methods {
+        methods[k] = v.Clone().(*FunctionValue)
+    }
+    fields := make(map[string]RuntimeValue)
+    for k, v := range v.Fields {
+        fields[k] = v.Clone()
+    }
+
+    constructor := v.Constructor.Clone().(*FunctionValue)
+    return ClassValue{Name: v.Name, Constructor: constructor, Methods: methods, Fields: fields}
+}
+
+func MakeClassValue(name string, methods map[string]*FunctionValue) ClassValue {
+    return ClassValue{Name: name, Methods: methods}
 }

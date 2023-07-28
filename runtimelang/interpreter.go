@@ -79,6 +79,20 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
             return nil, nil
         }
         return EvaluateReturnStatement(*returnStatement, env), nil
+    case ast.ClassDeclarationType:
+        classDeclaration, ok := astNode.(*ast.ClassDeclaration)
+        if !ok {
+            fmt.Printf("Error: Expected ClassDeclaration, got %T\n", astNode)
+            os.Exit(0)
+            return nil, nil
+        }
+
+        result, err := EvaluateClassDeclaration(*classDeclaration, &env)
+        if err != nil {
+            return nil, err
+        }
+
+        return result, nil
     case ast.BreakStatementType:
         breakStatement, ok := astNode.(*ast.BreakStatement)
         if !ok {

@@ -18,6 +18,7 @@ const (
     ReturnStatementType NodeType = "ReturnStatement"
     BreakStatementType NodeType = "BreakStatement"
     ImportStatementType NodeType = "ImportStatement"
+    ClassDeclarationType NodeType = "ClassDeclaration"
 
 
     PropertyType NodeType = "Property"
@@ -106,6 +107,18 @@ func (f *FunctionDeclaration) ToString() string {
     return s
 }
 
+func (f *FunctionDeclaration) CloneBody() []Statement {
+    body := make([]Statement, len(f.Body))
+    copy(body, f.Body)
+    return body
+}
+
+func (f *FunctionDeclaration) CloneParameters() []string {
+    params := make([]string, len(f.Parameters))
+    copy(params, f.Parameters)
+    return params
+}
+
 type ReturnStatement struct {
     Value Expression
 }
@@ -138,6 +151,27 @@ func (i *ImportStatement) Kind() NodeType {
 
 func (i *ImportStatement) ToString() string {
     return "import " + i.Path
+}
+
+type ClassDeclaration struct {
+    Name string
+    Body []Statement
+}
+
+func (c *ClassDeclaration) Kind() NodeType {
+    return ClassDeclarationType
+}
+
+func (c *ClassDeclaration) ToString() string {
+    s := "class " + c.Name + " {\n"
+
+    for _, statement := range c.Body {
+        s += statement.ToString()
+    }
+
+    s += "}\n"
+
+    return s
 }
 
 type Expression interface {
@@ -348,11 +382,11 @@ type CallExpression struct {
     Caller Expression
 }
 
-func (c *CallExpression) Kind() NodeType {
+func (c CallExpression) Kind() NodeType {
     return CallExpressionType
 }
 
-func (c *CallExpression) ToString() string {
+func (c CallExpression) ToString() string {
     var buffer bytes.Buffer
     buffer.WriteString(c.Caller.ToString())
     buffer.WriteString("(")

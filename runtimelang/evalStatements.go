@@ -36,6 +36,9 @@ func EvaluateFunctionDeclaration(declaration ast.FunctionDeclaration, env Enviro
 
 func EvaluateVariableDeclaration(declaration ast.VariableDeclaration, env Environment) RuntimeValue {
     value, _ := Evaluate(declaration.Value, env)
+    if value.Type() == "object" {
+        value = value.(ObjectValue).Clone()
+    }
     return env.DeclareVariable(declaration.Identifier, value, declaration.Constant)
 }
 

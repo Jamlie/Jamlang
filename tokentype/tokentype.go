@@ -39,6 +39,7 @@ const (
     Or
     Xor
     Import
+    Class
 
     EndOfFile
 )

@@ -1,5 +1,27 @@
-import "sumOfEvenNumbers.jam"
+class Person {
+    fn constructor(name, age) {
+        this.name = name
+        this.age = age
+    }
 
-let target = 10;
-const result = sumOfEvenNumbers(target);
-println("The sum of even numbers from 1 to", target, "is", result)
+    fn getName(self) {
+        return self.name
+    }
+
+    fn getAge(self) {
+        return self.age
+    }
+
+    fn setName(self, name) {
+        self.name = name
+    }
+
+    fn setAge(self, age) {
+        self.age = age
+    }
+}
+
+const person = Person("Jam", 19)
+person.setName(person, "Omar")
+println(person.name)
+println(person.getName(person))
