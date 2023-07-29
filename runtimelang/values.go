@@ -14,6 +14,7 @@ const (
     String ValueType = "string"
     Bool ValueType = "bool"
     Object ValueType = "object"
+    Array ValueType = "array"
     NativeFunction ValueType = "native_function"
     Function ValueType = "function"
     Break ValueType = "break"
@@ -166,7 +167,9 @@ func (v ObjectValue) Get() any {
         case Bool:
             str += value.ToString()
         case Object:
-            str += value.ToString()            
+            str += value.ToString()
+        case Array:
+            str += value.ToString()
         case Function:
             str += value.Get().(string)
         default:
@@ -191,6 +194,36 @@ func (v ObjectValue) Clone() RuntimeValue {
         newObject.Properties[key] = value.Clone()
     }
     return newObject
+}
+
+type ArrayValue struct {
+    Values []RuntimeValue
+}
+
+func (v ArrayValue) Type() ValueType {
+    return Array
+}
+
+func (v ArrayValue) Get() any {
+    str := "[ "
+    for i, value := range v.Values {
+        str += value.ToString()
+        if i < len(v.Values) - 1 {
+            str += ", "
+        }
+    }
+    str += " ]"
+    return str
+}
+
+func (v ArrayValue) ToString() string {
+    return v.Get().(string)
+}
+
+func (v ArrayValue) Clone() RuntimeValue {
+    newArray := ArrayValue{Values: make([]RuntimeValue, len(v.Values))}
+    copy(newArray.Values, v.Values)
+    return newArray
 }
 
 type FunctionCall func(args []RuntimeValue, env Environment) RuntimeValue
@@ -318,4 +351,16 @@ func (v ClassValue) Clone() RuntimeValue {
 
 func MakeClassValue(name string, methods map[string]*FunctionValue) ClassValue {
     return ClassValue{Name: name, Methods: methods}
+}
+
+func MakeArrayValue(values []RuntimeValue) ArrayValue {
+    return ArrayValue{Values: values}
+}
+
+func ToGoArrayValue(v ArrayValue) []RuntimeValue {
+    return v.Values
+}
+
+func ToGoNumberValue(v NumberValue) float64 {
+    return v.Value
 }

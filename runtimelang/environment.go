@@ -23,6 +23,11 @@ func CreateGlobalEnvironment() *Environment {
     env.DeclareVariable("typeof", MakeNativeFunction(jamlangTypeof), true)
     env.DeclareVariable("exit", MakeNativeFunction(jamlangExit), true)
     env.DeclareVariable("input", MakeNativeFunction(jamlangInput), true)
+    env.DeclareVariable("array", MakeNativeFunction(jamlangArray), true)
+    env.DeclareVariable("len", MakeNativeFunction(jamlangLen), true)
+    env.DeclareVariable("append", MakeNativeFunction(jamlangAppend), true)
+    env.DeclareVariable("pop", MakeNativeFunction(jamlangPop), true)
+    env.DeclareVariable("get", MakeNativeFunction(jamlangGetArrayElement), true)
 
     return env
 }

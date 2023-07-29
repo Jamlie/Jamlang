@@ -43,6 +43,7 @@ func repl() {
 
 func main() {
     runFlag := flag.Bool("r", false, "Run a file")
+    helpFlag := flag.Bool("h", false, "Run a file")
     flag.Parse()
     args := flag.Args()
     if flag.NFlag() == 0 && len(args) == 0 {
@@ -71,6 +72,13 @@ func main() {
                 fmt.Println(err)
                 os.Exit(0)
             }
+        } else if *helpFlag {
+            fmt.Println("Usage: jamlang [options] [file]")
+            fmt.Println("Options:")
+            fmt.Println("  -r\t\tRun a file")
+            fmt.Println("  -h\t\tShow this help message")
+            fmt.Println("  run\t\tRun a file")
+            fmt.Println("  help\t\tShow this help message")
         } else {
              option := args[0]
             if option == "run" {
@@ -99,6 +107,13 @@ func main() {
                     os.Exit(0)
                 }
 
+            } else if args[0] == "help" {
+                fmt.Println("Usage: jamlang [options] [file]")
+                fmt.Println("Options:")
+                fmt.Println("  -r\t\tRun a file")
+                fmt.Println("  -h\t\tShow this help message")
+                fmt.Println("  run\t\tRun a file")
+                fmt.Println("  help\t\tShow this help message")
             } else {
                 fmt.Println("Unknown option")
                 fmt.Println("Usage: jamlang [run] [file]")

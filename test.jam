@@ -1,27 +1,6 @@
-class Person {
-    fn constructor(name, age) {
-        this.name = name
-        this.age = age
-    }
-
-    fn getName(self) {
-        return self.name
-    }
-
-    fn getAge(self) {
-        return self.age
-    }
-
-    fn setName(self, name) {
-        self.name = name
-    }
-
-    fn setAge(self, age) {
-        self.age = age
-    }
+let arr = array(1,2,3,4)
+let i = 0;
+while i < len(arr) {
+    println(i, get(arr, i))
+    ++i
 }
-
-const person = Person("Jam", 19)
-person.setName(person, "Omar")
-println(person.name)
-println(person.getName(person))
