@@ -15,6 +15,7 @@ const (
     Bool ValueType = "bool"
     Object ValueType = "object"
     Array ValueType = "array"
+    Tuple ValueType = "tuple"
     NativeFunction ValueType = "native_function"
     Function ValueType = "function"
     Break ValueType = "break"
@@ -226,6 +227,36 @@ func (v ArrayValue) Clone() RuntimeValue {
     return newArray
 }
 
+type TupleValue struct {
+    Values []RuntimeValue
+}
+
+func (v TupleValue) Type() ValueType {
+    return Tuple
+}
+
+func (v TupleValue) Get() any {
+    str := "( "
+    for i, value := range v.Values {
+        str += value.ToString()
+        if i < len(v.Values) - 1 {
+            str += ", "
+        }
+    }
+    str += " )"
+    return str
+}
+
+func (v TupleValue) ToString() string {
+    return v.Get().(string)
+}
+
+func (v TupleValue) Clone() RuntimeValue {
+    newTuple := TupleValue{Values: make([]RuntimeValue, len(v.Values))}
+    copy(newTuple.Values, v.Values)
+    return newTuple
+}
+
 type FunctionCall func(args []RuntimeValue, env Environment) RuntimeValue
 
 type NativeFunctionValue struct {
@@ -357,10 +388,22 @@ func MakeArrayValue(values []RuntimeValue) ArrayValue {
     return ArrayValue{Values: values}
 }
 
+func MakeTupleValue(values []RuntimeValue) TupleValue {
+    return TupleValue{Values: values}
+}
+
 func ToGoArrayValue(v ArrayValue) []RuntimeValue {
     return v.Values
 }
 
 func ToGoNumberValue(v NumberValue) float64 {
     return v.Value
+}
+
+func ToGoStringValue(v StringValue) string {
+    return v.Value
+}
+
+func ToGoTupleValue(v TupleValue) []RuntimeValue {
+    return v.Values
 }

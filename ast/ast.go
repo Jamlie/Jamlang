@@ -14,6 +14,8 @@ const (
     ConditionalStatementType NodeType = "ConditionalStatement"
     WhileStatementType NodeType = "WhileStatement"
     LoopStatementType NodeType = "LoopStatement"
+    ForEachStatementType NodeType = "ForEachStatement"
+    ForStatementType NodeType = "ForStatement"
     FunctionDeclarationType NodeType = "FunctionDeclaration"
     ReturnStatementType NodeType = "ReturnStatement"
     BreakStatementType NodeType = "BreakStatement"
@@ -23,6 +25,7 @@ const (
 
     PropertyType NodeType = "Property"
     ObjectLiteralType NodeType = "ObjectLiteral"
+    ArrayLiteralType NodeType = "ArrayLiteral"
     NumericLiteralType NodeType = "NumericLiteral"
     IdentifierType NodeType = "Identifier"
     BinaryExpressionType NodeType = "BinaryExpression"
@@ -239,6 +242,47 @@ func (l *LoopStatement) ToString() string {
     return s
 }
 
+type ForEachStatement struct {
+    Variable string
+    Collection Expression
+    Body []Statement
+}
+
+func (f *ForEachStatement) Kind() NodeType {
+    return ForEachStatementType
+}
+
+func (f *ForEachStatement) ToString() string {
+    s := "foreach (" + f.Variable + " in " + f.Collection.ToString() + ") {\n"
+    for _, statement := range f.Body {
+        s += statement.ToString()
+    }
+    s += "}\n"
+
+    return s
+}
+
+type ForStatement struct {
+    Init Statement
+    Condition Expression
+    Update Expression
+    Body []Statement
+}
+
+func (f *ForStatement) Kind() NodeType {
+    return ForStatementType
+}
+
+func (f *ForStatement) ToString() string {
+    s := "for (" + f.Init.ToString() + "; " + f.Condition.ToString() + "; " + f.Update.ToString() + ") {\n"
+    for _, statement := range f.Body {
+        s += statement.ToString()
+    }
+    s += "}\n"
+
+    return s
+}
+
 type AssignmentExpression struct {
     Assigne Expression
     Value Expression
@@ -374,6 +418,27 @@ func (o *ObjectLiteral) ToString() string {
         }
     }
     buffer.WriteString("}")
+    return buffer.String()
+}
+
+type ArrayLiteral struct {
+    Elements []Expression
+}
+
+func (a *ArrayLiteral) Kind() NodeType {
+    return ArrayLiteralType
+}
+
+func (a *ArrayLiteral) ToString() string {
+    var buffer bytes.Buffer
+    buffer.WriteString("[")
+    for i, e := range a.Elements {
+        buffer.WriteString(e.ToString())
+        if i < len(a.Elements) - 1 {
+            buffer.WriteString(", ")
+        }
+    }
+    buffer.WriteString("]")
     return buffer.String()
 }
 

@@ -114,6 +114,109 @@ func EvaluateImportExpression(expr ast.ImportStatement, env *Environment) (Runti
     return MakeNullValue(), nil
 }
 
+func EvaluateForExpression(expr ast.ForStatement, env *Environment) (RuntimeValue, error) {
+    scope := NewEnvironment(env)
+
+    initialVariable := expr.Init.(*ast.VariableDeclaration).Identifier
+    _, err := Evaluate(expr.Init, *env)
+    defer func() {
+        env.RemoveVariable(initialVariable)
+    }()
+
+    if err != nil {
+        return MakeNullValue(), err
+    }
+
+    for {
+        if expr.Condition != nil {
+            condition, err := Evaluate(expr.Condition, *scope)
+            if err != nil {
+                return MakeNullValue(), err
+            }
+            if condition.Type() == Bool {
+                if !condition.(BoolValue).Value {
+                    break
+                }
+            } else {
+                return MakeNullValue(), fmt.Errorf("for loop condition must be a boolean value")
+            }
+        }
+
+        for _, statement := range expr.Body {
+            if statement.Kind() == ast.BreakStatementType {
+                return MakeNullValue(), nil
+            }
+
+            _, err := Evaluate(statement, *scope)
+
+            if err != nil {
+                return MakeNullValue(), err
+            }
+        }
+        if expr.Update != nil {
+            _, err := Evaluate(expr.Update, *scope)
+            if err != nil {
+                return MakeNullValue(), err
+            }
+        }
+
+        for k, v := range scope.variables {
+            if _, ok := env.variables[k]; ok {
+                env.variables[k] = v
+            }
+        }
+
+        scope = NewEnvironment(env)
+    }
+
+    return MakeNullValue(), nil
+}
+
+func EvaluateForEachExpression(expr ast.ForEachStatement, env *Environment) (RuntimeValue, error) {
+    scope := NewEnvironment(env)
+
+    array, err := Evaluate(expr.Collection, *env)
+    if err != nil {
+        return MakeNullValue(), err
+    }
+
+    if array.Type() == Array {
+        scope.DeclareVariable(expr.Variable, MakeNullValue(), false)
+        for _, element := range array.(ArrayValue).Values {
+            scope.AssignVariable(expr.Variable, element)
+
+            for _, statement := range expr.Body {
+                if statement.Kind() == ast.ReturnStatementType {
+                    return Evaluate(statement, *scope)
+                }
+                _, err := Evaluate(statement, *scope)
+                if err != nil {
+                    return MakeNullValue(), err
+                }
+            }
+        }
+    } else if array.Type() == Tuple {
+        scope.DeclareVariable(expr.Variable, MakeNullValue(), false)
+        for _, element := range array.(TupleValue).Values {
+            scope.AssignVariable(expr.Variable, element)
+
+            for _, statement := range expr.Body {
+                if statement.Kind() == ast.ReturnStatementType {
+                    return Evaluate(statement, *scope)
+                }
+                _, err := Evaluate(statement, *scope)
+                if err != nil {
+                    return MakeNullValue(), err
+                }
+            }
+        }
+    } else {
+        return MakeNullValue(), fmt.Errorf("Cannot iterate over non-iterable type")
+    }
+
+    return MakeNullValue(), nil
+}
+
 func EvaluateLoopExpression(expr ast.LoopStatement, env *Environment) (RuntimeValue, error) {
     scope := NewEnvironment(env)
 
@@ -337,10 +440,73 @@ func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) Runtim
             fmt.Println(err)
             os.Exit(0)
         }
+        if _, ok := obj.(ArrayValue); ok {
+            if property.(NumberValue).Value >= float64(len(obj.(ArrayValue).Values)) {
+                fmt.Println("Error: Index out of bounds")
+                os.Exit(0)
+            }
+
+            if property.(NumberValue).Value < 0 {
+                if -property.(NumberValue).Value > float64(len(obj.(ArrayValue).Values)) {
+                    fmt.Println("Error: Index out of bounds")
+                    os.Exit(0)
+                }
+                return obj.(ArrayValue).Values[int(property.(NumberValue).Value) + len(obj.(ArrayValue).Values)]
+            }
+
+            return obj.(ArrayValue).Values[int(property.(NumberValue).Value)]
+        }
+
+        if _, ok := obj.(TupleValue); ok {
+            if property.(NumberValue).Value >= float64(len(obj.(TupleValue).Values)) {
+                fmt.Println("Error: Index out of bounds")
+                os.Exit(0)
+            }
+
+            if property.(NumberValue).Value < 0 {
+                if -property.(NumberValue).Value > float64(len(obj.(TupleValue).Values)) {
+                    fmt.Println("Error: Index out of bounds")
+                    os.Exit(0)
+                }
+                return obj.(TupleValue).Values[int(property.(NumberValue).Value) + len(obj.(TupleValue).Values)]
+            }
+
+            return obj.(TupleValue).Values[int(property.(NumberValue).Value)]
+        }
+
+        if _, ok := obj.(StringValue); ok {
+            if property.(NumberValue).Value >= float64(len(obj.(StringValue).Value)) {
+                fmt.Println("Error: Index out of bounds")
+                os.Exit(0)
+            }
+
+            if property.(NumberValue).Value < 0 {
+                if -property.(NumberValue).Value > float64(len(obj.(StringValue).Value)) {
+                    fmt.Println("Error: Index out of bounds")
+                    os.Exit(0)
+                }
+                return MakeStringValue(string(obj.(StringValue).Value[int(property.(NumberValue).Value) + len(obj.(StringValue).Value)]))
+            }
+
+            return MakeStringValue(string(obj.(StringValue).Value[int(property.(NumberValue).Value)]))
+        }
+
         return obj.(ObjectValue).Properties[property.(StringValue).Value]
     } else {
         return obj.(ObjectValue).Properties[expr.Property.(*ast.Identifier).Symbol]
     }
+}
+
+func EvaluateArrayExpression(expr ast.ArrayLiteral, env Environment) RuntimeValue {
+    array := ArrayValue{
+        Values: make([]RuntimeValue, len(expr.Elements)),
+    }
+
+    for i, element := range expr.Elements {
+        array.Values[i], _ = Evaluate(element, env)
+    }
+
+    return array
 }
 
 func EvaluateObjectExpression(obj ast.ObjectLiteral, env Environment) RuntimeValue {
@@ -526,6 +692,20 @@ func EvaluateUnaryExpression(node ast.UnaryExpression, env Environment) RuntimeV
             os.Exit(0)
             return nil
         }
+        if node.Value.Kind() == ast.MemberExpressionType {
+            val, err := Evaluate(node.Value.(*ast.MemberExpression).Property, env)
+            if err != nil {
+                fmt.Println(err)
+                os.Exit(0)
+            }
+            arr, err := Evaluate(node.Value.(*ast.MemberExpression).Object, env)
+            if err != nil {
+                fmt.Println(err)
+                os.Exit(0)
+            }
+            arr.(ArrayValue).Values[int(ToGoNumberValue(val.(NumberValue)))] = NumberValue{val.(NumberValue).Value + 1}
+            return NumberValue{val.(NumberValue).Value + 1}
+        }
         env.variables[node.Value.(*ast.Identifier).Symbol] = NumberValue{value.(NumberValue).Value + 1}
         return NumberValue{value.(NumberValue).Value + 1}
     case "--":
@@ -643,6 +823,31 @@ func EvaluateAssignment(node ast.AssignmentExpression, env Environment) RuntimeV
     if node.Assigne.Kind() == ast.MemberExpressionType {
         objectLiteral := node.Assigne.(*ast.MemberExpression).Object
         objectValue, _ := Evaluate(objectLiteral, env)
+        if objectValue.Type() == Array {
+            index, _ := Evaluate(node.Assigne.(*ast.MemberExpression).Property, env)
+            if index.Type() != Number {
+                fmt.Println("Error: array index must be a number")
+                os.Exit(0)
+                return nil
+            }
+            if index.(NumberValue).Value >= float64(len(objectValue.(ArrayValue).Values)) {
+                fmt.Println("Error: array index out of bounds")
+                os.Exit(0)
+                return nil
+            }
+            if index.(NumberValue).Value < 0 {
+                if -index.(NumberValue).Value > float64(len(objectValue.(ArrayValue).Values)) {
+                    fmt.Println("Error: array index out of bounds")
+                    os.Exit(0)
+                    return nil
+                }
+                objectValue.(ArrayValue).Values[len(objectValue.(ArrayValue).Values) + int(index.(NumberValue).Value)], _ = Evaluate(node.Value, env)
+                return objectValue
+            }
+
+            objectValue.(ArrayValue).Values[int(index.(NumberValue).Value)], _ = Evaluate(node.Value, env)
+            return objectValue
+        }
         objectValue.(ObjectValue).Properties[node.Assigne.(*ast.MemberExpression).Property.(*ast.Identifier).Symbol], _ = Evaluate(node.Value, env)
         return objectValue
     }

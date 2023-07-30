@@ -71,23 +71,26 @@ func jamlangInput(args []RuntimeValue, environment Environment) RuntimeValue {
     return MakeStringValue(input)
 }
 
-func jamlangArray(args []RuntimeValue, environment Environment) RuntimeValue {
-    return MakeArrayValue(args)
-}
-
 func jamlangLen(args []RuntimeValue, environment Environment) RuntimeValue {
     if len(args) != 1 {
         fmt.Println("len takes 1 argument")
         os.Exit(0)
     }
 
-    if args[0].Type() != "array" {
-        fmt.Println("len takes an array")
+    if args[0].Type() == "array" {
+        goArray := ToGoArrayValue(args[0].(ArrayValue))
+        return MakeNumberValue(float64(len(goArray)))
+    } else if args[0].Type() == "tuple" {
+        goTuple := ToGoTupleValue(args[0].(TupleValue))
+        return MakeNumberValue(float64(len(goTuple)))
+    } else if args[0].Type() == "string" {
+        goString := ToGoStringValue(args[0].(StringValue))
+        return MakeNumberValue(float64(len(goString)))
+    } else {
+        fmt.Println("len takes an array, tuple or string")
         os.Exit(0)
+        return MakeNullValue()
     }
-
-    goArray := ToGoArrayValue(args[0].(ArrayValue))
-    return MakeNumberValue(float64(len(goArray)))
 }
 
 func jamlangAppend(args []RuntimeValue, environment Environment) RuntimeValue {
@@ -126,23 +129,51 @@ func jamlangPop(args []RuntimeValue, environment Environment) RuntimeValue {
     return MakeArrayValue(goArray[:len(goArray)-1])
 }
 
-func jamlangGetArrayElement(args []RuntimeValue, environment Environment) RuntimeValue {
-    if len(args) != 2 {
-        fmt.Println("get takes 2 arguments")
+func jamlangSetArrayElement(args []RuntimeValue, environment Environment) RuntimeValue {
+    if len(args) != 3 {
+        fmt.Println("set takes 3 arguments")
         os.Exit(0)
     }
 
     if args[0].Type() != "array" {
-        fmt.Println("get takes an array")
+        fmt.Println("set takes an array")
         os.Exit(0)
     }
 
     goArray := ToGoArrayValue(args[0].(ArrayValue))
     index := int(ToGoNumberValue(args[1].(NumberValue)))
     if index < 0 || index >= len(goArray) {
-        fmt.Println("get takes a valid index")
+        fmt.Println("set takes a valid index")
         os.Exit(0)
     }
 
-    return goArray[index]
+    goArray[index] = args[2]
+    return MakeArrayValue(goArray)
+}
+
+func jamlangCopy(args []RuntimeValue, environment Environment) RuntimeValue {
+    if len(args) != 1 {
+        fmt.Println("copy takes 1 argument")
+        os.Exit(0)
+    }
+
+    if args[0].Type() == "array" {
+        goArray := ToGoArrayValue(args[0].(ArrayValue))
+        goArrayCopy := make([]RuntimeValue, len(goArray))
+        copy(goArrayCopy, goArray)
+        return MakeArrayValue(goArrayCopy)
+    } else if args[0].Type() == "tuple" {
+        goTuple := ToGoTupleValue(args[0].(TupleValue))
+        goTupleCopy := make([]RuntimeValue, len(goTuple))
+        copy(goTupleCopy, goTuple)
+        return MakeTupleValue(goTupleCopy)
+    } else {
+        fmt.Println("copy takes an array or tuple")
+        os.Exit(0)
+        return MakeNullValue()
+    }
+}
+
+func jamlangTuple(args []RuntimeValue, environment Environment) RuntimeValue {
+    return MakeTupleValue(args)
 }

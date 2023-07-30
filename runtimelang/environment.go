@@ -23,11 +23,11 @@ func CreateGlobalEnvironment() *Environment {
     env.DeclareVariable("typeof", MakeNativeFunction(jamlangTypeof), true)
     env.DeclareVariable("exit", MakeNativeFunction(jamlangExit), true)
     env.DeclareVariable("input", MakeNativeFunction(jamlangInput), true)
-    env.DeclareVariable("array", MakeNativeFunction(jamlangArray), true)
     env.DeclareVariable("len", MakeNativeFunction(jamlangLen), true)
     env.DeclareVariable("append", MakeNativeFunction(jamlangAppend), true)
     env.DeclareVariable("pop", MakeNativeFunction(jamlangPop), true)
-    env.DeclareVariable("get", MakeNativeFunction(jamlangGetArrayElement), true)
+    env.DeclareVariable("set", MakeNativeFunction(jamlangSetArrayElement), true)
+    env.DeclareVariable("tuple", MakeNativeFunction(jamlangTuple), true)
 
     return env
 }
@@ -92,4 +92,8 @@ func (e *Environment) LookupVariable(name string) RuntimeValue {
     }
 
     return env.variables[name]
+}
+
+func (e *Environment) RemoveVariable(name string) {
+    delete(e.variables, name)
 }

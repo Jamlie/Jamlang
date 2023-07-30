@@ -55,6 +55,14 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
             return nil, nil
         }
         return EvaluateObjectExpression(*objectLiteral, env), nil
+    case ast.ArrayLiteralType:
+        arrayLiteral, ok := astNode.(*ast.ArrayLiteral)
+        if !ok {
+            fmt.Printf("Error: Expected ArrayLiteral, got %T\n", astNode)
+            os.Exit(0)
+            return nil, nil
+        }
+        return EvaluateArrayExpression(*arrayLiteral, env), nil
     case ast.MemberExpressionType:
         memberExpression, ok := astNode.(*ast.MemberExpression)
         if !ok {
@@ -192,6 +200,56 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
         }
 
         result, err := EvaluateLoopExpression(*loopStatement, &env)
+
+        if err == IsReturnError {
+            return result, IsReturnError
+        }
+
+        if err == IsBreakError {
+            return result, nil
+        }
+
+        if err != nil {
+            fmt.Printf("Error: %s\n", err.Error())
+            os.Exit(0)
+            return nil, nil
+        }
+
+        return result, nil
+    case ast.ForEachStatementType:
+        forEachStatement, ok := astNode.(*ast.ForEachStatement)
+        if !ok {
+            fmt.Printf("Error: Expected ForEachStatement, got %T\n", astNode)
+            os.Exit(0)
+            return nil, nil
+        }
+
+        result, err := EvaluateForEachExpression(*forEachStatement, &env)
+
+        if err == IsReturnError {
+            return result, IsReturnError
+        }
+
+        if err == IsBreakError {
+            return result, nil
+        }
+
+        if err != nil {
+            fmt.Printf("Error: %s\n", err.Error())
+            os.Exit(0)
+            return nil, nil
+        }
+
+        return result, nil
+    case ast.ForStatementType:
+        forStatement, ok := astNode.(*ast.ForStatement)
+        if !ok {
+            fmt.Printf("Error: Expected ForStatement, got %T\n", astNode)
+            os.Exit(0)
+            return nil, nil
+        }
+
+        result, err := EvaluateForExpression(*forStatement, &env)
 
         if err == IsReturnError {
             return result, IsReturnError

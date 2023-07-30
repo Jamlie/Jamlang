@@ -33,6 +33,9 @@ const (
     Else
     While
     Loop
+    ForEach
+    For
+    In
     Break
     Not
     And

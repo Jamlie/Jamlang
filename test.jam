@@ -1,6 +1,18 @@
-let arr = array(1,2,3,4)
-let i = 0;
-while i < len(arr) {
-    println(i, get(arr, i))
-    ++i
+let items = [0,1,2,3,4]
+
+for let i = 0; i < len(items); ++i {
+    println(items[i])
+    ++(items[i])
 }
+
+println("------------")
+
+foreach item in items {
+    println(item)
+}
+
+
+let x = "hello there"
+println(x[0])
+
+

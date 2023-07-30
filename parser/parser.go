@@ -67,6 +67,10 @@ func (p *Parser) parseStatement() ast.Statement {
         return p.parseWhileStatement()
     case tokentype.Loop:
         return p.parseLoopStatement()
+    case tokentype.ForEach:
+        return p.parseForEachStatement()
+    case tokentype.For:
+        return p.parseForStatement()
     case tokentype.Import:
         return p.parseImportStatement()
     case tokentype.SemiColon:
@@ -81,6 +85,46 @@ func (p *Parser) parseImportStatement() ast.Statement {
     p.eat()
     path := p.expect(tokentype.String, "Error: Expected string after import statement").Value
     return &ast.ImportStatement{Path: path}
+}
+
+func (p *Parser) parseForStatement() ast.Statement {
+    p.eat()
+    p.isLoop = true
+    defer func() { p.isLoop = false }()
+    init := p.parseStatement()
+    p.expect(tokentype.SemiColon, "Error: Expected ';' after for statement")
+    condition := p.parseExpression()
+    p.expect(tokentype.SemiColon, "Error: Expected ';' after for statement")
+    increment := p.parseExpression()
+    p.expect(tokentype.LSquirly, "Error: Expected '{' after for statement")
+    var body []ast.Statement
+    for p.at().Type != tokentype.RSquirly {
+        body = append(body, p.parseStatement())
+    }
+    p.expect(tokentype.RSquirly, "Error: Expected '}' after for statement")
+    return &ast.ForStatement{Init: init, Condition: condition, Update: increment, Body: body}
+}
+
+func (p *Parser) parseForEachStatement() ast.Statement {
+    p.eat()
+    
+    p.isLoop = true
+    defer func() { p.isLoop = false }()
+
+    value := p.expect(tokentype.Identifier, "Error: Expected identifier in for each statement").Value
+    p.expect(tokentype.In, "Error: Expected in after identifier in for each statement")
+    array := p.parseExpression()
+
+    p.expect(tokentype.LSquirly, "Error: Expected { after for each statement")
+
+    var body []ast.Statement
+    for p.at().Type != tokentype.RSquirly {
+        body = append(body, p.parseStatement())
+    }
+
+    p.expect(tokentype.RSquirly, "Error: Expected } after for each statement")
+
+    return &ast.ForEachStatement{Variable: value, Collection: array, Body: body}
 }
 
 func (p *Parser) parseLoopStatement() ast.Statement {
@@ -247,8 +291,10 @@ func (p *Parser) parseVariableDeclaration() ast.Statement {
         Value: p.parseExpression(),
     }
 
-    if p.at().Type == tokentype.SemiColon {
-        p.eat()
+    if !p.isLoop {
+        if p.at().Type == tokentype.SemiColon {
+            p.eat()
+        }
     }
     return declaration
 }
@@ -318,6 +364,22 @@ func (p *Parser) parseNotExpression() ast.Expression {
     return p.parseComparisonExpression()
 }
 
+func (p *Parser) parseArrayExpression() ast.Expression {
+    if p.at().Type != tokentype.OpenBracket {
+        return p.parseAdditiveExpression()
+    }
+    p.eat()
+    elements := []ast.Expression{}
+    for p.at().Type != tokentype.CloseBracket {
+        elements = append(elements, p.parseExpression())
+        if p.at().Type == tokentype.Comma {
+            p.eat()
+        }
+    }
+    p.expect(tokentype.CloseBracket, "Expected closing bracket after array expression")
+    return &ast.ArrayLiteral{Elements: elements}
+}
+
 func (p *Parser) parseAssignmentExpression() ast.Expression {
     left := p.parseOrExpression()
 
@@ -335,7 +397,7 @@ func (p *Parser) parseAssignmentExpression() ast.Expression {
 
 func (p *Parser) parseObjectExpression() ast.Expression {
     if p.at().Type != tokentype.LSquirly {
-        return p.parseAdditiveExpression()
+        return p.parseArrayExpression()
     }
 
     p.eat()
