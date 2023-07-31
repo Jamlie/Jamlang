@@ -7,6 +7,8 @@ import (
     "strings"
     "bufio"
     "io/ioutil"
+    "io"
+    "net/http"
     
     "github.com/Jamlee977/CustomLanguage/parser"
     "github.com/Jamlee977/CustomLanguage/runtimelang"
@@ -43,7 +45,8 @@ func repl() {
 
 func main() {
     runFlag := flag.Bool("r", false, "Run a file")
-    helpFlag := flag.Bool("h", false, "Run a file")
+    helpFlag := flag.Bool("h", false, "Help")
+    installFlag := flag.Bool("i", false, "Install a package")
     flag.Parse()
     args := flag.Args()
     if flag.NFlag() == 0 && len(args) == 0 {
@@ -79,6 +82,44 @@ func main() {
             fmt.Println("  -h\t\tShow this help message")
             fmt.Println("  run\t\tRun a file")
             fmt.Println("  help\t\tShow this help message")
+        } else if *installFlag {
+            if len(args) < 1 {
+                fmt.Println("No package specified")
+                os.Exit(0)
+            }
+            if _, err := os.Stat("std/" + args[0] + ".jam"); err == nil {
+                fmt.Println("Library already installed")
+                os.Exit(0)
+            }
+
+            if args[0] == "math" {
+                resp, err := http.Get("https://raw.githubusercontent.com/Jamlee977/CustomLanguage/main/std/math.jam")
+                if err != nil {
+                    fmt.Println(err)
+                    os.Exit(0)
+                }
+                defer resp.Body.Close()
+
+                if _, err := os.Stat("std"); os.IsNotExist(err) {
+                    os.Mkdir("std", 0755)
+                }
+
+                file, err := os.Create("std/" + args[0] + ".jam")
+                if err != nil {
+                    fmt.Println(err)
+                    os.Exit(0)
+                }
+                defer file.Close()
+
+                _, err = io.Copy(file, resp.Body)
+                if err != nil {
+                    fmt.Println(err)
+                    os.Exit(0)
+                }
+            } else {
+                fmt.Println("Unknown library")
+                os.Exit(0)
+            }
         } else {
              option := args[0]
             if option == "run" {
@@ -112,12 +153,57 @@ func main() {
                 fmt.Println("Options:")
                 fmt.Println("  -r\t\tRun a file")
                 fmt.Println("  -h\t\tShow this help message")
+                fmt.Println("  -i\t\tInstall a library")
                 fmt.Println("  run\t\tRun a file")
                 fmt.Println("  help\t\tShow this help message")
+                fmt.Println("  install\tInstall a library")
+            } else if args[0] == "install" {
+                if len(args) < 2 {
+                    fmt.Println("Usage: jamlang install [library]")
+                    os.Exit(0)
+                }
+
+                if _, err := os.Stat("std/" + args[1] + ".jam"); err == nil {
+                    fmt.Println("Library already installed")
+                    os.Exit(0)
+                }
+
+                if args[1] == "math" {
+                    resp, err := http.Get("https://raw.githubusercontent.com/Jamlee977/CustomLanguage/main/std/math.jam")
+                    if err != nil {
+                        fmt.Println(err)
+                        os.Exit(0)
+                    }
+                    defer resp.Body.Close()
+
+                    if _, err := os.Stat("std"); os.IsNotExist(err) {
+                        os.Mkdir("std", 0755)
+                    }
+
+                    file, err := os.Create("std/" + args[1] + ".jam")
+                    if err != nil {
+                        fmt.Println(err)
+                        os.Exit(0)
+                    }
+                    defer file.Close()
+
+                    _, err = io.Copy(file, resp.Body)
+                    if err != nil {
+                        fmt.Println(err)
+                        os.Exit(0)
+                    }
+                } else {
+                    fmt.Println("Unknown library")
+                    os.Exit(0)
+                }
             } else {
                 fmt.Println("Unknown option")
                 fmt.Println("Usage: jamlang [run] [file]")
                 fmt.Println("Usage: jamlang -r [file]")
+                fmt.Println("Usage: jamlang -i [library]")
+                fmt.Println("Usage: jamlang install [library]")
+                fmt.Println("Usage: jamlang -h")
+                fmt.Println("Usage: jamlang help")
                 fmt.Println("Usage: jamlang")
             }
         }
