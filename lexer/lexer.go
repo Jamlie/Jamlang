@@ -98,6 +98,16 @@ func Tokenize(sourceCode string) []Token {
                 src = src[2:]
                 continue
             }
+            if src[0] == "*" && src[1] == "*" {
+                tokens = append(tokens, createToken("**", tokentype.BinaryOperator))
+                src = src[2:]
+                continue
+            }
+            if src[0] == "/" && src[1] == "/" {
+                tokens = append(tokens, createToken("//", tokentype.BinaryOperator))
+                src = src[2:]
+                continue
+            }
             tokens = append(tokens, createToken(src[0], tokentype.BinaryOperator))
             src = src[1:]
         } else if src[0] == "=" {

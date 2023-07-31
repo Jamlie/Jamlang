@@ -149,7 +149,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
             return nil, nil
         }
 
-        result, err := EvaluateConditionalExpression(*conditionalStatement, env)
+        result, err := EvaluateConditionalExpression(*conditionalStatement, &env)
 
         if err == IsReturnError {
             return result, IsReturnError

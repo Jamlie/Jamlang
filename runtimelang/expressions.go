@@ -307,14 +307,19 @@ func EvaluateWhileExpression(expr ast.WhileStatement, env *Environment) (Runtime
     return MakeNullValue(), nil
 }
 
-func EvaluateConditionalExpression(expr ast.ConditionalStatement, env Environment) (RuntimeValue, error) {
-    condition, err := Evaluate(expr.Condition, env)
+func EvaluateConditionalExpression(expr ast.ConditionalStatement, env *Environment) (RuntimeValue, error) {
+    condition, err := Evaluate(expr.Condition, *env)
     if err != nil {
         fmt.Println(err)
         os.Exit(0)
     }
 
-    scope := NewEnvironment(&env)
+    scope := NewEnvironment(env)
+    scope.variables = env.variables
+
+    if condition.Type() != Bool {
+        return MakeNullValue(), fmt.Errorf("if statement condition must be a boolean")
+    }
 
     if condition.Get() == true {
         for _, statement := range expr.Body {
@@ -339,6 +344,14 @@ func EvaluateConditionalExpression(expr ast.ConditionalStatement, env Environmen
                 os.Exit(0)
             }
         }
+
+        for k, v := range scope.variables {
+            if _, ok := env.variables[k]; ok {
+                env.variables[k] = v
+            }
+        }
+
+        scope = NewEnvironment(env)
     } else {
         for _, statement := range expr.Alternate {
             if statement.Kind() == ast.ReturnStatementType {
@@ -361,7 +374,16 @@ func EvaluateConditionalExpression(expr ast.ConditionalStatement, env Environmen
                 os.Exit(0)
             }
         }
+
+        for k, v := range scope.variables {
+            if _, ok := env.variables[k]; ok {
+                env.variables[k] = v
+            }
+        }
+
+        scope = NewEnvironment(env)
     }
+
 
     return MakeNullValue(), nil
 }
@@ -616,6 +638,8 @@ func EvaluateNumericBinaryExpression(lhs, rhs NumberValue, op string) RuntimeVal
         result = lhs.Value - rhs.Value
     } else if op == "*" {
         result = lhs.Value * rhs.Value
+    } else if op == "**" {
+        result = math.Pow(lhs.Value, rhs.Value)
     } else if op == "/" {
         if rhs.Value == 0 {
             fmt.Printf("Division by zero\n")
@@ -623,6 +647,13 @@ func EvaluateNumericBinaryExpression(lhs, rhs NumberValue, op string) RuntimeVal
             return nil
         }
         result = lhs.Value / rhs.Value
+    } else if op == "//" {
+        if rhs.Value == 0 {
+            fmt.Printf("Division by zero\n")
+            os.Exit(0)
+            return nil
+        }
+        result = math.Floor(lhs.Value / rhs.Value)
     } else if op == "%" {
         result = math.Mod(lhs.Value, rhs.Value)
     } else if op == ">" {

@@ -177,3 +177,12 @@ func jamlangCopy(args []RuntimeValue, environment Environment) RuntimeValue {
 func jamlangTuple(args []RuntimeValue, environment Environment) RuntimeValue {
     return MakeTupleValue(args)
 }
+
+func jamlangToString(args []RuntimeValue, environment Environment) RuntimeValue {
+    if len(args) != 1 {
+        fmt.Println("string takes 1 argument")
+        os.Exit(0)
+    }
+
+    return MakeStringValue(args[0].ToString())
+}

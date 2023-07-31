@@ -1,0 +1,152 @@
+const __E = 2.718281828459045
+const __PI = 3.141592653589793
+const __LN2 = 0.69314718056
+const __LN10 = 2.30258509299
+
+fn __power(base, exponent) {
+    exponent = exponent // 1
+    if typeof(base) == "number" and typeof(exponent) != "number" {
+        return null
+    }
+
+    let result = 1
+    if base == 0 { return 0 }
+    if base == 1 { return 1 }
+    if exponent == 0 { return 1 }
+
+    if exponent < 0 {
+        while exponent != 0 {
+            result = result / base
+            ++exponent
+        }
+        return result
+    }
+
+    while exponent != 0 {
+        result = result * base
+        --exponent
+    }
+
+    return result
+}
+
+fn __abs(a) {
+    if typeof(a) != "number" {
+        return null
+    }
+    if a > 0 {
+        return a
+    }
+    return -a    
+}
+
+fn __factorial(x) {
+    if typeof(x) != "number" {
+        return null
+    }
+    let fact = 1
+    for let i = x; i > 1; --i {
+        fact = fact * i
+    }
+    return fact
+}
+
+fn __ln(x) {
+    if typeof(x) != "number" {
+        return null
+    }
+
+    if x <= 0 {
+        return null
+    }
+
+    let power = 0
+
+    while x > 1 {
+        x = x / __E
+        ++power
+    }
+
+    while x < 0.25 {
+        x = x * __E
+        --power
+    }
+
+    --x
+
+    let semiResult = 0
+    let oneMinusOne = 1
+    let value = x
+    let i = 1
+
+    while i <= 20 {
+        semiResult = semiResult + value * (oneMinusOne / i)
+        oneMinusOne = -oneMinusOne
+        value = value * x
+        ++i
+    }
+
+    return semiResult + power
+}
+
+fn __log10(x) {
+    if typeof(x) != "number" {
+        return null
+    }
+    return __ln(x) / __LN10
+}
+
+fn __log2(x) {
+    if typeof(x) != "number" {
+        return null
+    }
+    return __ln(x) / __LN2
+}
+
+fn __logn(value, base) {
+    if typeof(value) != "number" and typeof(base) != "number" {
+        return null
+    }
+    return __ln(value) / __ln(base)
+}
+
+fn __exp(x) {
+    if typeof(x) != "number" {
+        return null
+    }
+    
+    let result = 0
+    let i = 0
+    while i < 109 {
+        let powerValue = __power(x, i)
+        let fact = __factorial(i)
+        result = result + powerValue / fact
+        ++i
+    }
+
+    return result
+}
+
+fn __pow(base, exponent) {
+    if typeof(base) == "number" and typeof(exponent) != "number" {
+        return null
+    }
+
+    return base ** exponent
+}
+
+
+const Math = {
+    E: 2.718281828459045,
+    PI: 3.141592653589793,
+    LN2: 0.69314718056,
+    LN10: 2.30258509299,
+    abs: __abs,
+    factorial: __factorial,
+    ln: __ln,
+    log10: __log10,
+    log2: __log2,
+    logn: __logn,
+    exp: __exp,
+    pow: __pow
+}

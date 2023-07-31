@@ -478,7 +478,7 @@ func (p *Parser) parseAdditiveExpression() ast.Expression {
 func (p *Parser) parseMultiplicativeExpression() ast.Expression {
     left := p.parseCallMemberExpression()
 
-    for p.at().Value == "*" || p.at().Value == "/" || p.at().Value == "%" {
+    for p.at().Value == "*" || p.at().Value == "/" || p.at().Value == "%" || p.at().Value == "**" || p.at().Value == "//" {
         operator := p.eat().Value
 
         right := p.parseCallMemberExpression()

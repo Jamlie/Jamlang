@@ -26,14 +26,18 @@ func CreateGlobalEnvironment() *Environment {
     env.DeclareVariable("len", MakeNativeFunction(jamlangLen), true)
     env.DeclareVariable("append", MakeNativeFunction(jamlangAppend), true)
     env.DeclareVariable("pop", MakeNativeFunction(jamlangPop), true)
-    env.DeclareVariable("set", MakeNativeFunction(jamlangSetArrayElement), true)
     env.DeclareVariable("tuple", MakeNativeFunction(jamlangTuple), true)
+
 
     return env
 }
 
 func NewEnvironment(parent *Environment) *Environment {
-    return &Environment{parent, make(map[string]RuntimeValue), make(map[string]bool)}
+    return &Environment{
+        parent: parent,
+        variables: make(map[string]RuntimeValue),
+        constants: make(map[string]bool),
+    }
 }
 
 func (e *Environment) DeclareVariable(name string, value RuntimeValue, constant bool) RuntimeValue {
