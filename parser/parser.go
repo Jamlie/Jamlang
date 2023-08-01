@@ -1,9 +1,9 @@
 package parser
 
 import (
-    "strconv"
     "fmt"
     "os"
+    "strconv"
 
     "github.com/Jamlee977/CustomLanguage/ast"
     "github.com/Jamlee977/CustomLanguage/lexer"
@@ -11,9 +11,9 @@ import (
 )
 
 type Parser struct {
-    tokens []lexer.Token
+    tokens     []lexer.Token
     isFunction bool
-    isLoop bool
+    isLoop     bool
 }
 
 func NewParser() *Parser {
@@ -39,6 +39,8 @@ func (p *Parser) ProduceAST(sourceCode string) ast.Program {
 
 func (p *Parser) parseStatement() ast.Statement {
     switch p.at().Type {
+    case tokentype.OpenComment:
+        return p.parseComment()
     case tokentype.Let:
         return p.parseVariableDeclaration()
     case tokentype.Constant:
@@ -78,7 +80,15 @@ func (p *Parser) parseStatement() ast.Statement {
         return &ast.NullLiteral{}
     default:
         return p.parseExpression()
+}
+}
+
+func (p *Parser) parseComment() ast.Statement {
+    for p.at().Type != tokentype.CloseComment {
+        p.eat()
     }
+    p.expect(tokentype.CloseComment, "Error: Expected close comment")
+    return &ast.NullLiteral{}
 }
 
 func (p *Parser) parseImportStatement() ast.Statement {
@@ -107,7 +117,7 @@ func (p *Parser) parseForStatement() ast.Statement {
 
 func (p *Parser) parseForEachStatement() ast.Statement {
     p.eat()
-    
+
     p.isLoop = true
     defer func() { p.isLoop = false }()
 
@@ -159,7 +169,7 @@ func (p *Parser) parseWhileStatement() ast.Statement {
 
     return &ast.WhileStatement{
         Condition: condition,
-        Body: body,
+        Body:      body,
     }
 }
 
@@ -188,7 +198,7 @@ func (p *Parser) parseIfStatement() ast.Statement {
 
         return &ast.ConditionalStatement{
             Condition: condition,
-            Body: body,
+            Body:      body,
             Alternate: elseBody,
         }
     }
@@ -239,16 +249,16 @@ func (p *Parser) parseFunctionDeclaration() ast.Statement {
     p.isFunction = true
     defer func() { p.isFunction = false }()
     body := []ast.Statement{}
-    for (p.at().Type != tokentype.EndOfFile && p.at().Type != tokentype.RSquirly) {
+    for p.at().Type != tokentype.EndOfFile && p.at().Type != tokentype.RSquirly {
         body = append(body, p.parseStatement())
     }
 
     p.expect(tokentype.RSquirly, "Error: Expected '}' after function declaration")
-    
+
     return &ast.FunctionDeclaration{
-        Name: name,
+        Name:       name,
         Parameters: params,
-        Body: body,
+        Body:       body,
     }
 }
 
@@ -264,7 +274,6 @@ func (p *Parser) parseReturnStatement() ast.Statement {
     }
 }
 
-
 func (p *Parser) parseVariableDeclaration() ast.Statement {
     isConstant := p.eat().Type == tokentype.Constant
     identifier := p.expect(tokentype.Identifier, "Error: Expected identifier name after let/const keyword").Value
@@ -279,16 +288,16 @@ func (p *Parser) parseVariableDeclaration() ast.Statement {
 
         return &ast.VariableDeclaration{
             Identifier: identifier,
-            Constant: isConstant,
-            Value: &ast.NullLiteral{},
+            Constant:   isConstant,
+            Value:      &ast.NullLiteral{},
         }
     }
 
     p.expect(tokentype.Equals, "Expected = after identifier name")
     declaration := &ast.VariableDeclaration{
         Identifier: identifier,
-        Constant: isConstant,
-        Value: p.parseExpression(),
+        Constant:   isConstant,
+        Value:      p.parseExpression(),
     }
 
     if !p.isLoop {
@@ -315,8 +324,8 @@ func (p *Parser) parseOrExpression() ast.Expression {
         right := p.parseAndExpression()
         left = &ast.LogicalExpression{
             Operator: "or",
-            Left: left,
-            Right: right,
+            Left:     left,
+            Right:    right,
         }
     }
 
@@ -331,8 +340,8 @@ func (p *Parser) parseAndExpression() ast.Expression {
         right := p.parseXorExpression()
         left = &ast.LogicalExpression{
             Operator: "and",
-            Left: left,
-            Right: right,
+            Left:     left,
+            Right:    right,
         }
     }
     return left
@@ -346,8 +355,8 @@ func (p *Parser) parseXorExpression() ast.Expression {
         right := p.parseNotExpression()
         left = &ast.LogicalExpression{
             Operator: "xor",
-            Left: left,
-            Right: right,
+            Left:     left,
+            Right:    right,
         }
     }
     return left
@@ -358,7 +367,7 @@ func (p *Parser) parseNotExpression() ast.Expression {
         p.eat()
         return &ast.LogicalExpression{
             Operator: "not",
-            Right: p.parseNotExpression(),
+            Right:    p.parseNotExpression(),
         }
     }
     return p.parseComparisonExpression()
@@ -366,7 +375,7 @@ func (p *Parser) parseNotExpression() ast.Expression {
 
 func (p *Parser) parseArrayExpression() ast.Expression {
     if p.at().Type != tokentype.OpenBracket {
-        return p.parseAdditiveExpression()
+        return p.parseBitwise()
     }
     p.eat()
     elements := []ast.Expression{}
@@ -388,7 +397,7 @@ func (p *Parser) parseAssignmentExpression() ast.Expression {
         value := p.parseAssignmentExpression()
         return &ast.AssignmentExpression{
             Assigne: left,
-            Value: value,
+            Value:   value,
         }
     }
 
@@ -422,7 +431,7 @@ func (p *Parser) parseObjectExpression() ast.Expression {
         p.expect(tokentype.Colon, "Expected : after object key")
         value := p.parseExpression()
         properties = append(properties, ast.Property{
-            Key: key,
+            Key:   key,
             Value: value,
         })
 
@@ -449,12 +458,48 @@ func (p *Parser) parseComparisonExpression() ast.Expression {
         right := p.parseObjectExpression()
 
         left = &ast.BinaryExpression{
-            Left: left,
+            Left:     left,
             Operator: operator,
-            Right: right,
+            Right:    right,
         }
     }
 
+    return left
+}
+
+func (p *Parser) parseBitwise() ast.Expression {
+    left := p.parseBitwiseShiftBit()
+
+    for p.at().Value == "&" || p.at().Value == "|" || p.at().Value == "^" {
+        operator := p.eat().Value
+
+        right := p.parseBitwiseShiftBit()
+
+        left = &ast.BinaryExpression{
+            Left:     left,
+            Operator: operator,
+            Right:    right,
+        }
+    }
+
+    return left
+}
+
+func (p *Parser) parseBitwiseShiftBit() ast.Expression {
+    left := p.parseAdditiveExpression()
+
+    for p.at().Value == "<<" || p.at().Value == ">>" || p.at().Value == ">>>" {
+        operator := p.eat().Value
+
+        right := p.parseAdditiveExpression()
+
+        left = &ast.BinaryExpression{
+            Left:     left,
+            Operator: operator,
+            Right:    right,
+        }
+    }
+    
     return left
 }
 
@@ -466,9 +511,9 @@ func (p *Parser) parseAdditiveExpression() ast.Expression {
 
         right := p.parseMultiplicativeExpression()
         left = &ast.BinaryExpression{
-            Left: left,
+            Left:     left,
             Operator: operator,
-            Right: right,
+            Right:    right,
         }
     }
 
@@ -483,9 +528,9 @@ func (p *Parser) parseMultiplicativeExpression() ast.Expression {
 
         right := p.parseCallMemberExpression()
         left = &ast.BinaryExpression{
-            Left: left,
+            Left:     left,
             Operator: operator,
-            Right: right,
+            Right:    right,
         }
     }
 
@@ -505,7 +550,7 @@ func (p *Parser) parseCallMemberExpression() ast.Expression {
 func (p *Parser) parseCallExpression(caller ast.Expression) ast.Expression {
     var callExpression ast.Expression = &ast.CallExpression{
         Caller: caller,
-        Args: p.parseArgs(),
+        Args:   p.parseArgs(),
     }
 
     if p.at().Type == tokentype.OpenParen {
@@ -532,7 +577,6 @@ func (p *Parser) parseArgs() []ast.Expression {
 
 func (p *Parser) parseArgumentsList() []ast.Expression {
     args := []ast.Expression{p.parseAssignmentExpression()}
-
 
     for p.at().Type == tokentype.Comma {
         p.eat()
@@ -566,7 +610,7 @@ func (p *Parser) parseMemberExpression() ast.Expression {
         }
 
         object = &ast.MemberExpression{
-            Object: object,
+            Object:   object,
             Property: property,
             Computed: computed,
         }
@@ -610,13 +654,13 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
         value := p.parsePrimaryExpression()
         return &ast.UnaryExpression{
             Operator: operator,
-            Value: value,
+            Value:    value,
         }
     default:
         fmt.Println("Unexpected token found: ", p.at())
         os.Exit(0)
         return nil
-    }
+}
 }
 
 func (p *Parser) at() lexer.Token {

@@ -15,6 +15,8 @@ const (
     ComparisonOperator
     Whitespace
     SemiColon
+    OpenComment
+    CloseComment
 
     Comma
     ColonColon

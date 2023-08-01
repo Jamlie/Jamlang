@@ -3,6 +3,7 @@ package runtimelang
 import (
     "fmt"
     "os"
+    "strconv"
     "time"
 )
 
@@ -185,4 +186,31 @@ func jamlangToString(args []RuntimeValue, environment Environment) RuntimeValue 
     }
 
     return MakeStringValue(args[0].ToString())
+}
+
+func jamlangHex(args []RuntimeValue, environment Environment) RuntimeValue {
+    // takes a string value of a hexadecimally encoded number and returns a number value
+    if len(args) != 1 {
+        fmt.Println("hex takes 1 argument")
+        os.Exit(0)
+    }
+
+    if args[0].Type() != "string" {
+        fmt.Println("hex takes a string")
+        os.Exit(0)
+    }
+
+    hexString := args[0].ToString()
+
+    hexInt, err := strconv.ParseInt(hexString, 16, 64)
+    if err != nil {
+        fmt.Println("hex takes a string")
+        os.Exit(0)
+    }
+
+    return MakeNumberValue(float64(hexInt))
+}
+
+func jamlangCurrentTime(args []RuntimeValue, environment Environment) RuntimeValue {
+    return MakeNumberValue(float64(time.Now().UnixNano()))
 }

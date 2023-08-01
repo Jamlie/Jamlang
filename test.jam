@@ -1,5 +1,9 @@
 import "std/math.jam"
 
+const time = {
+
+}
+
 println(Math.abs(-0))
 println(Math.abs(1))
 println(Math.abs(-4))
@@ -11,4 +15,7 @@ println(Math.ln(2))
 println(Math.exp(100))
 println(Math.pow(Math.PI, Math.E))
 println(Math.PI ** Math.E)
-println(0.1 + 0.2)
+println(Math.floor(-2.3))
+println(Math.ceil(-2.3))
+println(4 ^ 2)
+println(time.now())

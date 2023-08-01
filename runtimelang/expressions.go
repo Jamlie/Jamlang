@@ -656,6 +656,12 @@ func EvaluateNumericBinaryExpression(lhs, rhs NumberValue, op string) RuntimeVal
         result = math.Floor(lhs.Value / rhs.Value)
     } else if op == "%" {
         result = math.Mod(lhs.Value, rhs.Value)
+    } else if op == "&" {
+        result = float64(int64(lhs.Value) & int64(rhs.Value))
+    } else if op == "|" {
+        result = float64(int64(lhs.Value) | int64(rhs.Value))
+    } else if op == "^" {
+        result = float64(int64(lhs.Value) ^ int64(rhs.Value))
     } else if op == ">" {
         isGreaterThan := lhs.Value > rhs.Value
         if isGreaterThan {
@@ -692,6 +698,10 @@ func EvaluateNumericBinaryExpression(lhs, rhs NumberValue, op string) RuntimeVal
             return BoolValue{true}
         }
         return BoolValue{false}
+    } else if op == "<<" {
+        result = float64(int64(lhs.Value) << int64(rhs.Value))
+    } else if op == ">>" {
+        result = float64(int64(lhs.Value) >> int64(rhs.Value))
     } else {
         fmt.Printf("Error: Unknown operator: %s\n", op)
         os.Exit(0)

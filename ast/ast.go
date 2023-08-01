@@ -21,6 +21,7 @@ const (
     BreakStatementType NodeType = "BreakStatement"
     ImportStatementType NodeType = "ImportStatement"
     ClassDeclarationType NodeType = "ClassDeclaration"
+    CommentType NodeType = "Comment"
 
 
     PropertyType NodeType = "Property"
@@ -175,6 +176,18 @@ func (c *ClassDeclaration) ToString() string {
     s += "}\n"
 
     return s
+}
+
+type Comment struct {
+    Text string
+}
+
+func (c *Comment) Kind() NodeType {
+    return CommentType
+}
+
+func (c *Comment) ToString() string {
+    return "/*" + c.Text + "*/"
 }
 
 type Expression interface {

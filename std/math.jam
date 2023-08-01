@@ -135,6 +135,22 @@ fn __pow(base, exponent) {
     return base ** exponent
 }
 
+fn __floor(x) {
+    if typeof(x) != "number" {
+        return null
+    }
+
+    return x // 1
+}
+
+fn __ceil(x) {
+    if typeof(x) != "number" {
+        return null
+    }
+    
+    return (x // 1) + 1
+}
+
 
 const Math = {
     E: 2.718281828459045,
@@ -148,5 +164,7 @@ const Math = {
     log2: __log2,
     logn: __logn,
     exp: __exp,
-    pow: __pow
+    pow: __pow,
+    floor: __floor,
+    ceil: __ceil,
 }

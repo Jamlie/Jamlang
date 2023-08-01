@@ -9,6 +9,8 @@ import (
 
 func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     switch astNode.Kind() {
+    case ast.CommentType:
+        return nil, nil
     case ast.NumericLiteralType:
         return NumberValue{astNode.(*ast.NumericLiteral).Value}, nil
     case ast.StringLiteralType:

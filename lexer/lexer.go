@@ -82,7 +82,7 @@ func Tokenize(sourceCode string) []Token {
         } else if src[0] == "]" {
             tokens = append(tokens, createToken(src[0], tokentype.CloseBracket))
             src = src[1:]
-        } else if src[0] == "+" || src[0] == "-" || src[0] == "*" || src[0] == "/" || src[0] == "%" {
+        } else if src[0] == "+" || src[0] == "-" || src[0] == "*" || src[0] == "/" || src[0] == "%" || src[0] == "&" || src[0] == "|" || src[0] == "^" {
             if (src[0] == "-" && isInt(src[1])) || (src[0] == "-" && isFloat(src[1])) || (src[0] == "-" && isAlpha(src[1])) {
                 tokens = append(tokens, createToken(src[0], tokentype.UnaryOperator))
                 src = src[1:]
@@ -103,6 +103,16 @@ func Tokenize(sourceCode string) []Token {
                 src = src[2:]
                 continue
             }
+            if src[0] == "/" && src[1] == "*" {
+                tokens = append(tokens, createToken("/*", tokentype.OpenComment))
+                src = src[2:]
+                continue
+            }
+            if src[0] == "*" && src[1] == "/" {
+                tokens = append(tokens, createToken("*/", tokentype.CloseComment))
+                src = src[2:]
+                continue
+            }
             if src[0] == "/" && src[1] == "/" {
                 tokens = append(tokens, createToken("//", tokentype.BinaryOperator))
                 src = src[2:]
@@ -114,9 +124,19 @@ func Tokenize(sourceCode string) []Token {
             tokens = append(tokens, createToken(src[0], tokentype.Equals))
             src = src[1:]
         } else if src[0] == ">" {
+            if src[1] == ">" {
+                tokens = append(tokens, createToken(">>", tokentype.BinaryOperator))
+                src = src[2:]
+                continue
+            }
             tokens = append(tokens, createToken(src[0], tokentype.ComparisonOperator))
             src = src[1:]
         } else if src[0] == "<" {
+            if src[1] == "<" {
+                tokens = append(tokens, createToken("<<", tokentype.BinaryOperator))
+                src = src[2:]
+                continue
+            }
             tokens = append(tokens, createToken(src[0], tokentype.ComparisonOperator))
             src = src[1:]
         } else if src[0] == ">" && src[1] == "=" {

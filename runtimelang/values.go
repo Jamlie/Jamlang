@@ -392,6 +392,10 @@ func MakeTupleValue(values []RuntimeValue) TupleValue {
     return TupleValue{Values: values}
 }
 
+func MakeObjectValue(properties map[string]RuntimeValue) ObjectValue {
+    return ObjectValue{Properties: properties}
+}
+
 func ToGoArrayValue(v ArrayValue) []RuntimeValue {
     return v.Values
 }

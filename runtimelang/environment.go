@@ -17,6 +17,10 @@ func CreateGlobalEnvironment() *Environment {
     env.DeclareVariable("false", MakeBoolValue(false), true)
     env.DeclareVariable("null", MakeNullValue(), true)
 
+    timeObject := make(map[string]RuntimeValue)
+    timeObject["now"] = MakeNativeFunction(jamlangCurrentTime)
+    env.DeclareVariable("time", MakeObjectValue(timeObject), true)
+
     env.DeclareVariable("println", MakeNativeFunction(jamlangPrintln), true)
     env.DeclareVariable("print", MakeNativeFunction(jamlangPrint), true)
     env.DeclareVariable("sleep", MakeNativeFunction(jamlangSleep), true)
@@ -27,6 +31,7 @@ func CreateGlobalEnvironment() *Environment {
     env.DeclareVariable("append", MakeNativeFunction(jamlangAppend), true)
     env.DeclareVariable("pop", MakeNativeFunction(jamlangPop), true)
     env.DeclareVariable("tuple", MakeNativeFunction(jamlangTuple), true)
+    env.DeclareVariable("hex", MakeNativeFunction(jamlangHex), true)
 
 
     return env
