@@ -185,6 +185,7 @@ func MakeBoolValue(value bool) BoolValue {
 
 type ObjectValue struct {
     Properties map[string]RuntimeValue
+    IsClass bool
 }
 
 func (v ObjectValue) Equals(other RuntimeValue) bool {
@@ -384,6 +385,7 @@ type FunctionValue struct {
     Parameters             []string
     DeclarationEnvironment Environment
     Body                   []ast.Statement
+    IsAnonymous            bool
 }
 
 func (v FunctionValue) Equals(other RuntimeValue) bool {

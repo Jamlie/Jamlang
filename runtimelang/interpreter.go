@@ -48,7 +48,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
             os.Exit(0)
             return nil, nil
         }
-        return EvaluateIdentifier(identifier, env), nil
+        return EvaluateIdentifier(identifier, &env), nil
     case ast.ObjectLiteralType:
         objectLiteral, ok := astNode.(*ast.ObjectLiteral)
         if !ok {
@@ -134,7 +134,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
             os.Exit(0)
             return nil, nil
         }
-        return EvaluateVariableDeclaration(*variableDeclaration, env), nil
+        return EvaluateVariableDeclaration(*variableDeclaration, &env), nil
     case ast.FunctionDeclarationType:
         functionDeclaration, ok := astNode.(*ast.FunctionDeclaration)
         if !ok {
@@ -142,7 +142,9 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
             os.Exit(0)
             return nil, nil
         }
-        return EvaluateFunctionDeclaration(*functionDeclaration, env), nil
+        
+        fn, _ := EvaluateFunctionDeclaration(*functionDeclaration, &env)
+        return fn, nil
     case ast.ConditionalStatementType:
         conditionalStatement, ok := astNode.(*ast.ConditionalStatement)
         if !ok {

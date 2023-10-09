@@ -86,6 +86,7 @@ type FunctionDeclaration struct {
     Parameters []string
     Name string
     Body []Statement
+    IsAnonymous bool
 }
 
 func (f *FunctionDeclaration) Kind() NodeType {
@@ -93,7 +94,12 @@ func (f *FunctionDeclaration) Kind() NodeType {
 }
 
 func (f *FunctionDeclaration) ToString() string {
-    s := "function " + f.Name + "("
+    var s string
+    if f.IsAnonymous {
+        s = "function("
+    } else {
+        s = "function " + f.Name + "("
+    }
     for i, param := range f.Parameters {
         if i > 0 {
             s += ", "

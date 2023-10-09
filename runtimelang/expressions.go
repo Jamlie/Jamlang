@@ -16,8 +16,37 @@ var (
     IsBreakError = fmt.Errorf("break statement error")
 )
 
+func EvaluateFunctionDeclaration(expr ast.FunctionDeclaration, env *Environment) (RuntimeValue, error) {
+    var fn FunctionValue
+    if expr.Name == "" {
+        expr.IsAnonymous = true
+    }
+    if expr.IsAnonymous {
+        fn = FunctionValue{
+            Body: expr.CloneBody(),
+            Parameters: expr.CloneParameters(),
+            DeclarationEnvironment: *env,
+            IsAnonymous: true,
+        }
+    } else {
+        fn = FunctionValue{
+            Name: expr.Name,
+            Body: expr.CloneBody(),
+            Parameters: expr.CloneParameters(),
+            DeclarationEnvironment: *env,
+        }
+
+        env.DeclareVariable(expr.Name, fn, true)
+    }
+
+    return fn, nil
+}
+
 func EvaluateClassDeclaration(expr ast.ClassDeclaration, env *Environment) (RuntimeValue, error) {
-    class := ObjectValue{map[string]RuntimeValue{}}
+    class := ObjectValue{
+        Properties: map[string]RuntimeValue{},
+        IsClass: true,
+    }
     actualClass := ClassValue{
         Name: expr.Name,
         Methods: make(map[string]*FunctionValue),
@@ -411,7 +440,7 @@ func EvaluateCallExpression(expr ast.CallExpression, env Environment) RuntimeVal
         result := function.(NativeFunctionValue).Call(args, env)
         return result
     } else if function.Type() == Function {
-        fn := function.(*FunctionValue)
+        fn := function.(FunctionValue)
         scope := NewEnvironment(&fn.DeclarationEnvironment)
 
         for i := 0; i < len(fn.Parameters); i++ {

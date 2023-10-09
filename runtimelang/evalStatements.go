@@ -24,25 +24,15 @@ func EvaluateReturnStatement(statement ast.ReturnStatement, env Environment) Run
     return returnValue
 }
 
-func EvaluateFunctionDeclaration(declaration ast.FunctionDeclaration, env Environment) RuntimeValue {
-    fn := FunctionValue{
-        Name: declaration.Name,
-        Parameters: declaration.Parameters,
-        DeclarationEnvironment: env,
-        Body: declaration.Body,
+func EvaluateVariableDeclaration(declaration ast.VariableDeclaration, env *Environment) RuntimeValue {
+    value, _ := Evaluate(declaration.Value, *env)
+    if value.Type() == "object" && value.(ObjectValue).IsClass {
+        value = value.(ObjectValue).Clone()
     }
-    return env.DeclareVariable(declaration.Name, &fn, true)
-}
-
-func EvaluateVariableDeclaration(declaration ast.VariableDeclaration, env Environment) RuntimeValue {
-    value, _ := Evaluate(declaration.Value, env)
-    // if value.Type() == "object" {
-    //     value = value.(ObjectValue).Clone()
-    // }
     return env.DeclareVariable(declaration.Identifier, value, declaration.Constant)
 }
 
-func EvaluateIdentifier(identifier *ast.Identifier, env Environment) RuntimeValue {
+func EvaluateIdentifier(identifier *ast.Identifier, env *Environment) RuntimeValue {
     if identifier == nil {
         return MakeNullValue()
     }

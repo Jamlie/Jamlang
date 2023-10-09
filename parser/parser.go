@@ -229,7 +229,11 @@ func (p *Parser) parseClassDeclaration() ast.Statement {
 
 func (p *Parser) parseFunctionDeclaration() ast.Statement {
     p.eat()
-    name := p.expect(tokentype.Identifier, "Error: Expected function name after fn keyword").Value
+    var name string
+
+    if p.at().Type != tokentype.OpenParen {
+        name = p.expect(tokentype.Identifier, "Error: Expected function name after fn keyword").Value
+    }
 
     args := p.parseArgs()
     var params []string
@@ -659,11 +663,13 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
             Operator: operator,
             Value:    value,
         }
+    case tokentype.Function:
+        return p.parseFunctionDeclaration()
     default:
         fmt.Println("Unexpected token found: ", p.at())
         os.Exit(0)
         return nil
-}
+    }
 }
 
 func (p *Parser) at() lexer.Token {
