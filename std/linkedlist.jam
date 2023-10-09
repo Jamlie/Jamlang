@@ -1,79 +1,60 @@
 fn Node(value) {
     return {
-        value,
-        next: null,
+        value: value,
+        next: null
     }
 }
 
 fn LinkedList() {
-    let head = null
+    let head = null;
 
     fn add(value) {
-        const node = Node(value)
-
-        if not head {
-            head = node
+        let node = Node(value);
+        if head == null {
+            head = node;
         } else {
-            let current = head
+            let current = head;
             while current.next != null {
-                current = current.next
+                current = current.next;
             }
-            current.next = node
+            current.next = node;
         }
     }
 
-    fn display() {
-        let current = head
-        let result = ""
+    fn printList() {
+        let current = head;
+        print("[ ")
         while current != null {
-            result = result + current.value + " -> "
-            current = current.next
-        }
-        println(result + "null")
-    }
-
-    fn length() {
-        let count = 0
-        let current = head
-        while current != null {
-            ++count
-            current = current.next
-        }
-        return count
-    }
-
-    fn search(value) {
-        let current = head
-        while current != null {
-            if current.value == value {
-                return current
+            if current.next == null {
+                print(current.value)
+                break
             }
-            current = current.next
+            print(current.value, ", ");
+            current = current.next;
         }
-        return null
+        println(" ]")
     }
 
     fn remove(value) {
-        if not head {
-            return null
-        }
-
-        if head.value == value {
-            head = head.next
-        } else {
-            let current = head
-            while current.next != null {
-                if current.next.value == value {
-                    current.next = current.next.next
-                    break
+        let current = head;
+        let previous = null;
+        while current != null {
+            if current.value == value {
+                if previous == null {
+                    head = current.next;
+                } else {
+                    previous.next = current.next;
                 }
-                current = current.next
+                break;
             }
+            previous = current;
+            current = current.next;
         }
     }
 
     return {
         add,
-        display,
+        printList,
+        remove,
     }
 }

@@ -93,53 +93,13 @@ func main() {
             }
 
             if args[0] == "math" {
-                resp, err := http.Get("https://raw.githubusercontent.com/Jamlee977/CustomLanguage/main/std/math.jam")
-                if err != nil {
-                    fmt.Println(err)
-                    os.Exit(0)
-                }
-                defer resp.Body.Close()
-
-                if _, err := os.Stat("std"); os.IsNotExist(err) {
-                    os.Mkdir("std", 0755)
-                }
-
-                file, err := os.Create("std/" + args[0] + ".jam")
-                if err != nil {
-                    fmt.Println(err)
-                    os.Exit(0)
-                }
-                defer file.Close()
-
-                _, err = io.Copy(file, resp.Body)
-                if err != nil {
-                    fmt.Println(err)
-                    os.Exit(0)
-                }
+                getLibrary("math")
             } else if args[0] == "random" {
-                resp, err := http.Get("https://raw.githubusercontent.com/Jamlee977/CustomLanguage/main/std/random.jam")
-                if err != nil {
-                    fmt.Println(err)
-                    os.Exit(0)
-                }
-                defer resp.Body.Close()
-
-                if _, err := os.Stat("std"); os.IsNotExist(err) {
-                    os.Mkdir("std", 0755)
-                }
-
-                file, err := os.Create("std/" + args[0] + ".jam")
-                if err != nil {
-                    fmt.Println(err)
-                    os.Exit(0)
-                }
-                defer file.Close()
-
-                _, err = io.Copy(file, resp.Body)
-                if err != nil {
-                    fmt.Println(err)
-                    os.Exit(0)
-                }
+                getLibrary("random")
+            } else if args[0] == "algorithm" {
+                getLibrary("algorithm")
+            } else if args[0] == "linkedlist" {
+                getLibrary("linkedlist")
             } else {
                 fmt.Println("Unknown library")
                 os.Exit(0)
@@ -171,7 +131,6 @@ func main() {
                     fmt.Println(err)
                     os.Exit(0)
                 }
-
             } else if args[0] == "help" {
                 fmt.Println("Usage: jamlang [options] [file]")
                 fmt.Println("Options:")
@@ -193,54 +152,14 @@ func main() {
                 }
 
                 if args[1] == "math" {
-                    resp, err := http.Get("https://raw.githubusercontent.com/Jamlee977/CustomLanguage/main/std/math.jam")
-                    if err != nil {
-                        fmt.Println(err)
-                        os.Exit(0)
-                    }
-                    defer resp.Body.Close()
-
-                    if _, err := os.Stat("std"); os.IsNotExist(err) {
-                        os.Mkdir("std", 0755)
-                    }
-
-                    file, err := os.Create("std/" + args[1] + ".jam")
-                    if err != nil {
-                        fmt.Println(err)
-                        os.Exit(0)
-                    }
-                    defer file.Close()
-
-                    _, err = io.Copy(file, resp.Body)
-                    if err != nil {
-                        fmt.Println(err)
-                        os.Exit(0)
-                    }
+                    getLibrary("math")
                 } else if args[1] == "random" {
-                    resp, err := http.Get("https://raw.githubusercontent.com/Jamlee977/CustomLanguage/main/std/random.jam")
-                    if err != nil {
-                        fmt.Println(err)
-                        os.Exit(0)
-                    }
-                    defer resp.Body.Close()
-
-                    if _, err := os.Stat("std"); os.IsNotExist(err) {
-                        os.Mkdir("std", 0755)
-                    }
-
-                    file, err := os.Create("std/random.jam")
-                    if err != nil {
-                        fmt.Println(err)
-                        os.Exit(0)
-                    }
-                    defer file.Close()
-
-                    _, err = io.Copy(file, resp.Body)
-                    if err != nil {
-                        fmt.Println(err)
-                        os.Exit(0)
-                    }
-                } else {
+                    getLibrary("random")
+                } else if args[1] == "algorithm" {
+                    getLibrary("algorithm")
+                } else if args[1] == "linkedlist" {
+                    getLibrary("linkedlist")
+                }else {
                     fmt.Println("Unknown library")
                     os.Exit(0)
                 }
@@ -255,6 +174,33 @@ func main() {
                 fmt.Println("Usage: jamlang")
             }
         }
+    }
+}
+
+func getLibrary(name string) {
+    link := fmt.Sprintf("https://raw.githubusercontent.com/Jamlie/CustomLanguage/main/std/%s.jam", name)
+    resp, err := http.Get(link)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(0)
+    }
+    defer resp.Body.Close()
+
+    if _, err := os.Stat("std"); os.IsNotExist(err) {
+        os.Mkdir("std", 0755)
+    }
+
+    file, err := os.Create("std/" + name + ".jam")
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(0)
+    }
+    defer file.Close()
+
+    _, err = io.Copy(file, resp.Body)
+    if err != nil {
+        fmt.Println(err)
+        os.Exit(0)
     }
 }
 

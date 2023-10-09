@@ -1,10 +1,27 @@
+import "std/algorithm.jam"
+import "std/linkedlist.jam"
+
+let x = sort([1,2,4,5,2,5,5])
+println(x)
+
+const list = LinkedList()
+list.add(1)
+list.add(2)
+list.add(3)
+list.add(4)
+list.add(5)
+list.add(6)
+list.add(7)
+list.printList()
+list.remove(2)
+list.printList()
+
 fn adder(x) {
-    fn sum(y) {
+    fn add(y) {
         return x + y
     }
-    return sum
+    return add
 }
 
-const addTwo = adder(2)
-
-println(addTwo(3))
+let add5 = adder(5)
+println(add5(2))

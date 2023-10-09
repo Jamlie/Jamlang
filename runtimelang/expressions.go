@@ -594,6 +594,30 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
         return EvaluateNumericStringBinaryExpression(lhs.(NumberValue), rhs.(StringValue), binaryExpression.Operator)
     } else if lhs.Type() == "null" || rhs.Type() == "null" {
         return EvaluateNullBinaryExpression(lhs, rhs, binaryExpression.Operator)
+    } else if lhs.Type() == "object" && rhs.Type() == "object" {
+        return EvaluateObjectBinaryExpression(lhs.(ObjectValue), rhs.(ObjectValue), binaryExpression.Operator)
+    }
+
+
+    return MakeNullValue()
+}
+
+
+func EvaluateObjectBinaryExpression(lhs ObjectValue, rhs ObjectValue, op string) RuntimeValue {
+    if op == "==" {
+        for key, value := range lhs.Properties {
+            if !value.Equals(rhs.Properties[key]) {
+                return BoolValue{false}
+            }
+        }
+        return BoolValue{true}
+    } else if op == "!=" {
+        for key, value := range lhs.Properties {
+            if !value.Equals(rhs.Properties[key]) {
+                return BoolValue{true}
+            }
+        }
+        return BoolValue{false}
     }
 
     return MakeNullValue()
@@ -605,14 +629,29 @@ func EvaluateNullBinaryExpression(lhs RuntimeValue, rhs RuntimeValue, op string)
             return BoolValue{true}
         }
         return BoolValue{false}
-    } else if lhs.Type() == "bool" && rhs.Type() != "null" {
+    } else if lhs.Type() == "bool" && rhs.Type() == "null" {
+        if op == "==" {
+            return BoolValue{false}
+        }
+        return BoolValue{true}
+    } else if lhs.Type() == "null" && rhs.Type() == "bool" {
+        if op == "==" {
+            return BoolValue{false}
+        }
+        return BoolValue{true}
+    } else if lhs.Type() == "object" && rhs.Type() == "null" {
+        if op == "==" {
+            return BoolValue{false}
+        }
+        return BoolValue{true}
+    } else if lhs.Type() == "null" && rhs.Type() == "object" {
         if op == "==" {
             return BoolValue{false}
         }
         return BoolValue{true}
     }
 
-    return MakeNullValue()
+    return MakeBoolValue(false)
 }
 
 func EvaluateStringNumericBinaryExpression(lhs StringValue, rhs NumberValue, op string) RuntimeValue {
@@ -869,7 +908,6 @@ func EvaluateLogicalExpression(node ast.LogicalExpression, env Environment) Runt
         if err != nil {
             return nil
         }
-        fmt.Println(operand.Type())
         if operand.Type() != Bool {
             fmt.Println("Error: not operator can only be applied to boolean values")
             os.Exit(0)
