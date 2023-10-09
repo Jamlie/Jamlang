@@ -24,7 +24,7 @@ func EvaluateClassDeclaration(expr ast.ClassDeclaration, env *Environment) (Runt
     }
 
     scope := NewEnvironment(env)
-
+    
     for _, method := range expr.Body {
         if method.Kind() == ast.FunctionDeclarationType {
             if method.(*ast.FunctionDeclaration).Name == "constructor" {
@@ -37,9 +37,11 @@ func EvaluateClassDeclaration(expr ast.ClassDeclaration, env *Environment) (Runt
                 }
 
                 env.DeclareVariable(expr.Name, actualClass.Constructor, true)
+
                 continue
             }
             method := method.(*ast.FunctionDeclaration)
+
             class.Properties[method.Name] = &FunctionValue{
                 Name: method.Name,
                 Body: method.CloneBody(),
@@ -47,23 +49,19 @@ func EvaluateClassDeclaration(expr ast.ClassDeclaration, env *Environment) (Runt
                 DeclarationEnvironment: *scope,
             }
 
-            actualClass.Methods[method.Name] = class.Properties[method.Name].(*FunctionValue)
         } else if method.Kind() == ast.VariableDeclarationType {
             method := method.(*ast.VariableDeclaration)
-            value, err := Evaluate(method.Value, *scope)
+            _, err := Evaluate(method.Value, *scope)
             if err != nil {
                 return MakeNullValue(), err
             }
-            class.Properties[method.Identifier] = value.Clone()
-            actualClass.Fields[method.Identifier] = class.Properties[method.Identifier]
         } else {
             return MakeNullValue(), fmt.Errorf("unexpected method type")
         }
     }
 
-    scope.DeclareVariable("this", class, true)
-
-    return class.Clone(), nil
+    scope.DeclareVariable("this", class, false)
+    return class, nil
 }
 
 func EvaluateImportExpression(expr ast.ImportStatement, env *Environment) (RuntimeValue, error) {
@@ -244,11 +242,12 @@ func EvaluateLoopExpression(expr ast.LoopStatement, env *Environment) (RuntimeVa
             }
         }
 
-        for k, v := range scope.variables {
-            if _, ok := env.variables[k]; ok {
-                env.variables[k] = v
-            }
-        }
+        // ! why is this here?
+        // for k, v := range scope.variables {
+        //     if _, ok := env.variables[k]; ok {
+        //         env.variables[k] = v
+        //     }
+        // }
 
         scope = NewEnvironment(env)
     }
@@ -290,11 +289,13 @@ func EvaluateWhileExpression(expr ast.WhileStatement, env *Environment) (Runtime
                 os.Exit(0)
             }
         }
-        for k, v := range scope.variables {
-            if _, ok := env.variables[k]; ok {
-                env.variables[k] = v
-            }
-        }
+
+        // ! why was this a thing?
+        // for k, v := range scope.variables {
+        //     if _, ok := env.variables[k]; ok {
+        //         env.variables[k] = v
+        //     }
+        // }
 
         scope = NewEnvironment(env)
         condition, err = Evaluate(expr.Condition, *env)
@@ -315,7 +316,7 @@ func EvaluateConditionalExpression(expr ast.ConditionalStatement, env *Environme
     }
 
     scope := NewEnvironment(env)
-    scope.variables = env.variables
+    // scope.variables = env.variables
 
     if condition.Type() != Bool {
         return MakeNullValue(), fmt.Errorf("if statement condition must be a boolean")
@@ -345,11 +346,11 @@ func EvaluateConditionalExpression(expr ast.ConditionalStatement, env *Environme
             }
         }
 
-        for k, v := range scope.variables {
-            if _, ok := env.variables[k]; ok {
-                env.variables[k] = v
-            }
-        }
+        // for k, v := range scope.variables {
+        //     if _, ok := env.variables[k]; ok {
+        //         env.variables[k] = v
+        //     }
+        // }
 
         scope = NewEnvironment(env)
     } else {
@@ -375,11 +376,11 @@ func EvaluateConditionalExpression(expr ast.ConditionalStatement, env *Environme
             }
         }
 
-        for k, v := range scope.variables {
-            if _, ok := env.variables[k]; ok {
-                env.variables[k] = v
-            }
-        }
+        // for k, v := range scope.variables {
+        //     if _, ok := env.variables[k]; ok {
+        //         env.variables[k] = v
+        //     }
+        // }
 
         scope = NewEnvironment(env)
     }
@@ -515,6 +516,9 @@ func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) Runtim
 
         return obj.(ObjectValue).Properties[property.(StringValue).Value]
     } else {
+        if _, ok := obj.(NullValue); ok {
+            return obj
+        }
         return obj.(ObjectValue).Properties[expr.Property.(*ast.Identifier).Symbol]
     }
 }
@@ -588,6 +592,24 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
         return EvaluateStringNumericBinaryExpression(lhs.(StringValue), rhs.(NumberValue), binaryExpression.Operator)
     } else if lhs.Type() == "number" && rhs.Type() == "string" {
         return EvaluateNumericStringBinaryExpression(lhs.(NumberValue), rhs.(StringValue), binaryExpression.Operator)
+    } else if lhs.Type() == "null" || rhs.Type() == "null" {
+        return EvaluateNullBinaryExpression(lhs, rhs, binaryExpression.Operator)
+    }
+
+    return MakeNullValue()
+}
+
+func EvaluateNullBinaryExpression(lhs RuntimeValue, rhs RuntimeValue, op string) RuntimeValue {
+    if lhs.Type() == "null" && rhs.Type() == "null" {
+        if op == "==" {
+            return BoolValue{true}
+        }
+        return BoolValue{false}
+    } else if lhs.Type() == "bool" && rhs.Type() != "null" {
+        if op == "==" {
+            return BoolValue{false}
+        }
+        return BoolValue{true}
     }
 
     return MakeNullValue()
@@ -747,7 +769,7 @@ func EvaluateUnaryExpression(node ast.UnaryExpression, env Environment) RuntimeV
             arr.(ArrayValue).Values[int(ToGoNumberValue(val.(NumberValue)))] = NumberValue{val.(NumberValue).Value + 1}
             return NumberValue{val.(NumberValue).Value + 1}
         }
-        env.variables[node.Value.(*ast.Identifier).Symbol] = NumberValue{value.(NumberValue).Value + 1}
+        env.AssignVariable(node.Value.(*ast.Identifier).Symbol, NumberValue{value.(NumberValue).Value + 1})
         return NumberValue{value.(NumberValue).Value + 1}
     case "--":
         if value.Type() != Number {
@@ -847,6 +869,7 @@ func EvaluateLogicalExpression(node ast.LogicalExpression, env Environment) Runt
         if err != nil {
             return nil
         }
+        fmt.Println(operand.Type())
         if operand.Type() != Bool {
             fmt.Println("Error: not operator can only be applied to boolean values")
             os.Exit(0)
@@ -888,6 +911,9 @@ func EvaluateAssignment(node ast.AssignmentExpression, env Environment) RuntimeV
 
             objectValue.(ArrayValue).Values[int(index.(NumberValue).Value)], _ = Evaluate(node.Value, env)
             return objectValue
+        }
+        if objectValue.Type() == Null {
+            return objectValue.(NullValue)
         }
         objectValue.(ObjectValue).Properties[node.Assigne.(*ast.MemberExpression).Property.(*ast.Identifier).Symbol], _ = Evaluate(node.Value, env)
         return objectValue

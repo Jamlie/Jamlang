@@ -168,3 +168,21 @@ const Math = {
     floor: __floor,
     ceil: __ceil,
 }
+
+if true {
+    println(Math.abs(-0))
+    println(Math.abs(1))
+    println(Math.abs(-4))
+    println(Math.factorial(9))
+    println(Math.E)
+    println(Math.PI)
+    println(Math.ln(10))
+    println(Math.ln(2))
+    println(Math.exp(100))
+    println(Math.pow(Math.PI, Math.E))
+    println(Math.PI ** Math.E)
+    println(Math.floor(-2.3))
+    println(Math.ceil(-2.3))
+    println(4 ^ 2)
+    println(Time.now())
+}

@@ -1,15 +1,15 @@
 package main
 
 import (
-    "fmt"
-    "os"
-    "flag"
-    "strings"
     "bufio"
-    "io/ioutil"
+    "flag"
+    "fmt"
     "io"
+    "io/ioutil"
     "net/http"
-    
+    "os"
+    "strings"
+
     "github.com/Jamlee977/CustomLanguage/parser"
     "github.com/Jamlee977/CustomLanguage/runtimelang"
 )
@@ -116,12 +116,36 @@ func main() {
                     fmt.Println(err)
                     os.Exit(0)
                 }
+            } else if args[0] == "random" {
+                resp, err := http.Get("https://raw.githubusercontent.com/Jamlee977/CustomLanguage/main/std/random.jam")
+                if err != nil {
+                    fmt.Println(err)
+                    os.Exit(0)
+                }
+                defer resp.Body.Close()
+
+                if _, err := os.Stat("std"); os.IsNotExist(err) {
+                    os.Mkdir("std", 0755)
+                }
+
+                file, err := os.Create("std/" + args[0] + ".jam")
+                if err != nil {
+                    fmt.Println(err)
+                    os.Exit(0)
+                }
+                defer file.Close()
+
+                _, err = io.Copy(file, resp.Body)
+                if err != nil {
+                    fmt.Println(err)
+                    os.Exit(0)
+                }
             } else {
                 fmt.Println("Unknown library")
                 os.Exit(0)
             }
         } else {
-             option := args[0]
+            option := args[0]
             if option == "run" {
                 if len(args) < 2 {
                     fmt.Println("No file specified")
@@ -181,6 +205,30 @@ func main() {
                     }
 
                     file, err := os.Create("std/" + args[1] + ".jam")
+                    if err != nil {
+                        fmt.Println(err)
+                        os.Exit(0)
+                    }
+                    defer file.Close()
+
+                    _, err = io.Copy(file, resp.Body)
+                    if err != nil {
+                        fmt.Println(err)
+                        os.Exit(0)
+                    }
+                } else if args[1] == "random" {
+                    resp, err := http.Get("https://raw.githubusercontent.com/Jamlee977/CustomLanguage/main/std/random.jam")
+                    if err != nil {
+                        fmt.Println(err)
+                        os.Exit(0)
+                    }
+                    defer resp.Body.Close()
+
+                    if _, err := os.Stat("std"); os.IsNotExist(err) {
+                        os.Mkdir("std", 0755)
+                    }
+
+                    file, err := os.Create("std/random.jam")
                     if err != nil {
                         fmt.Println(err)
                         os.Exit(0)

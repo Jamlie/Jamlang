@@ -1,0 +1,79 @@
+fn Node(value) {
+    return {
+        value,
+        next: null,
+    }
+}
+
+fn LinkedList() {
+    let head = null
+
+    fn add(value) {
+        const node = Node(value)
+
+        if not head {
+            head = node
+        } else {
+            let current = head
+            while current.next != null {
+                current = current.next
+            }
+            current.next = node
+        }
+    }
+
+    fn display() {
+        let current = head
+        let result = ""
+        while current != null {
+            result = result + current.value + " -> "
+            current = current.next
+        }
+        println(result + "null")
+    }
+
+    fn length() {
+        let count = 0
+        let current = head
+        while current != null {
+            ++count
+            current = current.next
+        }
+        return count
+    }
+
+    fn search(value) {
+        let current = head
+        while current != null {
+            if current.value == value {
+                return current
+            }
+            current = current.next
+        }
+        return null
+    }
+
+    fn remove(value) {
+        if not head {
+            return null
+        }
+
+        if head.value == value {
+            head = head.next
+        } else {
+            let current = head
+            while current.next != null {
+                if current.next.value == value {
+                    current.next = current.next.next
+                    break
+                }
+                current = current.next
+            }
+        }
+    }
+
+    return {
+        add,
+        display,
+    }
+}

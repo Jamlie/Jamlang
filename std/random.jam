@@ -1,0 +1,124 @@
+const __N = 624
+const __M = 397
+const __A = hex("9908b0df")
+const __U = 11
+const __D = hex("ffffffff")
+const __S = 7
+const __B = hex("9d2c5680")
+const __T = 15
+const __C = hex("efc60000")
+const __L = 18
+const __F = 1812433253
+const __LOWER_MASK = hex("7fffffff")
+const __UPPER_MASK = Bitwise.NOT(__LOWER_MASK)
+const __MAX_INT = hex("ffffffff")
+const __DOUBLE_UNIT = 1 << 53
+
+let __state = []
+let __index = 0
+
+fn __twist() {
+    let i = 0
+    while i < __N {
+        let x = (__state[i] & __UPPER_MASK) + (__state[(i + 1) % __N] & __LOWER_MASK)
+        let xA = x >> 1
+        if (x & 1) != 0 {
+            xA = xA ^ x
+        }
+        __state[i] = __state[(i + __M) % __N] ^ xA
+        ++i
+    }
+    __index = 0
+}
+
+fn __next(bits) {
+    if __index >= __N {
+        __twist()
+    }
+    let y = __state[__index]
+    ++__index
+    y = y ^ (y >> __U)
+    y = y ^ ((y << __S) & __B)
+    y = y ^ ((y << __T) & __C)
+    y = y ^ (y >> __L)
+    return y >> (32 - bits)
+}
+
+fn __new() {
+    __index = __N
+    __state = append(__state, Time.now())
+    let i = 1
+    while i < __N {
+        __state = append(__state, (__F * (__state[i - 1] ^ (__state[i - 1] >> 30)) + i))
+        ++i
+    }
+}
+
+fn __nextInt() {
+    return __next(32)
+}
+
+fn __nextIntBounded(bound) {
+    let r = __next(31)
+    let m = bound - 1
+    if (bound & m) == 0 {
+        r = ((bound * (r // 1)) >> 31) // 1
+    } else {
+        let u = r
+        while u - (r = u % bound) + m < 0 {
+            u = __next(31)
+        }
+    }
+    return r
+}
+
+fn __nextLong() {
+    return (__next(32) << 32) + __next(32)
+}
+
+fn __nextLongBounded(bound) {
+    let r = __nextLong() & hex("7fffffffffffffff")
+    let m = bound - 1
+    if (bound & m) == 0 {
+        r = ((bound * (r // 1)) >> 63) // 1 
+    } else {
+        let u = r
+        while u - (r = u % bound) + m < 0 {
+            u = __nextLong() & hex("7fffffffffffffff")
+        }
+    }
+
+    return r
+}
+
+fn __nextBool() {
+    return __next(1) != 0
+}
+
+fn __nextFloat() {
+    return __next(24) / (1 << 24)
+}
+
+fn __nextFloatRanged(from, to) {
+    return from + __nextFloat() * (to - from)
+}
+
+fn __nextDouble() {
+    return (((__next(26) // 1) << 27) + __next(27)) / __DOUBLE_UNIT
+}
+
+fn __nextDoubleRanged(from, to) {
+    return from + __nextDouble() * (to - from)
+}
+
+const Random = {
+    new: __new,
+    nextInt: __nextInt,
+    nextIntBounded: __nextIntBounded,
+    nextLong: __nextLong,
+    nextLongBounded: __nextLongBounded,
+    nextFloat: __nextFloat,
+    nextFloatRanged: __nextFloatRanged,
+    nextDouble: __nextDouble,
+    nextDoubleRanged: __nextDoubleRanged,
+}

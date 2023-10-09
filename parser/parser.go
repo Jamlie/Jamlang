@@ -246,8 +246,11 @@ func (p *Parser) parseFunctionDeclaration() ast.Statement {
 
     p.expect(tokentype.LSquirly, "Error: Expected '{' after function declaration")
 
-    p.isFunction = true
-    defer func() { p.isFunction = false }()
+    if !p.isFunction {
+        p.isFunction = true
+        defer func() { p.isFunction = false }()
+    }
+
     body := []ast.Statement{}
     for p.at().Type != tokentype.EndOfFile && p.at().Type != tokentype.RSquirly {
         body = append(body, p.parseStatement())

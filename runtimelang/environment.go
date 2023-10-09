@@ -6,7 +6,7 @@ import (
 )
 
 type Environment struct {
-    parent *Environment
+    parent    *Environment
     variables map[string]RuntimeValue
     constants map[string]bool
 }
@@ -19,11 +19,18 @@ func CreateGlobalEnvironment() *Environment {
 
     timeObject := make(map[string]RuntimeValue)
     timeObject["now"] = MakeNativeFunction(jamlangCurrentTime)
-    env.DeclareVariable("time", MakeObjectValue(timeObject), true)
+    timeObject["sleep"] = MakeNativeFunction(jamlangSleep)
+    env.DeclareVariable("Time", MakeObjectValue(timeObject), true)
+
+    bitwiseObject := make(map[string]RuntimeValue)
+    bitwiseObject["NOT"] = MakeNativeFunction(jamlangBitwiseNot)
+    bitwiseObject["AND"] = MakeNativeFunction(jamlangBitwiseAnd)
+    bitwiseObject["OR"] = MakeNativeFunction(jamlangBitwiseOr)
+    bitwiseObject["XOR"] = MakeNativeFunction(jamlangBitwiseXor)
+    env.DeclareVariable("Bitwise", MakeObjectValue(bitwiseObject), true)
 
     env.DeclareVariable("println", MakeNativeFunction(jamlangPrintln), true)
     env.DeclareVariable("print", MakeNativeFunction(jamlangPrint), true)
-    env.DeclareVariable("sleep", MakeNativeFunction(jamlangSleep), true)
     env.DeclareVariable("typeof", MakeNativeFunction(jamlangTypeof), true)
     env.DeclareVariable("exit", MakeNativeFunction(jamlangExit), true)
     env.DeclareVariable("input", MakeNativeFunction(jamlangInput), true)
@@ -32,17 +39,28 @@ func CreateGlobalEnvironment() *Environment {
     env.DeclareVariable("pop", MakeNativeFunction(jamlangPop), true)
     env.DeclareVariable("tuple", MakeNativeFunction(jamlangTuple), true)
     env.DeclareVariable("hex", MakeNativeFunction(jamlangHex), true)
-
+    env.DeclareVariable("string", MakeNativeFunction(jamlangToString), true)
 
     return env
 }
 
 func NewEnvironment(parent *Environment) *Environment {
     return &Environment{
-        parent: parent,
+        parent:    parent,
         variables: make(map[string]RuntimeValue),
         constants: make(map[string]bool),
     }
+}
+
+func (e *Environment) DeepCopy() *Environment {
+    newEnv := NewEnvironment(nil)
+
+    fmt.Println(e.variables)
+    for name, value := range e.variables {
+        newEnv.DeclareVariable(name, value, e.constants[name])
+    }
+
+    return newEnv
 }
 
 func (e *Environment) DeclareVariable(name string, value RuntimeValue, constant bool) RuntimeValue {
