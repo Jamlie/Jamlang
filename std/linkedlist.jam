@@ -6,9 +6,10 @@ fn Node(value) {
 }
 
 fn LinkedList() {
+    let this = {}
     let head = null;
 
-    fn add(value) {
+    this.add = fn(value) {
         let node = Node(value);
         if head == null {
             head = node;
@@ -21,7 +22,7 @@ fn LinkedList() {
         }
     }
 
-    fn printList() {
+    this.printList = fn() {
         let current = head;
         print("[ ")
         while current != null {
@@ -35,7 +36,7 @@ fn LinkedList() {
         println(" ]")
     }
 
-    fn remove(value) {
+    this.remove = fn(value) {
         let current = head;
         let previous = null;
         while current != null {
@@ -52,9 +53,5 @@ fn LinkedList() {
         }
     }
 
-    return {
-        add,
-        printList,
-        remove,
-    }
+    return this;
 }

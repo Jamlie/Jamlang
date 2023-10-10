@@ -845,7 +845,7 @@ func EvaluateUnaryExpression(node ast.UnaryExpression, env Environment) RuntimeV
             os.Exit(0)
             return nil
         }
-        env.variables[node.Value.(*ast.Identifier).Symbol] = NumberValue{value.(NumberValue).Value - 1}
+        env.AssignVariable(node.Value.(*ast.Identifier).Symbol, NumberValue{value.(NumberValue).Value - 1})
         return NumberValue{value.(NumberValue).Value - 1}
     case "-":
         if value.Type() != Number {

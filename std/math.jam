@@ -178,7 +178,7 @@ if true {
     println(Math.PI)
     println(Math.ln(10))
     println(Math.ln(2))
-    println(Math.exp(100))
+    println(Math.exp(5))
     println(Math.pow(Math.PI, Math.E))
     println(Math.PI ** Math.E)
     println(Math.floor(-2.3))
