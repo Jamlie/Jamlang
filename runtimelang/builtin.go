@@ -5,6 +5,7 @@ import (
     "os"
     "strconv"
     "time"
+    "bufio"
 )
 
 func jamlangPrintln(args []RuntimeValue, environment Environment) RuntimeValue {
@@ -67,8 +68,12 @@ func jamlangInput(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
     }
 
-    var input string
-    fmt.Scanln(&input)
+    scanner := bufio.NewReader(os.Stdin)
+    input, err := scanner.ReadString('\n')
+    if err != nil {
+        fmt.Println("Error reading input")
+        os.Exit(0)
+    }
     return MakeStringValue(input)
 }
 
@@ -189,7 +194,6 @@ func jamlangToString(args []RuntimeValue, environment Environment) RuntimeValue 
 }
 
 func jamlangHex(args []RuntimeValue, environment Environment) RuntimeValue {
-    // takes a string value of a hexadecimally encoded number and returns a number value
     if len(args) != 1 {
         fmt.Println("hex takes 1 argument")
         os.Exit(0)

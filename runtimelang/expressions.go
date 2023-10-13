@@ -37,6 +37,7 @@ func EvaluateFunctionDeclaration(expr ast.FunctionDeclaration, env *Environment)
         }
 
         env.DeclareVariable(expr.Name, fn, true)
+        env.DeclareVariable("this", MakeObjectValue(make(map[string]RuntimeValue)), true)
     }
 
     return fn, nil
@@ -126,7 +127,10 @@ func EvaluateImportExpression(expr ast.ImportStatement, env *Environment) (Runti
             if _, ok := fn.(FunctionValue); !ok {
                 continue
             }
-            env.DeclareVariable(function.Name, fn, true)            
+
+            if function.Name[0] >= 'A' && function.Name[0] <= 'Z' {
+                env.DeclareVariable(function.Name, fn, true)
+            }
         }
         if statement.Kind() == ast.VariableDeclarationType {
             variable := statement.(*ast.VariableDeclaration)
@@ -134,7 +138,10 @@ func EvaluateImportExpression(expr ast.ImportStatement, env *Environment) (Runti
             if _, ok := value.(RuntimeValue); !ok {
                 continue
             }
-            env.DeclareVariable(variable.Identifier, value, true)
+
+            if variable.Identifier[0] >= 'A' && variable.Identifier[0] <= 'Z' {
+                env.DeclareVariable(variable.Identifier, value, true)
+            }
         }
     }
 

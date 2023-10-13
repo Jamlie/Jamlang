@@ -52,20 +52,13 @@ func NewEnvironment(parent *Environment) *Environment {
     }
 }
 
-func (e *Environment) DeepCopy() *Environment {
-    newEnv := NewEnvironment(nil)
-
-    fmt.Println(e.variables)
-    for name, value := range e.variables {
-        newEnv.DeclareVariable(name, value, e.constants[name])
-    }
-
-    return newEnv
-}
-
 func (e *Environment) DeclareVariable(name string, value RuntimeValue, constant bool) RuntimeValue {
     if _, ok := e.variables[name]; ok {
-        fmt.Printf("Variable %s already declared\n", name)
+        if _, ok := e.variables[name].(FunctionValue); ok {
+            fmt.Printf("Function %s already declared\n", name)
+        } else {
+            fmt.Printf("Variable %s already declared\n", name)
+        }
         os.Exit(0)
         return nil
     }
@@ -113,7 +106,7 @@ func (e *Environment) Resolve(name string) *Environment {
 func (e *Environment) LookupVariable(name string) RuntimeValue {
     env := e.Resolve(name)
     if env == nil {
-        fmt.Printf("Variable %s not declared\n", name)
+        fmt.Printf("%s not declared\n", name)
         os.Exit(0)
         return nil
     }
