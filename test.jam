@@ -1,0 +1,58 @@
+fn Person(name, age) {
+    let this = {}
+    this.name = name
+    this.age = age
+
+    this.sayHello = fn() {
+        println("hello")
+    }
+
+    this.getName = fn() {
+        return this.name
+    }
+
+    this.getAge = fn() {
+        return this.age
+    }
+
+    this.setName = fn(name) {
+        this.name = name
+    }
+
+    this.setAge = fn(age) {
+        this.age = age
+    }
+
+    return this
+}
+
+const foo = Person("foo", 20)
+const bar = Person("bar", 25)
+
+foo.setName("baz")
+
+println(foo.getName())
+println(bar.getName())
+
+const StringBuilder = {
+    new: fn() {
+        let this = {}
+        this.str = ""
+
+        this.append = fn(s) {
+            this.str = this.str + s
+        }
+
+        this.toString = fn() {
+            return this.str
+        }
+
+        return this
+    }
+}
+
+const sb = StringBuilder.new()
+sb.append("hello")
+sb.append(" world")
+
+println(sb.toString())

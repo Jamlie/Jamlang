@@ -1,0 +1,36 @@
+fn sort(arr) {
+    return quickSort(arr, 0, len(arr) - 1)
+}
+
+fn quickSort(arr, left, right) {
+    if left < right {
+        const pivot = partition(arr, left, right)
+        quickSort(arr, left, pivot - 1)
+        quickSort(arr, pivot + 1, right)
+    }
+    
+    return arr
+}
+
+fn partition(arr, left, right) {
+    const pivot = arr[right]
+    let i = left - 1
+
+    let j = left
+    while j < right {
+        if arr[j] <= pivot {
+            ++i
+            swap(arr, i, j)
+        }
+        ++j
+    }
+
+    swap(arr, i + 1, right)
+    return i + 1
+}
+
+fn swap(arr, i, j) {
+    const temp = arr[i]
+    arr[i] = arr[j]
+    arr[j] = temp
+}

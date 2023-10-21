@@ -1,0 +1,57 @@
+fn Node(value) {
+    return {
+        value: value,
+        next: null
+    }
+}
+
+fn LinkedList() {
+    let this = {}
+    let head = null;
+
+    this.add = fn(value) {
+        let node = Node(value);
+        if head == null {
+            head = node;
+        } else {
+            let current = head;
+            while current.next != null {
+                current = current.next;
+            }
+            current.next = node;
+        }
+    }
+
+    this.printList = fn() {
+        let current = head;
+        print("[ ")
+        while current != null {
+            if current.next == null {
+                print(current.value)
+                break
+            }
+            print(current.value, ", ");
+            current = current.next;
+        }
+        println(" ]")
+    }
+
+    this.remove = fn(value) {
+        let current = head;
+        let previous = null;
+        while current != null {
+            if current.value == value {
+                if previous == null {
+                    head = current.next;
+                } else {
+                    previous.next = current.next;
+                }
+                break;
+            }
+            previous = current;
+            current = current.next;
+        }
+    }
+
+    return this;
+}

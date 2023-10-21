@@ -1,0 +1,21 @@
+fn sumOfEvenNumbers(target) {
+    let sum = 0;
+    let currentNumber = 1;
+
+    while currentNumber <= target {
+        if currentNumber % 2 == 0 {
+            sum = sum + currentNumber
+        }
+        ++currentNumber
+    }
+
+    return sum
+}
+
+if true {
+    const test = 12
+    println(sumOfEvenNumbers(test))
+}
+
+
+
