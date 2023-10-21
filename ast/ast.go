@@ -59,7 +59,7 @@ func (p *Program) ToString() string {
     return s
 }
 
-type VariableDeclaration struct{
+type VariableDeclaration struct {
     Constant bool
     Identifier string
     Value Expression

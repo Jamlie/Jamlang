@@ -4,7 +4,7 @@ import (
     "fmt"
     "os"
 
-    "github.com/Jamlee977/CustomLanguage/ast"
+    "github.com/Jamlie/Jamlang/ast"
 )
 
 func EvaluateProgram(program ast.Program, env Environment) RuntimeValue {

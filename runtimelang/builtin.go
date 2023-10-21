@@ -1,11 +1,14 @@
 package runtimelang
 
 import (
+    "bufio"
     "fmt"
     "os"
     "strconv"
     "time"
-    "bufio"
+    // "strings"
+
+    "github.com/Jamlie/Jamlang/parser"
 )
 
 func jamlangPrintln(args []RuntimeValue, environment Environment) RuntimeValue {
@@ -68,6 +71,7 @@ func jamlangInput(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
     }
 
+    fmt.Print(args[0].Get())
     scanner := bufio.NewReader(os.Stdin)
     input, err := scanner.ReadString('\n')
     if err != nil {
@@ -273,4 +277,98 @@ func jamlangBitwiseXor(args []RuntimeValue, environment Environment) RuntimeValu
     }
 
     return MakeNumberValue(float64(int64(args[0].(NumberValue).Value) ^ int64(args[1].(NumberValue).Value)))
+}
+
+func jamlangEval(args []RuntimeValue, environment Environment) RuntimeValue {
+    if len(args) != 1 {
+        fmt.Println("eval takes 1 argument")
+        os.Exit(0)
+    }
+
+    if args[0].Type() != "string" {
+        fmt.Println("eval takes a string")
+        os.Exit(0)
+    }
+
+    code := args[0].ToString()
+    program := parser.NewParser().ProduceAST(code)
+    newEnvironment := CreateGlobalEnvironment()
+    Evaluate(&program, *newEnvironment)
+    return MakeNullValue()
+}
+
+func jamlangOpen(args []RuntimeValue, environment Environment) RuntimeValue {
+    if len(args) != 1 {
+        fmt.Println("open takes 1 argument")
+        os.Exit(0)
+    }
+
+    if args[0].Type() != "string" {
+        fmt.Println("open takes a string")
+        os.Exit(0)
+    }
+
+    filename := args[0].(StringValue).Value
+
+    file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+    if err != nil {
+        fmt.Println("Error opening file")
+        os.Exit(0)
+    }
+
+    return MakeFileValue(file.Name(), file)
+}
+
+func jamlangClose(args []RuntimeValue, environment Environment) RuntimeValue {
+    if len(args) != 1 {
+        fmt.Println("close takes 1 argument")
+        os.Exit(0)
+    }
+
+    if args[0].Type() != "file" {
+        fmt.Println("close takes a file")
+        os.Exit(0)
+    }
+
+    if args[0].(FileValue).IsClosed {
+        fmt.Println("File is already closed")
+        os.Exit(0)
+    }
+
+    f, _ := args[0].(FileValue)
+    f.IsClosed = true
+    args[0].(FileValue).File.Close()
+    f.File.Close()
+    return MakeNullValue()
+}
+
+func jamlangWrite(args []RuntimeValue, environment Environment) RuntimeValue {
+    if len(args) != 2 {
+        fmt.Println("write takes 2 arguments")
+        os.Exit(0)
+    }
+
+    if args[0].Type() != "file" {
+        fmt.Println("write takes a file")
+        os.Exit(0)
+    }
+
+    if args[0].(FileValue).IsClosed {
+        fmt.Println("File is closed")
+        os.Exit(0)
+    }
+
+    if args[1].Type() != "string" {
+        fmt.Println("write takes a string")
+        os.Exit(0)
+    }
+
+    file := ToGoFileValue(args[0].(FileValue))
+
+    file.Truncate(0)
+    file.Seek(0, 0)
+
+    file.WriteString(args[1].(StringValue).ToString())
+
+    return MakeNullValue()
 }

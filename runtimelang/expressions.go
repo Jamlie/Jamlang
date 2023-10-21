@@ -7,8 +7,8 @@ import (
     "math"
     "io/ioutil"
 
-    "github.com/Jamlee977/CustomLanguage/ast"
-    "github.com/Jamlee977/CustomLanguage/parser"
+    "github.com/Jamlie/Jamlang/ast"
+    "github.com/Jamlie/Jamlang/parser"
 )
 
 var (

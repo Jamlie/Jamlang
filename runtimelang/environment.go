@@ -29,6 +29,16 @@ func CreateGlobalEnvironment() *Environment {
     bitwiseObject["XOR"] = MakeNativeFunction(jamlangBitwiseXor)
     env.DeclareVariable("Bitwise", MakeObjectValue(bitwiseObject), true)
 
+    // osObject := make(map[string]RuntimeValue)
+    // osObject["exit"] = MakeNativeFunction(jamlangExit)
+    // osObject["open"] = MakeNativeFunction(jamlangOpen)
+    // osObject["read"] = MakeNativeFunction(jamlangRead)
+    // osObject["write"] = MakeNativeFunction(jamlangWrite)
+    // osObject["close"] = MakeNativeFunction(jamlangClose)
+    // osObject["remove"] = MakeNativeFunction(jamlangRemove)
+    // osObject["rename"] = MakeNativeFunction(jamlangRename)
+    // env.DeclareVariable("OS", MakeObjectValue(osObject), true)
+
     env.DeclareVariable("println", MakeNativeFunction(jamlangPrintln), true)
     env.DeclareVariable("print", MakeNativeFunction(jamlangPrint), true)
     env.DeclareVariable("typeof", MakeNativeFunction(jamlangTypeof), true)
@@ -40,6 +50,7 @@ func CreateGlobalEnvironment() *Environment {
     env.DeclareVariable("tuple", MakeNativeFunction(jamlangTuple), true)
     env.DeclareVariable("hex", MakeNativeFunction(jamlangHex), true)
     env.DeclareVariable("string", MakeNativeFunction(jamlangToString), true)
+    env.DeclareVariable("eval", MakeNativeFunction(jamlangEval), true)
 
     return env
 }

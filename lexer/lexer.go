@@ -1,7 +1,7 @@
 package lexer
 
 import (
-    "github.com/Jamlee977/CustomLanguage/tokentype"
+    "github.com/Jamlie/Jamlang/tokentype"
     "strings"
     "fmt"
     "os"

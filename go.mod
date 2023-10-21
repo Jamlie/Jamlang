@@ -1,3 +1,3 @@
-module github.com/Jamlee977/CustomLanguage
+module github.com/Jamlie/Jamlang
 
-go 1.20
+go 1.21.0

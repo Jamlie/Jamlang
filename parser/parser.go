@@ -5,9 +5,9 @@ import (
     "os"
     "strconv"
 
-    "github.com/Jamlee977/CustomLanguage/ast"
-    "github.com/Jamlee977/CustomLanguage/lexer"
-    "github.com/Jamlee977/CustomLanguage/tokentype"
+    "github.com/Jamlie/Jamlang/ast"
+    "github.com/Jamlie/Jamlang/lexer"
+    "github.com/Jamlie/Jamlang/tokentype"
 )
 
 type Parser struct {
@@ -80,7 +80,7 @@ func (p *Parser) parseStatement() ast.Statement {
         return &ast.NullLiteral{}
     default:
         return p.parseExpression()
-}
+    }
 }
 
 func (p *Parser) parseComment() ast.Statement {

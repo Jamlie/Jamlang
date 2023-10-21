@@ -1,9 +1,11 @@
 package runtimelang
 
 import (
+    "os"
     "strconv"
+    // "strings"
 
-    "github.com/Jamlee977/CustomLanguage/ast"
+    "github.com/Jamlie/Jamlang/ast"
 )
 
 type ValueType string
@@ -20,6 +22,7 @@ const (
     Function       ValueType = "function"
     Break          ValueType = "break"
     Class          ValueType = "class"
+    File           ValueType = "file"
 )
 
 type RuntimeValue interface {
@@ -524,4 +527,38 @@ func ToGoStringValue(v StringValue) string {
 
 func ToGoTupleValue(v TupleValue) []RuntimeValue {
     return v.Values
+}
+
+func ToGoFileValue(v FileValue) *os.File {
+    return v.File
+}
+
+type FileValue struct {
+    Name     string
+    File     *os.File
+    IsClosed bool
+}
+
+func (v FileValue) Equals(other RuntimeValue) bool {
+    return false
+}
+
+func (v FileValue) Type() ValueType {
+    return File
+}
+
+func (v FileValue) Get() any {
+    return v
+}
+
+func (v FileValue) ToString() string {
+    return "file"
+}
+
+func (v FileValue) Clone() RuntimeValue {
+    return v
+}
+
+func MakeFileValue(name string, file *os.File) FileValue {
+    return FileValue{Name: name, File: file, IsClosed: false}
 }

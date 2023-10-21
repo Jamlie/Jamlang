@@ -10,15 +10,19 @@ import (
     "os"
     "strings"
 
-    "github.com/Jamlee977/CustomLanguage/parser"
-    "github.com/Jamlee977/CustomLanguage/runtimelang"
+    "github.com/Jamlie/Jamlang/parser"
+    "github.com/Jamlie/Jamlang/runtimelang"
 )
 
 var (
     env = runtimelang.CreateGlobalEnvironment()
 )
 
-func repl() {
+func main() {
+    CallMain(env)
+}
+
+func Repl() {
     parser := parser.NewParser()
     fmt.Println("Repl mode. Type 'exit' to exit.")
     for {
@@ -43,14 +47,14 @@ func repl() {
     }
 }
 
-func main() {
+func CallMain(env *runtimelang.Environment) {
     runFlag := flag.Bool("r", false, "Run a file")
     helpFlag := flag.Bool("h", false, "Help")
     installFlag := flag.Bool("i", false, "Install a package")
     flag.Parse()
     args := flag.Args()
     if flag.NFlag() == 0 && len(args) == 0 {
-        repl()
+        Repl()
     } else {
         if *runFlag {
             if len(args) < 1 {
@@ -178,7 +182,7 @@ func main() {
 }
 
 func getLibrary(name string) {
-    link := fmt.Sprintf("https://raw.githubusercontent.com/Jamlie/CustomLanguage/main/std/%s.jam", name)
+    link := fmt.Sprintf("https://raw.githubusercontent.com/Jamlie/Jamlang/main/std/%s.jam", name)
     resp, err := http.Get(link)
     if err != nil {
         fmt.Println(err)
