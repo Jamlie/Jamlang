@@ -50,6 +50,8 @@ func CreateGlobalEnvironment() *Environment {
     env.DeclareVariable("tuple", MakeNativeFunction(jamlangTuple), true)
     env.DeclareVariable("hex", MakeNativeFunction(jamlangHex), true)
     env.DeclareVariable("string", MakeNativeFunction(jamlangToString), true)
+    env.DeclareVariable("int", MakeNativeFunction(jamlangToInt), true)
+    env.DeclareVariable("float", MakeNativeFunction(jamlangToFloat), true)
     env.DeclareVariable("eval", MakeNativeFunction(jamlangEval), true)
 
     return env

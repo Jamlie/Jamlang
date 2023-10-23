@@ -403,7 +403,7 @@ func (p *Parser) parseAssignmentExpression() ast.Expression {
         p.eat()
         value := p.parseAssignmentExpression()
         return &ast.AssignmentExpression{
-            Assigne: left,
+            Assignee: left,
             Value:   value,
         }
     }

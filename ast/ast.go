@@ -303,7 +303,7 @@ func (f *ForStatement) ToString() string {
 }
 
 type AssignmentExpression struct {
-    Assigne Expression
+    Assignee Expression
     Value Expression
 }
 
@@ -312,7 +312,7 @@ func (a *AssignmentExpression) Kind() NodeType {
 }
 
 func (a *AssignmentExpression) ToString() string {
-    return a.Assigne.ToString() + " = " + a.Value.ToString()
+    return a.Assignee.ToString() + " = " + a.Value.ToString()
 }
 
 type BinaryExpression struct {

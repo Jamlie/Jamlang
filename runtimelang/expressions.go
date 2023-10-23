@@ -37,7 +37,6 @@ func EvaluateFunctionDeclaration(expr ast.FunctionDeclaration, env *Environment)
         }
 
         env.DeclareVariable(expr.Name, fn, true)
-        env.DeclareVariable("this", MakeObjectValue(make(map[string]RuntimeValue)), true)
     }
 
     return fn, nil
@@ -958,11 +957,11 @@ func EvaluateLogicalExpression(node ast.LogicalExpression, env Environment) Runt
 }
 
 func EvaluateAssignment(node ast.AssignmentExpression, env Environment) RuntimeValue {
-    if node.Assigne.Kind() == ast.MemberExpressionType {
-        objectLiteral := node.Assigne.(*ast.MemberExpression).Object
+    if node.Assignee.Kind() == ast.MemberExpressionType {
+        objectLiteral := node.Assignee.(*ast.MemberExpression).Object
         objectValue, _ := Evaluate(objectLiteral, env)
         if objectValue.Type() == Array {
-            index, _ := Evaluate(node.Assigne.(*ast.MemberExpression).Property, env)
+            index, _ := Evaluate(node.Assignee.(*ast.MemberExpression).Property, env)
             if index.Type() != Number {
                 fmt.Println("Error: array index must be a number")
                 os.Exit(0)
@@ -989,17 +988,17 @@ func EvaluateAssignment(node ast.AssignmentExpression, env Environment) RuntimeV
         if objectValue.Type() == Null {
             return objectValue.(NullValue)
         }
-        objectValue.(ObjectValue).Properties[node.Assigne.(*ast.MemberExpression).Property.(*ast.Identifier).Symbol], _ = Evaluate(node.Value, env)
+        objectValue.(ObjectValue).Properties[node.Assignee.(*ast.MemberExpression).Property.(*ast.Identifier).Symbol], _ = Evaluate(node.Value, env)
         return objectValue
     }
 
-    if node.Assigne.Kind() != ast.IdentifierType {
+    if node.Assignee.Kind() != ast.IdentifierType {
         fmt.Println("Error: Left side of assignment must be a variable")
         os.Exit(0)
         return nil
     }
 
-    variableName := node.Assigne.(*ast.Identifier).Symbol
+    variableName := node.Assignee.(*ast.Identifier).Symbol
     environment, err := Evaluate(node.Value, env)
     if err != nil {
         fmt.Println(err)

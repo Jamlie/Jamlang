@@ -197,6 +197,50 @@ func jamlangToString(args []RuntimeValue, environment Environment) RuntimeValue 
     return MakeStringValue(args[0].ToString())
 }
 
+func jamlangToInt(args []RuntimeValue, environment Environment) RuntimeValue {
+    if len(args) != 1 {
+        fmt.Println("int takes 1 argument")
+        os.Exit(0)
+    }
+
+    if args[0].Type() != "string" {
+        fmt.Println("int takes a string")
+        os.Exit(0)
+    }
+
+    intString := args[0].ToString()
+
+    intInt, err := strconv.ParseInt(intString, 10, 64)
+    if err != nil {
+        fmt.Println("int takes a string")
+        os.Exit(0)
+    }
+
+    return MakeNumberValue(float64(intInt))
+}
+
+func jamlangToFloat(args []RuntimeValue, environment Environment) RuntimeValue {
+    if len(args) != 1 {
+        fmt.Println("float takes 1 argument")
+        os.Exit(0)
+    }
+
+    if args[0].Type() != "string" {
+        fmt.Println("float takes a string")
+        os.Exit(0)
+    }
+
+    floatString := args[0].ToString()
+
+    floatFloat, err := strconv.ParseFloat(floatString, 64)
+    if err != nil {
+        fmt.Println("float takes a string")
+        os.Exit(0)
+    }
+
+    return MakeNumberValue(floatFloat)
+}
+
 func jamlangHex(args []RuntimeValue, environment Environment) RuntimeValue {
     if len(args) != 1 {
         fmt.Println("hex takes 1 argument")
