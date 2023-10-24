@@ -168,12 +168,25 @@ func Tokenize(sourceCode string) []Token {
             }
             tokens = append(tokens, createToken(src[0], tokentype.Colon))
             src = src[1:]
-        } else if src[0] == "\"" {
+        } else if src[0] == "\"" || src[0] == "`" || src[0] == "'" {
+            quotationOrBacktick := src[0]
             src = src[1:]
             str := ""
-            for len(src) > 0 && src[0] != "\"" {
-                str += src[0]
-                src = src[1:]
+            if quotationOrBacktick == "'" {
+                for len(src) > 0 && src[0] != "'" {
+                    str += src[0]
+                    src = src[1:]
+                }
+            } else if quotationOrBacktick == "`" {
+                for len(src) > 0 && src[0] != "`" {
+                    str += src[0]
+                    src = src[1:]
+                }
+            } else {
+                for len(src) > 0 && src[0] != "\"" {
+                    str += src[0]
+                    src = src[1:]
+                }
             }
 
             if len(src) == 0 {

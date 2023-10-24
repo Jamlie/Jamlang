@@ -6,7 +6,7 @@ fn Node(value) {
 }
 
 fn LinkedList() {
-    let this = {}
+    const this = {}
     let head = null;
 
     this.add = fn(value) {
@@ -22,7 +22,7 @@ fn LinkedList() {
         }
     }
 
-    this.printList = fn() {
+    this.print = fn() {
         let current = head;
         print("[ ")
         while current != null {

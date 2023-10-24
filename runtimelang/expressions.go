@@ -128,10 +128,9 @@ func EvaluateImportExpression(expr ast.ImportStatement, env *Environment) (Runti
             }
 
             if function.Name[0] >= 'A' && function.Name[0] <= 'Z' {
-                env.DeclareVariable(function.Name, fn, true)
+                env.variables[function.Name] = fn
             }
-        }
-        if statement.Kind() == ast.VariableDeclarationType {
+        } else if statement.Kind() == ast.VariableDeclarationType {
             variable := statement.(*ast.VariableDeclaration)
             value, _ := Evaluate(variable.Value, *env)
             if _, ok := value.(RuntimeValue); !ok {
@@ -139,7 +138,7 @@ func EvaluateImportExpression(expr ast.ImportStatement, env *Environment) (Runti
             }
 
             if variable.Identifier[0] >= 'A' && variable.Identifier[0] <= 'Z' {
-                env.DeclareVariable(variable.Identifier, value, true)
+                env.variables[variable.Identifier] = value
             }
         }
     }
