@@ -1,1 +1,3 @@
-*.jam linguist-detectable=true
+*.go linguist-language=Go
+*.jam linguist-language=Jam
+# *.jam linguist-detectable=true
