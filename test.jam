@@ -1,9 +1,27 @@
-import "std/linkedlist.jam"
+import "std/random.jam"
 
-const list = LinkedList()
+const rand = Random(Time.now())
 
-foreach i in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10] {
-    list.add(i)
+println(rand.nextIntRange(0, 100))
+println(rand.nextLongRange(1000000000000, 10000000000000))
+println(rand.nextFloatRange(0, 1))
+println(rand.nextDoubleRange(0, 1))
+
+/*
+fn Car(year, location) {
+    const this = {}
+    this.year = year
+    this.location = location
+    this.drive = fn(distance) {
+        this.location = this.location + distance
+    }
+    if (location == null) {
+        this.location = 10
+    }
+    return this
 }
 
-list.print()
+let c = Car(1985, null)
+c.drive(10)
+println(Car)
+*/

@@ -233,6 +233,8 @@ func (v ObjectValue) Get() any {
             str += value.ToString()
         case Function:
             str += value.Get().(string)
+        case NativeFunction:
+            str += value.Get().(string)
         default:
             str += "unknown"
         }
@@ -356,6 +358,7 @@ type FunctionCall func(args []RuntimeValue, env Environment) RuntimeValue
 
 type NativeFunctionValue struct {
     Call FunctionCall
+    Name string
 }
 
 func (v NativeFunctionValue) Equals(other RuntimeValue) bool {
@@ -367,7 +370,7 @@ func (v NativeFunctionValue) Type() ValueType {
 }
 
 func (v NativeFunctionValue) Get() any {
-    return v.Call
+    return "fn " + v.Name + "(...)" + " { [native code] }"
 }
 
 func (v NativeFunctionValue) ToString() string {
@@ -378,8 +381,8 @@ func (v NativeFunctionValue) Clone() RuntimeValue {
     return v
 }
 
-func MakeNativeFunction(call FunctionCall) NativeFunctionValue {
-    return NativeFunctionValue{Call: call}
+func MakeNativeFunction(call FunctionCall, name string) NativeFunctionValue {
+    return NativeFunctionValue{Call: call, Name: name}
 }
 
 

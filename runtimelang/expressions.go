@@ -618,17 +618,17 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
         os.Exit(0)
     }
 
-    if lhs.Type() == "number" && rhs.Type() == "number" {
+    if lhs.Type() == Number && rhs.Type() == Number {
         return EvaluateNumericBinaryExpression(lhs.(NumberValue), rhs.(NumberValue), binaryExpression.Operator)
-    } else if lhs.Type() == "string" && rhs.Type() == "string" {
+    } else if lhs.Type() == String && rhs.Type() == String {
         return EvaluateStringBinaryExpression(lhs.(StringValue), rhs.(StringValue), binaryExpression.Operator)
-    } else if lhs.Type() == "string" && rhs.Type() == "number" {
+    } else if lhs.Type() == String && rhs.Type() == Number {
         return EvaluateStringNumericBinaryExpression(lhs.(StringValue), rhs.(NumberValue), binaryExpression.Operator)
-    } else if lhs.Type() == "number" && rhs.Type() == "string" {
+    } else if lhs.Type() == Number && rhs.Type() == String {
         return EvaluateNumericStringBinaryExpression(lhs.(NumberValue), rhs.(StringValue), binaryExpression.Operator)
-    } else if lhs.Type() == "null" || rhs.Type() == "null" {
+    } else if lhs.Type() == Null || rhs.Type() == Null {
         return EvaluateNullBinaryExpression(lhs, rhs, binaryExpression.Operator)
-    } else if lhs.Type() == "object" && rhs.Type() == "object" {
+    } else if lhs.Type() == Object && rhs.Type() == Object {
         return EvaluateObjectBinaryExpression(lhs.(ObjectValue), rhs.(ObjectValue), binaryExpression.Operator)
     }
 
@@ -658,27 +658,27 @@ func EvaluateObjectBinaryExpression(lhs ObjectValue, rhs ObjectValue, op string)
 }
 
 func EvaluateNullBinaryExpression(lhs RuntimeValue, rhs RuntimeValue, op string) RuntimeValue {
-    if lhs.Type() == "null" && rhs.Type() == "null" {
+    if lhs.Type() == Null && rhs.Type() == Null {
         if op == "==" {
             return BoolValue{true}
         }
         return BoolValue{false}
-    } else if lhs.Type() == "bool" && rhs.Type() == "null" {
+    } else if lhs.Type() == Bool && rhs.Type() == Null {
         if op == "==" {
             return BoolValue{false}
         }
         return BoolValue{true}
-    } else if lhs.Type() == "null" && rhs.Type() == "bool" {
+    } else if lhs.Type() == Null && rhs.Type() == Bool {
         if op == "==" {
             return BoolValue{false}
         }
         return BoolValue{true}
-    } else if lhs.Type() == "object" && rhs.Type() == "null" {
+    } else if lhs.Type() == Object && rhs.Type() == Null {
         if op == "==" {
             return BoolValue{false}
         }
         return BoolValue{true}
-    } else if lhs.Type() == "null" && rhs.Type() == "object" {
+    } else if lhs.Type() == Null && rhs.Type() == Object {
         if op == "==" {
             return BoolValue{false}
         }

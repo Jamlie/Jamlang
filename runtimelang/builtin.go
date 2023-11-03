@@ -32,7 +32,7 @@ func jamlangSleep(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
     }
 
-    if args[0].Type() != "number" {
+    if args[0].Type() != Number {
         fmt.Println("sleep takes a number - time in milliseconds")
         os.Exit(0)
     }
@@ -56,7 +56,7 @@ func jamlangExit(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
     }
 
-    if args[0].Type() != "number" {
+    if args[0].Type() != Number {
         fmt.Println("exit takes a number - exit code")
         os.Exit(0)
     }
@@ -87,13 +87,13 @@ func jamlangLen(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
     }
 
-    if args[0].Type() == "array" {
+    if args[0].Type() == Array {
         goArray := ToGoArrayValue(args[0].(ArrayValue))
         return MakeNumberValue(float64(len(goArray)))
-    } else if args[0].Type() == "tuple" {
+    } else if args[0].Type() == Tuple {
         goTuple := ToGoTupleValue(args[0].(TupleValue))
         return MakeNumberValue(float64(len(goTuple)))
-    } else if args[0].Type() == "string" {
+    } else if args[0].Type() == String {
         goString := ToGoStringValue(args[0].(StringValue))
         return MakeNumberValue(float64(len(goString)))
     } else {
@@ -109,7 +109,7 @@ func jamlangAppend(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
     }
 
-    if args[0].Type() != "array" {
+    if args[0].Type() != Array {
         fmt.Println("append takes an array")
         os.Exit(0)
     }
@@ -125,7 +125,7 @@ func jamlangPop(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
     }
 
-    if args[0].Type() != "array" {
+    if args[0].Type() != Array {
         fmt.Println("pop takes an array")
         os.Exit(0)
     }
@@ -145,7 +145,7 @@ func jamlangSetArrayElement(args []RuntimeValue, environment Environment) Runtim
         os.Exit(0)
     }
 
-    if args[0].Type() != "array" {
+    if args[0].Type() != Array {
         fmt.Println("set takes an array")
         os.Exit(0)
     }
@@ -167,12 +167,12 @@ func jamlangCopy(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
     }
 
-    if args[0].Type() == "array" {
+    if args[0].Type() == Array {
         goArray := ToGoArrayValue(args[0].(ArrayValue))
         goArrayCopy := make([]RuntimeValue, len(goArray))
         copy(goArrayCopy, goArray)
         return MakeArrayValue(goArrayCopy)
-    } else if args[0].Type() == "tuple" {
+    } else if args[0].Type() == Tuple {
         goTuple := ToGoTupleValue(args[0].(TupleValue))
         goTupleCopy := make([]RuntimeValue, len(goTuple))
         copy(goTupleCopy, goTuple)
@@ -182,6 +182,27 @@ func jamlangCopy(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
         return MakeNullValue()
     }
+}
+
+func jamlangArray(args []RuntimeValue, environment Environment) RuntimeValue {
+    if len(args) != 1 {
+        fmt.Println("array takes 1 argument")
+        os.Exit(0)
+    }
+
+    if args[0].Type() != Number {
+        fmt.Println("array takes a number")
+        os.Exit(0)
+    }
+
+    size := int(ToGoNumberValue(args[0].(NumberValue)))
+    if size < 0 {
+        fmt.Println("array takes a positive number")
+        os.Exit(0)
+    }
+
+    goArray := make([]RuntimeValue, size)
+    return MakeArrayValue(goArray)
 }
 
 func jamlangTuple(args []RuntimeValue, environment Environment) RuntimeValue {
@@ -197,14 +218,96 @@ func jamlangToString(args []RuntimeValue, environment Environment) RuntimeValue 
     return MakeStringValue(args[0].ToString())
 }
 
-func jamlangToInt(args []RuntimeValue, environment Environment) RuntimeValue {
+func jamlangToUint32(args []RuntimeValue, environment Environment) RuntimeValue {
     if len(args) != 1 {
-        fmt.Println("int takes 1 argument")
+        fmt.Println("uint32 takes 1 argument")
         os.Exit(0)
     }
 
-    if args[0].Type() != "string" {
-        fmt.Println("int takes a string")
+    if args[0].Type() == Number {
+        return MakeNumberValue(float64(uint32(ToGoNumberValue(args[0].(NumberValue)))))
+    }
+
+    if args[0].Type() != String {
+        fmt.Println("uint32 takes a string or a number")
+        os.Exit(0)
+    }
+
+    uintString := args[0].ToString()
+
+    uintUint, err := strconv.ParseUint(uintString, 10, 32)
+    if err != nil {
+        fmt.Println("uint32 takes a string or a number")
+        os.Exit(0)
+    }
+
+    return MakeNumberValue(float64(uintUint))
+}
+
+func jamlangToUint64(args []RuntimeValue, environment Environment) RuntimeValue {
+    if len(args) != 1 {
+        fmt.Println("uint64 takes 1 argument")
+        os.Exit(0)
+    }
+
+    if args[0].Type() == Number {
+        return MakeNumberValue(float64(uint64(ToGoNumberValue(args[0].(NumberValue)))))
+    }
+
+    if args[0].Type() != String {
+        fmt.Println("uint64 takes a string or a number")
+        os.Exit(0)
+    }
+
+    uintString := args[0].ToString()
+
+    uintUint, err := strconv.ParseUint(uintString, 10, 64)
+    if err != nil {
+        fmt.Println("uint64 takes a string or a number")
+        os.Exit(0)
+    }
+
+    return MakeNumberValue(float64(uintUint))
+}
+
+func jamlangToInt32(args []RuntimeValue, environment Environment) RuntimeValue {
+    if len(args) != 1 {
+        fmt.Println("int32 takes 1 argument")
+        os.Exit(0)
+    }
+
+    if args[0].Type() == Number {
+        return MakeNumberValue(float64(int32(ToGoNumberValue(args[0].(NumberValue)))))
+    }
+
+    if args[0].Type() != String {
+        fmt.Println("int32 takes a string or a number")
+        os.Exit(0)
+    }
+
+    intString := args[0].ToString()
+
+    intInt, err := strconv.ParseInt(intString, 10, 32)
+    if err != nil {
+        fmt.Println("int32 takes a string or a number")
+        os.Exit(0)
+    }
+
+    return MakeNumberValue(float64(intInt))
+}
+
+func jamlangToInt64(args []RuntimeValue, environment Environment) RuntimeValue {
+    if len(args) != 1 {
+        fmt.Println("int64 takes 1 argument")
+        os.Exit(0)
+    }
+
+    if args[0].Type() == Number {
+        return MakeNumberValue(float64(int64(ToGoNumberValue(args[0].(NumberValue)))))
+    }
+
+    if args[0].Type() != String {
+        fmt.Println("int64 takes a string or a number")
         os.Exit(0)
     }
 
@@ -212,7 +315,7 @@ func jamlangToInt(args []RuntimeValue, environment Environment) RuntimeValue {
 
     intInt, err := strconv.ParseInt(intString, 10, 64)
     if err != nil {
-        fmt.Println("int takes a string")
+        fmt.Println("int64 takes a string or a number")
         os.Exit(0)
     }
 
@@ -225,7 +328,7 @@ func jamlangToFloat(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
     }
 
-    if args[0].Type() != "string" {
+    if args[0].Type() != String {
         fmt.Println("float takes a string")
         os.Exit(0)
     }
@@ -247,7 +350,7 @@ func jamlangHex(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
     }
 
-    if args[0].Type() != "string" {
+    if args[0].Type() != String {
         fmt.Println("hex takes a string")
         os.Exit(0)
     }
@@ -273,7 +376,7 @@ func jamlangBitwiseNot(args []RuntimeValue, environment Environment) RuntimeValu
         os.Exit(0)
     }
 
-    if args[0].Type() != "number" {
+    if args[0].Type() != Number {
         fmt.Println("bitwise not takes a number")
         os.Exit(0)
     }
@@ -287,7 +390,7 @@ func jamlangBitwiseAnd(args []RuntimeValue, environment Environment) RuntimeValu
         os.Exit(0)
     }
 
-    if args[0].Type() != "number" || args[1].Type() != "number" {
+    if args[0].Type() != Number || args[1].Type() != Number {
         fmt.Println("bitwise and takes 2 numbers")
         os.Exit(0)
     }
@@ -301,7 +404,7 @@ func jamlangBitwiseOr(args []RuntimeValue, environment Environment) RuntimeValue
         os.Exit(0)
     }
 
-    if args[0].Type() != "number" || args[1].Type() != "number" {
+    if args[0].Type() != Number || args[1].Type() != Number {
         fmt.Println("bitwise or takes 2 numbers")
         os.Exit(0)
     }
@@ -315,7 +418,7 @@ func jamlangBitwiseXor(args []RuntimeValue, environment Environment) RuntimeValu
         os.Exit(0)
     }
 
-    if args[0].Type() != "number" || args[1].Type() != "number" {
+    if args[0].Type() != Number || args[1].Type() != Number {
         fmt.Println("bitwise xor takes 2 numbers")
         os.Exit(0)
     }
@@ -329,7 +432,7 @@ func jamlangEval(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
     }
 
-    if args[0].Type() != "string" {
+    if args[0].Type() != String {
         fmt.Println("eval takes a string")
         os.Exit(0)
     }
@@ -347,7 +450,7 @@ func jamlangOpen(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
     }
 
-    if args[0].Type() != "string" {
+    if args[0].Type() != String {
         fmt.Println("open takes a string")
         os.Exit(0)
     }
@@ -402,7 +505,7 @@ func jamlangWrite(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
     }
 
-    if args[1].Type() != "string" {
+    if args[1].Type() != String {
         fmt.Println("write takes a string")
         os.Exit(0)
     }

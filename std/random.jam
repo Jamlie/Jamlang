@@ -1,0 +1,114 @@
+fn Random(s) {
+    const N = 624;
+    const M = 397;
+    const A = hex("9908b0df");
+    const U = 11;
+    const D = hex("ffffffff");
+    const S = 7;
+    const B = hex("9d2c5680");
+    const T = 15;
+    const C = hex("efc60000");
+    const L = 18;
+    const F = 1812433253;
+    const LOWER_MASK = hex("7fffffff");
+    const UPPER_MASK = Bitwise.NOT(LOWER_MASK);
+    const MAX_INT = hex("ffffffff");
+    const DOUBLE_UNIT = int64(1) << 53; 
+
+    const state = array(N)
+    state[0] = uint32(s)
+    for let i = 1; i < N; ++i {
+        state[i] = uint32((F * (Bitwise.XOR(uint32(state[i - 1]), uint32(state[i - 1] >> 30))) + i))
+    }
+
+    let index = N;
+
+    fn twist() {
+        for let i = 0; i < N; ++i {
+            let x = (Bitwise.AND(state[i], UPPER_MASK)) + (Bitwise.AND(state[(i + 1) % N], LOWER_MASK))
+            let xA = x >> 1
+            if Bitwise.AND(x, 1) != 0 {
+                xA = Bitwise.XOR(xA, A)
+            }
+
+            state[i] = Bitwise.XOR(state[(i + M) % N], xA)
+        }
+    
+        index = 0
+    }
+
+    fn next(bits) {
+        if index >= N {
+            twist()
+        }
+        let y = state[index]
+        ++index
+        y = Bitwise.XOR(y, y >> U)
+        y = Bitwise.XOR(y, Bitwise.AND(y << S, B))
+        y = Bitwise.XOR(y, Bitwise.AND(y << T, C))
+        y = Bitwise.XOR(y, y >> L)
+        return (y >> (32 - bits))
+    }
+
+    const this = {}
+
+    this.nextInt = fn() {
+        return next(32)
+    }
+
+    this.nextIntBounded = fn(bound) {
+        let r = next(31)
+        let m = bound - 1
+
+        if Bitwise.AND(bound, m) == 0 {
+            r = int32((bound * r) >> 31)
+        } else {
+            for let u = r; u - (r = u % bound) + m < 0; u = next(31) {}
+        }
+        
+        return r
+    }
+
+    this.nextIntRange = fn(min, max) {
+        return min + this.nextIntBounded(max - min)
+    }
+    
+    this.nextLong = fn() {
+        return int64((next(32) << 32) + next(32))
+    }
+
+    this.nextLongBounded = fn(bound) {
+        let r = this.nextLong()
+        let m = bound - 1
+
+        if Bitwise.AND(bound, m) == 0 {
+            r = int64((bound * r) >> 31)
+        } else {
+            for let u = r; u - (r = u % bound) + m < 0; u = this.nextLong() {}
+        }
+        
+        return r
+    }
+
+    this.nextLongRange = fn(min, max) {
+        return min + this.nextLongBounded(max - min)
+    }
+    
+    this.nextFloat = fn() {
+        return next(24) / (1 << 24)
+    }
+
+    this.nextFloatRange = fn(min, max) {
+        return min + this.nextFloat() * (max - min)
+    }
+
+    this.nextDouble = fn() {
+        return ((int64(next(26)) << 27) + next(27)) / DOUBLE_UNIT
+    }
+
+    this.nextDoubleRange = fn(min, max) {
+        return min + this.nextDouble() * (max - min)
+    }
+
+    return this
+}
