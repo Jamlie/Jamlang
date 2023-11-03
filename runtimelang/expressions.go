@@ -553,6 +553,91 @@ func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) Runtim
         if _, ok := obj.(NullValue); ok {
             return obj
         }
+
+        if _, ok := obj.(ArrayValue); ok {
+            switch expr.Property.(*ast.Identifier).Symbol {
+            case "length":
+                return MakeNumberValue(float64(len(obj.(ArrayValue).Values)))
+            case "push":
+                if arr, ok := obj.(ArrayValue); ok {
+                    a := &arr.Values
+                    return jamlangArrayPush(&a)
+                }
+            case "pop":
+                return jamlangArrayPop(obj.(ArrayValue).Values)
+            case "shift":
+                return jamlangArrayShift(obj.(ArrayValue).Values)
+            case "contains":
+                return jamlangArrayContains(obj.(ArrayValue).Values)
+            case "insert":
+                return jamlangArrayInsertInto(obj.(ArrayValue).Values)
+            case "pushAll":
+                return jamlangArrayPushAll(obj.(ArrayValue).Values)
+            default:
+                fmt.Println("Error: Array does not have property " + expr.Property.(*ast.Identifier).Symbol)
+                os.Exit(0)
+            }
+        }
+
+        if _, ok := obj.(TupleValue); ok {
+            switch expr.Property.(*ast.Identifier).Symbol {
+            case "length":
+                return MakeNumberValue(float64(len(obj.(TupleValue).Values)))
+            default:
+                fmt.Println("Error: Tuple does not have property " + expr.Property.(*ast.Identifier).Symbol)
+                os.Exit(0)
+            }
+        }
+
+        if _, ok := obj.(StringValue); ok {
+            switch expr.Property.(*ast.Identifier).Symbol {
+            case "length":
+                return MakeNumberValue(float64(len(obj.(StringValue).Value)))
+            case "toUpper":
+                return jamlangStringToUpper(obj.(StringValue).Value)
+            case "toLower":
+                return jamlangStringToLower(obj.(StringValue).Value)
+            case "contains":
+                return jamlangStringContains(obj.(StringValue).Value)
+            case "split":
+                return jamlangStringSplit(obj.(StringValue).Value)
+            case "equalsIgnoreCase":
+                return jamlangStringEqualsIgnoreCase(obj.(StringValue).Value)
+            case "startsWith":
+                return jamlangStringStartsWith(obj.(StringValue).Value)
+            case "endsWith":
+                return jamlangStringEndsWith(obj.(StringValue).Value)
+            case "indexOf":
+                return jamlangStringIndexOf(obj.(StringValue).Value)
+            case "lastIndexOf":
+                return jamlangStringLastIndexOf(obj.(StringValue).Value)
+            case "substring":
+                return jamlangStringSubstring(obj.(StringValue).Value)
+            case "replace":
+                return jamlangStringReplace(obj.(StringValue).Value)
+            case "trim":
+                return jamlangStringTrim(obj.(StringValue).Value)
+            case "trimLeft":
+                return jamlangStringTrimLeft(obj.(StringValue).Value)
+            case "trimRight":
+                return jamlangStringTrimRight(obj.(StringValue).Value)
+            case "repeat":
+                return jamlangStringRepeat(obj.(StringValue).Value)
+            case "leftPad":
+                return jamlangStringLeftPad(obj.(StringValue).Value)
+            case "rightPad":
+                return jamlangStringRightPad(obj.(StringValue).Value)
+            default:
+                fmt.Println("Error: String has no property " + expr.Property.(*ast.Identifier).Symbol)
+                os.Exit(0)
+            }
+        }
+
+        if _, ok := obj.(ObjectValue); !ok {
+            fmt.Fprintf(os.Stderr, "Error: %s has no property %s\n", obj.Type(), expr.Property.(*ast.Identifier).Symbol)
+            os.Exit(0)
+        }
+
         return obj.(ObjectValue).Properties[expr.Property.(*ast.Identifier).Symbol]
     }
 }
@@ -986,6 +1071,10 @@ func EvaluateAssignment(node ast.AssignmentExpression, env Environment) RuntimeV
         }
         if objectValue.Type() == Null {
             return objectValue.(NullValue)
+        }
+        if objectValue.Type() == String {
+            fmt.Println("Error: string does not support assignment")
+            os.Exit(0)
         }
         objectValue.(ObjectValue).Properties[node.Assignee.(*ast.MemberExpression).Property.(*ast.Identifier).Symbol], _ = Evaluate(node.Value, env)
         return objectValue

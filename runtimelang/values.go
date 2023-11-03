@@ -260,8 +260,22 @@ func (v ObjectValue) Clone() RuntimeValue {
 }
 
 
+
 type ArrayValue struct {
     Values []RuntimeValue
+}
+
+func (v* ArrayValue) Push(value RuntimeValue) {
+    v.Values = append(v.Values, value)
+}
+
+func (v *ArrayValue) Pop() RuntimeValue {
+    if len(v.Values) > 0 {
+        value := v.Values[len(v.Values)-1]
+        v.Values = v.Values[:len(v.Values)-1]
+        return value
+    }
+    return MakeNullValue()
 }
 
 func (v ArrayValue) Equals(other RuntimeValue) bool {
