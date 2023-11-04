@@ -7,6 +7,17 @@ println(rand.nextLongRange(1000000000000, 10000000000000))
 println(rand.nextFloatRange(0, 1))
 println(rand.nextDoubleRange(0, 1))
 
+println("------------------------------------")
+
+const languageName = "Jamlang"
+let versions = [1.0, 1.1, 1.2]
+versions = versions.push(1.3)
+
+println(languageName)
+println(languageName.length)
+println(versions)
+println(versions.length)
+
 /*
 fn Car(year, location) {
     const this = {}
