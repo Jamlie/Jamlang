@@ -47,7 +47,7 @@ func (p *Parser) parseStatement() ast.Statement {
         return p.parseFunctionDeclaration()
     case tokentype.Return:
         if !p.isFunction {
-            fmt.Println("Error: Return statement outside of function")
+            fmt.Fprintln(os.Stderr, "Error: Return statement outside of function")
             os.Exit(0)
         }
         return p.parseReturnStatement()
@@ -55,7 +55,7 @@ func (p *Parser) parseStatement() ast.Statement {
         return p.parseClassDeclaration()
     case tokentype.Break:
         if !p.isLoop {
-            fmt.Println("Error: Break statement outside of loop")
+            fmt.Fprintln(os.Stderr, "Error: Break statement outside of loop")
             os.Exit(0)
         }
         return p.parseBreakStatement()
@@ -284,9 +284,24 @@ func (p *Parser) parseType() ast.VariableType {
     case "str":
         p.eat()
         return ast.StringType
-    case "number":
+    case "i8":
         p.eat()
-        return ast.NumberType
+        return ast.Int8Type
+    case "i16":
+        p.eat()
+        return ast.Int16Type
+    case "i32":
+        p.eat()
+        return ast.Int32Type
+    case "i64":
+        p.eat()
+        return ast.Int64Type
+    case "f32":
+        p.eat()
+        return ast.Float32Type
+    case "f64":
+        p.eat()
+        return ast.Float64Type
     case "bool":
         p.eat()
         return ast.BoolType
@@ -669,7 +684,7 @@ func (p *Parser) parseMemberExpression() ast.Expression {
             property = p.parsePrimaryExpression()
 
             if property.Kind() != ast.IdentifierType {
-                fmt.Println("Expected identifier after '.'")
+                fmt.Fprintln(os.Stderr, "Expected identifier after '.'")
                 os.Exit(0)
                 return nil
             }
@@ -700,7 +715,7 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
     case tokentype.Number:
         value, err := strconv.ParseFloat(p.eat().Value, 64)
         if err != nil {
-            fmt.Println(err.Error())
+            fmt.Fprintln(os.Stderr, err.Error())
             os.Exit(0)
             return nil
         }
@@ -729,7 +744,7 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
     case tokentype.Function:
         return p.parseFunctionDeclaration()
     default:
-        fmt.Println("Unexpected token found: ", p.at())
+        fmt.Fprintln(os.Stderr, "Unexpected token found: ", p.at())
         os.Exit(0)
         return nil
     }
@@ -751,7 +766,7 @@ func (p *Parser) peek() lexer.Token {
 
 func (p *Parser) expect(token tokentype.TokenType, message string) lexer.Token {
     if p.at().Type != token {
-        fmt.Println(message)
+        fmt.Fprintln(os.Stderr, message)
         os.Exit(0)
     }
     return p.eat()

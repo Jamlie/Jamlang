@@ -24,9 +24,15 @@ func EvaluateReturnStatement(statement ast.ReturnStatement, env Environment) Run
     return returnValue
 }
 
+func checkNumberTypes(value RuntimeValue, varType ast.VariableType) bool {
+    return !(value.Type() == Number && varType == ast.Float64Type) && !(value.Type() == Number && varType == ast.Float32Type) && !(value.Type() == Number && varType == ast.Int64Type) && !(value.Type() == Number && varType == ast.Int32Type) && !(value.Type() == Number && varType == ast.Int16Type) && !(value.Type() == Number && varType == ast.Int8Type)
+} 
+
 func EvaluateVariableDeclaration(declaration ast.VariableDeclaration, env *Environment, varType ast.VariableType) RuntimeValue {
     value, _ := Evaluate(declaration.Value, *env)
-    if value.VarType() != varType && varType != ast.AnyType {
+
+    // int8, int16, int32, int64, float32 and float64 are of type number
+    if value.VarType() != varType && varType != ast.AnyType && checkNumberTypes(value, varType) {
         fmt.Fprintf(os.Stderr, "Error: Expected %s, got %s\n", declaration.Type, value.VarType())
         os.Exit(0)
     }

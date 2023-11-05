@@ -49,13 +49,16 @@ func CreateGlobalEnvironment() *Environment {
     env.DeclareVariable("input", MakeNativeFunction(jamlangInput, "input"), true, ast.FunctionType)
     env.DeclareVariable("array", MakeNativeFunction(jamlangArray, "array"), true, ast.ArrayType)
     env.DeclareVariable("tuple", MakeNativeFunction(jamlangTuple, "tuple"), true, ast.TupleType)
-    env.DeclareVariable("hex", MakeNativeFunction(jamlangHex, "hex"), true, ast.NumberType)
+    env.DeclareVariable("hex", MakeNativeFunction(jamlangHex, "hex"), true, ast.Float64Type)
     env.DeclareVariable("string", MakeNativeFunction(jamlangToString, "string"), true, ast.FunctionType)
-    env.DeclareVariable("uint32", MakeNativeFunction(jamlangToUint32, "int"), true, ast.NumberType)
-    env.DeclareVariable("uint64", MakeNativeFunction(jamlangToUint64, "int"), true, ast.NumberType)
-    env.DeclareVariable("int32", MakeNativeFunction(jamlangToInt32, "int"), true, ast.NumberType)
-    env.DeclareVariable("int64", MakeNativeFunction(jamlangToInt64, "int"), true, ast.NumberType)
-    env.DeclareVariable("float", MakeNativeFunction(jamlangToFloat, "float"), true, ast.NumberType)
+    env.DeclareVariable("uint32", MakeNativeFunction(jamlangToUint32, "uint32"), true, ast.Float64Type)
+    env.DeclareVariable("uint64", MakeNativeFunction(jamlangToUint64, "uint64"), true, ast.Float64Type)
+    env.DeclareVariable("int8", MakeNativeFunction(jamlangToInt8, "int8"), true, ast.Float64Type)
+    env.DeclareVariable("int16", MakeNativeFunction(jamlangToInt16, "int16"), true, ast.Float64Type)
+    env.DeclareVariable("int32", MakeNativeFunction(jamlangToInt32, "int32"), true, ast.Float64Type)
+    env.DeclareVariable("int64", MakeNativeFunction(jamlangToInt64, "int64"), true, ast.Float64Type)
+    env.DeclareVariable("float32", MakeNativeFunction(jamlangToFloat32, "float32"), true, ast.Float64Type)
+    env.DeclareVariable("float64", MakeNativeFunction(jamlangToFloat64, "float64"), true, ast.Float64Type)
     env.DeclareVariable("eval", MakeNativeFunction(jamlangEval, "eval"), true, ast.AnyType)
 
     return env
@@ -109,11 +112,61 @@ func (e *Environment) AssignVariable(name string, value RuntimeValue) RuntimeVal
     env.variables[name] = value
 
     if env.types[name] != value.VarType() && env.types[name] != ast.AnyType {
+        if value.Type() == Number {
+            if env.types[name] == ast.Float64Type {
+                return value
+            }
+
+            if env.types[name] == ast.Int8Type && isInt8(value.(NumberValue).Value) {
+                return value
+            }
+
+            if env.types[name] == ast.Int16Type && isInt16(value.(NumberValue).Value) {
+                return value
+            }
+
+            if env.types[name] == ast.Int32Type && isInt32(value.(NumberValue).Value) {
+                return value
+            }
+
+            if env.types[name] == ast.Int64Type && isInt64(value.(NumberValue).Value) {
+                return value
+            }
+
+            if env.types[name] == ast.Float32Type && isFloat32(value.(NumberValue).Value) {
+                return value
+            }
+
+            incorrectNumberType(env, name, value)
+
+            fmt.Fprintf(os.Stderr, "Error: Type mismatch, expected %s got %s\n", env.types[name], value.VarType())
+            os.Exit(0)
+        }
         fmt.Fprintf(os.Stderr, "Error: Type mismatch, expected %s got %s\n", env.types[name], value.VarType())
         os.Exit(0)
     }
 
     return value
+}
+
+func isInt8(value float64) bool {
+    return value >= -0x80 && value <= 0x7F
+}
+
+func isInt16(value float64) bool {
+    return value >= -0x8000 && value <= 0x7FFF
+}
+
+func isInt32(value float64) bool {
+    return value >= -0x80000000 && value <= 0x7FFFFFFF
+}
+
+func isInt64(value float64) bool {
+    return value >= -0x8000000000000000 && value <= 0x7FFFFFFFFFFFFFFF
+}
+
+func isFloat32(value float64) bool {
+    return value >= -0x1.0p127 && value <= 0x1.0p127
 }
 
 func (e *Environment) Resolve(name string) *Environment {
@@ -141,4 +194,63 @@ func (e *Environment) LookupVariable(name string) RuntimeValue {
 
 func (e *Environment) RemoveVariable(name string) {
     delete(e.variables, name)
+}
+
+func incorrectNumberType(env *Environment, name string, value RuntimeValue) {
+    if env.types[name] == ast.Int8Type && !isInt8(value.(NumberValue).Value) {
+        switch {
+        case isInt16(value.(NumberValue).Value):
+            fmt.Fprintf(os.Stderr, "Error: Type mismatch, expected %s got %s\n", env.types[name], "i16")
+        case isInt32(value.(NumberValue).Value):
+            fmt.Fprintf(os.Stderr, "Error: Type mismatch, expected %s got %s\n", env.types[name], "i32")
+        case isInt64(value.(NumberValue).Value):
+            fmt.Fprintf(os.Stderr, "Error: Type mismatch, expected %s got %s\n", env.types[name], "i64")
+        case isFloat32(value.(NumberValue).Value):
+            fmt.Fprintf(os.Stderr, "Error: Type mismatch, expected %s got %s\n", env.types[name], "f32")
+        default:
+            fmt.Fprintf(os.Stderr, "Error: Type mismatch, expected %s got %s\n", env.types[name], "f64")
+        }
+        os.Exit(0)
+    }
+
+    if env.types[name] == ast.Int16Type && !isInt16(value.(NumberValue).Value) {
+        switch {
+        case isInt32(value.(NumberValue).Value):
+            fmt.Fprintf(os.Stderr, "Error: Type mismatch, expected %s got %s\n", env.types[name], "i32")
+        case isInt64(value.(NumberValue).Value):
+            fmt.Fprintf(os.Stderr, "Error: Type mismatch, expected %s got %s\n", env.types[name], "i64")
+        case isFloat32(value.(NumberValue).Value):
+            fmt.Fprintf(os.Stderr, "Error: Type mismatch, expected %s got %s\n", env.types[name], "f32")
+        default:
+            fmt.Fprintf(os.Stderr, "Error: Type mismatch, expected %s got %s\n", env.types[name], "f64")
+        }
+        os.Exit(0)
+    }
+
+    if env.types[name] == ast.Int32Type && !isInt32(value.(NumberValue).Value) {
+        switch {
+        case isInt64(value.(NumberValue).Value):
+            fmt.Fprintf(os.Stderr, "Error: Type mismatch, expected %s got %s\n", env.types[name], "i64")
+        case isFloat32(value.(NumberValue).Value):
+            fmt.Fprintf(os.Stderr, "Error: Type mismatch, expected %s got %s\n", env.types[name], "f32")
+        default:
+            fmt.Fprintf(os.Stderr, "Error: Type mismatch, expected %s got %s\n", env.types[name], "f64")
+        }
+        os.Exit(0)
+    }
+
+    if env.types[name] == ast.Int64Type && !isInt64(value.(NumberValue).Value) {
+        switch {
+        case isFloat32(value.(NumberValue).Value):
+            fmt.Fprintf(os.Stderr, "Error: Type mismatch, expected %s got %s\n", env.types[name], "f32")
+        default:
+            fmt.Fprintf(os.Stderr, "Error: Type mismatch, expected %s got %s\n", env.types[name], "f64")
+        }
+        os.Exit(0)
+    }
+
+    if env.types[name] == ast.Float32Type && !isFloat32(value.(NumberValue).Value) {
+        fmt.Fprintf(os.Stderr, "Error: Type mismatch, expected %s got %s\n", env.types[name], "f64")
+        os.Exit(0)
+    }
 }

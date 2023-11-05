@@ -62,7 +62,12 @@ func (p *Program) ToString() string {
 type VariableType string
 const (
     StringType VariableType = "string"
-    NumberType VariableType = "number"
+    Int8Type VariableType = "i8"
+    Int16Type VariableType = "i16"
+    Int32Type VariableType = "i32"
+    Int64Type VariableType = "i64"
+    Float32Type VariableType = "f32"
+    Float64Type VariableType = "f64"
     BoolType VariableType = "bool"
     ObjectType VariableType = "object"
     ArrayType VariableType = "array"
@@ -78,7 +83,6 @@ type VariableDeclaration struct {
     Identifier string
     Value Expression
     Type VariableType
-    // IsVar bool
 }
 
 func (v *VariableDeclaration) Kind() NodeType {

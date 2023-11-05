@@ -191,7 +191,7 @@ func Tokenize(sourceCode string) []Token {
             }
 
             if len(src) == 0 {
-                fmt.Println("Error: Unterminated string")
+                fmt.Fprintln(os.Stderr, "Error: Unterminated string")
                 os.Exit(0)
             }
 
@@ -232,7 +232,7 @@ func Tokenize(sourceCode string) []Token {
             } else if isWhitespace(src[0]) {
                 src = src[1:]
             } else {
-                fmt.Println("Error: Invalid character '" + string(src[0]) + "'")
+                fmt.Fprintln(os.Stderr, "Error: Invalid character '" + string(src[0]) + "'")
                 os.Exit(0)
             }
         }

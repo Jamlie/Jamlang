@@ -3,7 +3,6 @@ package runtimelang
 import (
     "os"
     "strconv"
-    // "strings"
 
     "github.com/Jamlie/Jamlang/ast"
 )
@@ -127,7 +126,7 @@ func (v NumberValue) Clone() RuntimeValue {
 }
 
 func (v NumberValue) VarType() ast.VariableType {
-    return ast.NumberType
+    return ast.Float64Type
 }
 
 func MakeNumberValue(value float64) NumberValue {

@@ -51,7 +51,7 @@ It has a very small standard library, which contains:
 
 ## Install
 ```sh
-$ go install github.com/Jamlie/Jamlang@latest # or github.com/Jamlie/Jamlang@v1.4.0
+$ go install github.com/Jamlie/Jamlang@latest # or github.com/Jamlie/Jamlang@v1.4.1
 ```
 
 ## How to add native functions to it?

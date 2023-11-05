@@ -33,7 +33,7 @@ func Repl(env *runtimelang.Environment) {
         program := parser.ProduceAST(text)
         runtimeValue, err := runtimelang.Evaluate(&program, *env)
         if err != nil {
-            fmt.Println(err)
+            fmt.Fprintln(os.Stderr, err)
             os.Exit(0)
         }
         fmt.Println(runtimeValue.Get())
@@ -77,8 +77,10 @@ func CallMain(env *runtimelang.Environment) {
             fmt.Println("Options:")
             fmt.Println("  -r\t\tRun a file")
             fmt.Println("  -h\t\tShow this help message")
+            fmt.Println("  -i\t\tInstall a package")
             fmt.Println("  run\t\tRun a file")
             fmt.Println("  help\t\tShow this help message")
+            fmt.Println("  install\tInstall a package")
         } else if *installFlag {
             if len(args) < 1 {
                 fmt.Println("No package specified")
