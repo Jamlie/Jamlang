@@ -12,7 +12,7 @@ It takes some parts of popular languages, such as:
 ```js
 import "std/linkedlist.jam" /* use jamlang -i linkedlist or jamlang install linkedlist to get the linkedlist file */
 fn Person(name, age) {
-    const this = {}
+    const this: object = {}
     this.getName = fn() {
         return name
     }
@@ -24,19 +24,19 @@ fn Person(name, age) {
     return this
 }
 
-const p = Person("Jamlang", 0.3)
+const p: object = Person("Jamlang", 0.3)
 println(p)
 println(p.getName())
 println((p.getName()).length)
 
-const list = LinkedList()
-list.add(1)
-list.add(2)
-list.add(3)
-list.remove(2)
-list.print()
+const linkedlist: object = LinkedList()
+linkedlist.add(1)
+linkedlist.add(2)
+linkedlist.add(3)
+linkedlist.remove(2)
+linkedlist.print()
 
-const arr = [1,2,3,4]
+const arr: list = [1,2,3,4]
 foreach i in arr {
     println(i)
 }
@@ -51,7 +51,7 @@ It has a very small standard library, which contains:
 
 ## Install
 ```sh
-$ go install github.com/Jamlie/Jamlang@latest # or github.com/Jamlie/Jamlang@v1.3.0
+$ go install github.com/Jamlie/Jamlang@latest # or github.com/Jamlie/Jamlang@v1.4.0
 ```
 
 ## How to add native functions to it?
@@ -60,8 +60,8 @@ Adding functions via Go is rather simple, here's how to do it:
 ### First
 Add the repository
 ```bash
-go mod init your_package
-go get github.com/Jamlie/Jamlang
+$ go mod init your_package
+$ go get github.com/Jamlie/Jamlang
 ```
 
 ### Second
@@ -73,13 +73,14 @@ import (
     "os"
 
     "github.com/Jamlie/Jamlang/jamlang"
+    "github.com/Jamlie/Jamlang/ast"
     . "github.com/Jamlie/Jamlang/runtimelang"
 )
 
 func main() {
     newEnv := CreateGlobalEnvironment()
 
-    newEnv.DeclareVariable(/* name */ "foo", /* value */ MakeNumberValue(69), /*is constant*/ true)
+    newEnv.DeclareVariable(/* name */ "foo", /* value */ MakeNumberValue(69), /* is const */ true, /* type */ ast.NumberValue)
     
     sumFn := MakeNativeFunction(func(args []RuntimeValue, env Environment) RuntimeValue {
         if len(args) != 2 {
@@ -101,6 +102,8 @@ func main() {
         
         return MakeNumberValue(num1 + num2)
     }, "sum")
+
+    env.DeclareVariable("sum", sumFn, true, ast.NumberType)
     
     jamlang.CallMain(newEnv)
 }
@@ -110,7 +113,7 @@ func main() {
 go build
 
 ```bash
-./your_package -r fileName.jam
+$ ./your_package -r fileName.jam
 ```
 
 ## Created by

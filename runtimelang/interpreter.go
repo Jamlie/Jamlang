@@ -20,7 +20,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.BinaryExpressionType:
         binaryExpression, ok := astNode.(*ast.BinaryExpression)
         if !ok {
-            fmt.Printf("Error: Expected BinaryExpression, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected BinaryExpression, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -28,7 +28,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.UnaryExpressionType:
         unaryExpression, ok := astNode.(*ast.UnaryExpression)
         if !ok {
-            fmt.Printf("Error: Expected UnaryExpression, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected UnaryExpression, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -36,7 +36,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.LogicalExpressionType:
         logicalExpression, ok := astNode.(*ast.LogicalExpression)
         if !ok {
-            fmt.Printf("Error: Expected LogicalExpression, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected LogicalExpression, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -44,7 +44,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.IdentifierType:
         identifier, ok := astNode.(*ast.Identifier)
         if !ok {
-            fmt.Printf("Error: Expected Identifier, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected Identifier, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -52,7 +52,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.ObjectLiteralType:
         objectLiteral, ok := astNode.(*ast.ObjectLiteral)
         if !ok {
-            fmt.Printf("Error: Expected ObjectLiteral, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected ObjectLiteral, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -60,7 +60,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.ArrayLiteralType:
         arrayLiteral, ok := astNode.(*ast.ArrayLiteral)
         if !ok {
-            fmt.Printf("Error: Expected ArrayLiteral, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected ArrayLiteral, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -68,7 +68,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.MemberExpressionType:
         memberExpression, ok := astNode.(*ast.MemberExpression)
         if !ok {
-            fmt.Printf("Error: Expected MemberExpression, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected MemberExpression, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -76,7 +76,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.CallExpressionType:
         callExpression, ok := astNode.(*ast.CallExpression)
         if !ok {
-            fmt.Printf("Error: Expected CallExpression, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected CallExpression, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -84,7 +84,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.ReturnStatementType:
         returnStatement, ok := astNode.(*ast.ReturnStatement)
         if !ok {
-            fmt.Printf("Error: Expected ReturnStatement, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected ReturnStatement, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -92,7 +92,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.ClassDeclarationType:
         classDeclaration, ok := astNode.(*ast.ClassDeclaration)
         if !ok {
-            fmt.Printf("Error: Expected ClassDeclaration, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected ClassDeclaration, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -106,7 +106,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.BreakStatementType:
         breakStatement, ok := astNode.(*ast.BreakStatement)
         if !ok {
-            fmt.Printf("Error: Expected BreakStatement, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected BreakStatement, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -114,7 +114,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.AssignmentExpressionType:
         assignmentExpression, ok := astNode.(*ast.AssignmentExpression)
         if !ok {
-            fmt.Printf("Error: Expected AssignmentExpression, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected AssignmentExpression, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -122,7 +122,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.ProgramType:
         program, ok := astNode.(*ast.Program)
         if !ok {
-            fmt.Printf("Error: Expected Program, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected Program, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -130,15 +130,15 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.VariableDeclarationType:
         variableDeclaration, ok := astNode.(*ast.VariableDeclaration)
         if !ok {
-            fmt.Printf("Error: Expected VariableDeclaration, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected VariableDeclaration, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
-        return EvaluateVariableDeclaration(*variableDeclaration, &env), nil
+        return EvaluateVariableDeclaration(*variableDeclaration, &env, variableDeclaration.Type), nil
     case ast.FunctionDeclarationType:
         functionDeclaration, ok := astNode.(*ast.FunctionDeclaration)
         if !ok {
-            fmt.Printf("Error: Expected FunctionDeclaration, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected FunctionDeclaration, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -148,7 +148,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.ConditionalStatementType:
         conditionalStatement, ok := astNode.(*ast.ConditionalStatement)
         if !ok {
-            fmt.Printf("Error: Expected ConditionalStatement, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected ConditionalStatement, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -164,7 +164,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
         }
 
         if err != nil {
-            fmt.Printf("Error: %s\n", err.Error())
+            fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
             os.Exit(0)
             return nil, nil
         }
@@ -173,7 +173,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.WhileStatementType:
         whileStatement, ok := astNode.(*ast.WhileStatement)
         if !ok {
-            fmt.Printf("Error: Expected WhileStatement, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected WhileStatement, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -189,7 +189,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
         }
 
         if err != nil {
-            fmt.Printf("Error: %s\n", err.Error())
+            fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
             os.Exit(0)
             return nil, nil
         }
@@ -198,7 +198,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.LoopStatementType:
         loopStatement, ok := astNode.(*ast.LoopStatement)
         if !ok {
-            fmt.Printf("Error: Expected LoopStatement, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected LoopStatement, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -214,7 +214,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
         }
 
         if err != nil {
-            fmt.Printf("Error: %s\n", err.Error())
+            fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
             os.Exit(0)
             return nil, nil
         }
@@ -223,7 +223,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.ForEachStatementType:
         forEachStatement, ok := astNode.(*ast.ForEachStatement)
         if !ok {
-            fmt.Printf("Error: Expected ForEachStatement, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected ForEachStatement, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -239,7 +239,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
         }
 
         if err != nil {
-            fmt.Printf("Error: %s\n", err.Error())
+            fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
             os.Exit(0)
             return nil, nil
         }
@@ -248,7 +248,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.ForStatementType:
         forStatement, ok := astNode.(*ast.ForStatement)
         if !ok {
-            fmt.Printf("Error: Expected ForStatement, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected ForStatement, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
@@ -264,7 +264,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
         }
 
         if err != nil {
-            fmt.Printf("Error: %s\n", err.Error())
+            fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
             os.Exit(0)
             return nil, nil
         }
@@ -273,21 +273,21 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     case ast.ImportStatementType:
         importStatement, ok := astNode.(*ast.ImportStatement)
         if !ok {
-            fmt.Printf("Error: Expected ImportStatement, got %T\n", astNode)
+            fmt.Fprintf(os.Stderr, "Error: Expected ImportStatement, got %T\n", astNode)
             os.Exit(0)
             return nil, nil
         }
 
         result, err := EvaluateImportExpression(*importStatement, &env)
         if err != nil {
-            fmt.Printf("Error: %s\n", err.Error())
+            fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
             os.Exit(0)
             return nil, nil
         }
 
         return result, nil
     default:
-        fmt.Printf("Unknown AST node type %T\n", astNode)
+        fmt.Fprintf(os.Stderr, "Unknown AST node type %T\n", astNode)
         os.Exit(0)
         return nil, nil
     }

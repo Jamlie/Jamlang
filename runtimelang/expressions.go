@@ -36,7 +36,7 @@ func EvaluateFunctionDeclaration(expr ast.FunctionDeclaration, env *Environment)
             DeclarationEnvironment: *env,
         }
 
-        env.DeclareVariable(expr.Name, fn, true)
+        env.DeclareVariable(expr.Name, fn, true, ast.FunctionType)
     }
 
     return fn, nil
@@ -65,7 +65,7 @@ func EvaluateClassDeclaration(expr ast.ClassDeclaration, env *Environment) (Runt
                     DeclarationEnvironment: *scope,
                 }
 
-                env.DeclareVariable(expr.Name, actualClass.Constructor, true)
+                env.DeclareVariable(expr.Name, actualClass.Constructor, true, ast.FunctionType)
 
                 continue
             }
@@ -89,7 +89,7 @@ func EvaluateClassDeclaration(expr ast.ClassDeclaration, env *Environment) (Runt
         }
     }
 
-    scope.DeclareVariable("this", class, false)
+    scope.DeclareVariable("this", class, false, ast.ObjectType)
     return class, nil
 }
 
@@ -213,7 +213,7 @@ func EvaluateForEachExpression(expr ast.ForEachStatement, env *Environment) (Run
     }
 
     if array.Type() == Array {
-        scope.DeclareVariable(expr.Variable, MakeNullValue(), false)
+        scope.DeclareVariable(expr.Variable, MakeNullValue(), false, ast.AnyType)
         for _, element := range array.(ArrayValue).Values {
             scope.AssignVariable(expr.Variable, element)
 
@@ -228,9 +228,24 @@ func EvaluateForEachExpression(expr ast.ForEachStatement, env *Environment) (Run
             }
         }
     } else if array.Type() == Tuple {
-        scope.DeclareVariable(expr.Variable, MakeNullValue(), false)
+        scope.DeclareVariable(expr.Variable, MakeNullValue(), false, ast.AnyType)
         for _, element := range array.(TupleValue).Values {
             scope.AssignVariable(expr.Variable, element)
+
+            for _, statement := range expr.Body {
+                if statement.Kind() == ast.ReturnStatementType {
+                    return Evaluate(statement, *scope)
+                }
+                _, err := Evaluate(statement, *scope)
+                if err != nil {
+                    return MakeNullValue(), err
+                }
+            }
+        }
+    } else if array.Type() == String {
+        scope.DeclareVariable(expr.Variable, MakeNullValue(), false, ast.StringType)
+        for _, element := range array.(StringValue).Value {
+            scope.AssignVariable(expr.Variable, StringValue{Value: string(element)})
 
             for _, statement := range expr.Body {
                 if statement.Kind() == ast.ReturnStatementType {
@@ -257,7 +272,7 @@ func EvaluateLoopExpression(expr ast.LoopStatement, env *Environment) (RuntimeVa
             if statement.Kind() == ast.ReturnStatementType {
                 result, err := Evaluate(statement, *scope)
                 if err != nil {
-                    fmt.Println(err)
+                    fmt.Fprintln(os.Stderr, err)
                     os.Exit(0)
                 }
                 return result, IsReturnError
@@ -271,7 +286,7 @@ func EvaluateLoopExpression(expr ast.LoopStatement, env *Environment) (RuntimeVa
                 return MakeNullValue(), nil
             }
             if err != nil {
-                fmt.Println(err)
+                fmt.Fprintln(os.Stderr, err)
                 os.Exit(0)
             }
         }
@@ -290,7 +305,7 @@ func EvaluateLoopExpression(expr ast.LoopStatement, env *Environment) (RuntimeVa
 func EvaluateWhileExpression(expr ast.WhileStatement, env *Environment) (RuntimeValue, error) {
     condition, err := Evaluate(expr.Condition, *env)
     if err != nil {
-        fmt.Println(err)
+        fmt.Fprintln(os.Stderr, err)
         os.Exit(0)
     }
 
@@ -305,7 +320,7 @@ func EvaluateWhileExpression(expr ast.WhileStatement, env *Environment) (Runtime
             if statement.Kind() == ast.ReturnStatementType {
                 result, err := Evaluate(statement, *scope)
                 if err != nil {
-                    fmt.Println(err)
+                    fmt.Fprintln(os.Stderr, err)
                     os.Exit(0)
                 }
                 return result, IsReturnError
@@ -319,7 +334,7 @@ func EvaluateWhileExpression(expr ast.WhileStatement, env *Environment) (Runtime
                 return MakeNullValue(), nil
             }
             if err != nil {
-                fmt.Println(err)
+                fmt.Fprintln(os.Stderr, err)
                 os.Exit(0)
             }
         }
@@ -334,7 +349,7 @@ func EvaluateWhileExpression(expr ast.WhileStatement, env *Environment) (Runtime
         scope = NewEnvironment(env)
         condition, err = Evaluate(expr.Condition, *env)
         if err != nil {
-            fmt.Println(err)
+            fmt.Fprintln(os.Stderr, err)
             os.Exit(0)
         }
     }
@@ -345,7 +360,7 @@ func EvaluateWhileExpression(expr ast.WhileStatement, env *Environment) (Runtime
 func EvaluateConditionalExpression(expr ast.ConditionalStatement, env *Environment) (RuntimeValue, error) {
     condition, err := Evaluate(expr.Condition, *env)
     if err != nil {
-        fmt.Println(err)
+        fmt.Fprintln(os.Stderr, err)
         os.Exit(0)
     }
 
@@ -361,7 +376,7 @@ func EvaluateConditionalExpression(expr ast.ConditionalStatement, env *Environme
             if statement.Kind() == ast.ReturnStatementType {
                 result, err := Evaluate(statement, *scope)
                 if err != nil {
-                    fmt.Println(err)
+                    fmt.Fprintln(os.Stderr, err)
                     os.Exit(0)
                 }
 
@@ -375,7 +390,7 @@ func EvaluateConditionalExpression(expr ast.ConditionalStatement, env *Environme
                 return MakeNullValue(), nil
             }
             if err != nil {
-                fmt.Println(err)
+                fmt.Fprintln(os.Stderr, err)
                 os.Exit(0)
             }
         }
@@ -392,7 +407,7 @@ func EvaluateConditionalExpression(expr ast.ConditionalStatement, env *Environme
             if statement.Kind() == ast.ReturnStatementType {
                 result, err := Evaluate(statement, *scope)
                 if err != nil {
-                    fmt.Println(err)
+                    fmt.Fprintln(os.Stderr, err)
                     os.Exit(0)
                 }
 
@@ -405,7 +420,7 @@ func EvaluateConditionalExpression(expr ast.ConditionalStatement, env *Environme
                 return MakeNullValue(), nil
             }
             if err != nil {
-                fmt.Println(err)
+                fmt.Fprintln(os.Stderr, err)
                 os.Exit(0)
             }
         }
@@ -428,7 +443,7 @@ func EvaluateCallExpression(expr ast.CallExpression, env Environment) RuntimeVal
     for _, arg := range expr.Args {
         value, err := Evaluate(arg, env)
         if err != nil {
-            fmt.Println(err)
+            fmt.Fprintln(os.Stderr, err)
             os.Exit(0)
         }
 
@@ -437,7 +452,7 @@ func EvaluateCallExpression(expr ast.CallExpression, env Environment) RuntimeVal
 
     function, err := Evaluate(expr.Caller, env)
     if err != nil {
-        fmt.Println(err)
+        fmt.Fprintln(os.Stderr, err)
         os.Exit(0)
     }
 
@@ -450,18 +465,18 @@ func EvaluateCallExpression(expr ast.CallExpression, env Environment) RuntimeVal
 
         for i := 0; i < len(fn.Parameters); i++ {
             if i >= len(args) {
-                fmt.Println("Error: Not enough arguments")
+                fmt.Fprintln(os.Stderr, "Error: Not enough arguments")
                 os.Exit(0)
             }
             varname := fn.Parameters[i]
-            scope.DeclareVariable(varname, args[i], false)
+            scope.DeclareVariable(varname, args[i], false, ast.FunctionType)
         }
         var result RuntimeValue = MakeNullValue()
         for _, stmt := range fn.Body {
             if stmt.Kind() == ast.ReturnStatementType {
                 result, err = Evaluate(stmt, *scope)
                 if err != nil {
-                    fmt.Println(err)
+                    fmt.Fprintln(os.Stderr, err)
                     os.Exit(0)
                 }
                 return result
@@ -471,7 +486,7 @@ func EvaluateCallExpression(expr ast.CallExpression, env Environment) RuntimeVal
                 return result
             }
             if err != nil {
-                fmt.Println(err)
+                fmt.Fprintln(os.Stderr, err)
                 os.Exit(0)
             }
         }
@@ -479,7 +494,7 @@ func EvaluateCallExpression(expr ast.CallExpression, env Environment) RuntimeVal
         return result
     }
 
-    fmt.Println("Error: Not a function")
+    fmt.Fprintln(os.Stderr, "Error: Not a function")
     os.Exit(0)
     return nil
 }
@@ -487,25 +502,25 @@ func EvaluateCallExpression(expr ast.CallExpression, env Environment) RuntimeVal
 func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) RuntimeValue {
     obj, err := Evaluate(expr.Object, env)
     if err != nil {
-        fmt.Println(err)
+        fmt.Fprintln(os.Stderr, err)
         os.Exit(0)
     }
 
     if expr.Computed {
         property, err := Evaluate(expr.Property, env)
         if err != nil {
-            fmt.Println(err)
+            fmt.Fprintln(os.Stderr, err)
             os.Exit(0)
         }
         if _, ok := obj.(ArrayValue); ok {
             if property.(NumberValue).Value >= float64(len(obj.(ArrayValue).Values)) {
-                fmt.Println("Error: Index out of bounds")
+                fmt.Fprintln(os.Stderr, "Error: Index out of bounds")
                 os.Exit(0)
             }
 
             if property.(NumberValue).Value < 0 {
                 if -property.(NumberValue).Value > float64(len(obj.(ArrayValue).Values)) {
-                    fmt.Println("Error: Index out of bounds")
+                    fmt.Fprintln(os.Stderr, "Error: Index out of bounds")
                     os.Exit(0)
                 }
                 return obj.(ArrayValue).Values[int(property.(NumberValue).Value) + len(obj.(ArrayValue).Values)]
@@ -516,13 +531,13 @@ func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) Runtim
 
         if _, ok := obj.(TupleValue); ok {
             if property.(NumberValue).Value >= float64(len(obj.(TupleValue).Values)) {
-                fmt.Println("Error: Index out of bounds")
+                fmt.Fprintln(os.Stderr, "Error: Index out of bounds")
                 os.Exit(0)
             }
 
             if property.(NumberValue).Value < 0 {
                 if -property.(NumberValue).Value > float64(len(obj.(TupleValue).Values)) {
-                    fmt.Println("Error: Index out of bounds")
+                    fmt.Fprintln(os.Stderr, "Error: Index out of bounds")
                     os.Exit(0)
                 }
                 return obj.(TupleValue).Values[int(property.(NumberValue).Value) + len(obj.(TupleValue).Values)]
@@ -533,13 +548,13 @@ func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) Runtim
 
         if _, ok := obj.(StringValue); ok {
             if property.(NumberValue).Value >= float64(len(obj.(StringValue).Value)) {
-                fmt.Println("Error: Index out of bounds")
+                fmt.Fprintln(os.Stderr, "Error: Index out of bounds")
                 os.Exit(0)
             }
 
             if property.(NumberValue).Value < 0 {
                 if -property.(NumberValue).Value > float64(len(obj.(StringValue).Value)) {
-                    fmt.Println("Error: Index out of bounds")
+                    fmt.Fprintln(os.Stderr, "Error: Index out of bounds")
                     os.Exit(0)
                 }
                 return MakeStringValue(string(obj.(StringValue).Value[int(property.(NumberValue).Value) + len(obj.(StringValue).Value)]))
@@ -574,7 +589,7 @@ func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) Runtim
             case "pushAll":
                 return jamlangArrayPushAll(obj.(ArrayValue).Values)
             default:
-                fmt.Println("Error: Array does not have property " + expr.Property.(*ast.Identifier).Symbol)
+                fmt.Fprintln(os.Stderr, "Error: Array does not have property " + expr.Property.(*ast.Identifier).Symbol)
                 os.Exit(0)
             }
         }
@@ -584,7 +599,7 @@ func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) Runtim
             case "length":
                 return MakeNumberValue(float64(len(obj.(TupleValue).Values)))
             default:
-                fmt.Println("Error: Tuple does not have property " + expr.Property.(*ast.Identifier).Symbol)
+                fmt.Fprintln(os.Stderr, "Error: Tuple does not have property " + expr.Property.(*ast.Identifier).Symbol)
                 os.Exit(0)
             }
         }
@@ -628,7 +643,7 @@ func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) Runtim
             case "rightPad":
                 return jamlangStringRightPad(obj.(StringValue).Value)
             default:
-                fmt.Println("Error: String has no property " + expr.Property.(*ast.Identifier).Symbol)
+                fmt.Fprintln(os.Stderr, "Error: String has no property " + expr.Property.(*ast.Identifier).Symbol)
                 os.Exit(0)
             }
         }
@@ -666,7 +681,7 @@ func EvaluateObjectExpression(obj ast.ObjectLiteral, env Environment) RuntimeVal
         if property.Value != nil {
             value, err = Evaluate(property.Value, env)
             if err != nil {
-                fmt.Println(err)
+                fmt.Fprintln(os.Stderr, err)
                 os.Exit(0)
             }
         } else {
@@ -694,12 +709,12 @@ func EvaluateStatement(statement ast.Statement, env Environment) RuntimeValue {
 func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environment) RuntimeValue {
     lhs, err := Evaluate(binaryExpression.Left, env)
     if err != nil {
-        fmt.Println(err)
+        fmt.Fprintln(os.Stderr, err)
         os.Exit(0)
     }
     rhs, err := Evaluate(binaryExpression.Right, env)
     if err != nil {
-        fmt.Println(err)
+        fmt.Fprintln(os.Stderr, err)
         os.Exit(0)
     }
 
@@ -779,7 +794,7 @@ func EvaluateStringNumericBinaryExpression(lhs StringValue, rhs NumberValue, op 
         return StringValue{lhs.Value + rhsAsString}
     }
 
-    fmt.Printf("Unknown operator %s for string\n", op)
+    fmt.Fprintf(os.Stderr, "Unknown operator %s for string\n", op)
     os.Exit(0)
     return nil
 }
@@ -791,7 +806,7 @@ func EvaluateNumericStringBinaryExpression(lhs NumberValue, rhs StringValue, op 
         return StringValue{lhsAsString + rhs.Value}
     }
 
-    fmt.Printf("Unknown operator %s for string\n", op)
+    fmt.Fprintf(os.Stderr, "Unknown operator %s for string\n", op)
     os.Exit(0)
     return nil
 }
@@ -805,7 +820,7 @@ func EvaluateStringBinaryExpression(lhs, rhs StringValue, op string) RuntimeValu
         return BoolValue{lhs.Value != rhs.Value}
     }
 
-    fmt.Printf("Unknown operator %s for string\n", op)
+    fmt.Fprintf(os.Stderr, "Unknown operator %s for string\n", op)
     os.Exit(0)
     return nil
 }
@@ -822,14 +837,14 @@ func EvaluateNumericBinaryExpression(lhs, rhs NumberValue, op string) RuntimeVal
         result = math.Pow(lhs.Value, rhs.Value)
     } else if op == "/" {
         if rhs.Value == 0 {
-            fmt.Printf("Division by zero\n")
+            fmt.Fprintf(os.Stderr, "Division by zero\n")
             os.Exit(0)
             return nil
         }
         result = lhs.Value / rhs.Value
     } else if op == "//" {
         if rhs.Value == 0 {
-            fmt.Printf("Division by zero\n")
+            fmt.Fprintf(os.Stderr, "Division by zero\n")
             os.Exit(0)
             return nil
         }
@@ -883,7 +898,7 @@ func EvaluateNumericBinaryExpression(lhs, rhs NumberValue, op string) RuntimeVal
     } else if op == ">>" {
         result = float64(int64(lhs.Value) >> int64(rhs.Value))
     } else {
-        fmt.Printf("Error: Unknown operator: %s\n", op)
+        fmt.Fprintf(os.Stderr, "Error: Unknown operator: %s\n", op)
         os.Exit(0)
         return nil
 
@@ -895,33 +910,33 @@ func EvaluateNumericBinaryExpression(lhs, rhs NumberValue, op string) RuntimeVal
 func EvaluateUnaryExpression(node ast.UnaryExpression, env Environment) RuntimeValue {
     value, err := Evaluate(node.Value, env)
     if err != nil {
-        fmt.Println(err)
+        fmt.Fprintln(os.Stderr, err)
         os.Exit(0)
     }
 
     switch node.Operator {
     case "!":
         if value.Type() != Bool {
-            fmt.Println("Error: ! operator can only be applied to boolean values")
+            fmt.Fprintln(os.Stderr, "Error: ! operator can only be applied to boolean values")
             os.Exit(0)
             return nil
         }
         return BoolValue{!value.(BoolValue).Value}
     case "++":
         if value.Type() != Number {
-            fmt.Println("Error: ++ operator can only be applied to number values")
+            fmt.Fprintln(os.Stderr, "Error: ++ operator can only be applied to number values")
             os.Exit(0)
             return nil
         }
         if node.Value.Kind() == ast.MemberExpressionType {
             val, err := Evaluate(node.Value.(*ast.MemberExpression).Property, env)
             if err != nil {
-                fmt.Println(err)
+                fmt.Fprintln(os.Stderr, err)
                 os.Exit(0)
             }
             arr, err := Evaluate(node.Value.(*ast.MemberExpression).Object, env)
             if err != nil {
-                fmt.Println(err)
+                fmt.Fprintln(os.Stderr, err)
                 os.Exit(0)
             }
             arr.(ArrayValue).Values[int(ToGoNumberValue(val.(NumberValue)))] = NumberValue{val.(NumberValue).Value + 1}
@@ -931,7 +946,7 @@ func EvaluateUnaryExpression(node ast.UnaryExpression, env Environment) RuntimeV
         return NumberValue{value.(NumberValue).Value + 1}
     case "--":
         if value.Type() != Number {
-            fmt.Println("Error: -- operator can only be applied to number values")
+            fmt.Fprintln(os.Stderr, "Error: -- operator can only be applied to number values")
             os.Exit(0)
             return nil
         }
@@ -939,13 +954,13 @@ func EvaluateUnaryExpression(node ast.UnaryExpression, env Environment) RuntimeV
         return NumberValue{value.(NumberValue).Value - 1}
     case "-":
         if value.Type() != Number {
-            fmt.Println("Error: - operator can only be applied to number values")
+            fmt.Fprintln(os.Stderr, "Error: - operator can only be applied to number values")
             os.Exit(0)
             return nil
         }
         return NumberValue{-value.(NumberValue).Value}
     default:
-        fmt.Printf("Error: Unknown operator: %s\n", node.Operator)
+        fmt.Fprintf(os.Stderr, "Error: Unknown operator: %s\n", node.Operator)
         os.Exit(0)
         return nil
     }
@@ -959,7 +974,7 @@ func EvaluateLogicalExpression(node ast.LogicalExpression, env Environment) Runt
             return nil
         }
         if left.Type() != Bool {
-            fmt.Println("Error: and operator can only be applied to boolean values")
+            fmt.Fprintln(os.Stderr, "Error: and operator can only be applied to boolean values")
             os.Exit(0)
             return nil
         }
@@ -972,7 +987,7 @@ func EvaluateLogicalExpression(node ast.LogicalExpression, env Environment) Runt
             return nil
         }
         if right.Type() != Bool {
-            fmt.Println("Error: and operator can only be applied to boolean values")
+            fmt.Fprintln(os.Stderr, "Error: and operator can only be applied to boolean values")
             os.Exit(0)
             return nil
         }
@@ -983,7 +998,7 @@ func EvaluateLogicalExpression(node ast.LogicalExpression, env Environment) Runt
             return nil
         }
         if left.Type() != Bool {
-            fmt.Println("Error: or operator can only be applied to boolean values")
+            fmt.Fprintln(os.Stderr, "Error: or operator can only be applied to boolean values")
             os.Exit(0)
             return nil
         }
@@ -996,7 +1011,7 @@ func EvaluateLogicalExpression(node ast.LogicalExpression, env Environment) Runt
             return nil
         }
         if right.Type() != Bool {
-            fmt.Println("Error: or operator can only be applied to boolean values")
+            fmt.Fprintln(os.Stderr, "Error: or operator can only be applied to boolean values")
             os.Exit(0)
             return nil
         }
@@ -1007,7 +1022,7 @@ func EvaluateLogicalExpression(node ast.LogicalExpression, env Environment) Runt
             return nil
         }
         if left.Type() != Bool {
-            fmt.Println("Error: xor operator can only be applied to boolean values")
+            fmt.Fprintln(os.Stderr, "Error: xor operator can only be applied to boolean values")
             os.Exit(0)
             return nil
         }
@@ -1017,7 +1032,7 @@ func EvaluateLogicalExpression(node ast.LogicalExpression, env Environment) Runt
             return nil
         }
         if right.Type() != Bool {
-            fmt.Println("Error: xor operator can only be applied to boolean values")
+            fmt.Fprintln(os.Stderr, "Error: xor operator can only be applied to boolean values")
             os.Exit(0)
             return nil
         }
@@ -1028,13 +1043,13 @@ func EvaluateLogicalExpression(node ast.LogicalExpression, env Environment) Runt
             return nil
         }
         if operand.Type() != Bool {
-            fmt.Println("Error: not operator can only be applied to boolean values")
+            fmt.Fprintln(os.Stderr, "Error: not operator can only be applied to boolean values")
             os.Exit(0)
             return nil
         }
         return BoolValue{!operand.(BoolValue).Value}
     default:
-        fmt.Println("Error: unknown operator")
+        fmt.Fprintln(os.Stderr, "Error: unknown operator")
         os.Exit(0)
         return nil
     }
@@ -1047,18 +1062,18 @@ func EvaluateAssignment(node ast.AssignmentExpression, env Environment) RuntimeV
         if objectValue.Type() == Array {
             index, _ := Evaluate(node.Assignee.(*ast.MemberExpression).Property, env)
             if index.Type() != Number {
-                fmt.Println("Error: array index must be a number")
+                fmt.Fprintln(os.Stderr, "Error: array index must be a number")
                 os.Exit(0)
                 return nil
             }
             if index.(NumberValue).Value >= float64(len(objectValue.(ArrayValue).Values)) {
-                fmt.Println("Error: array index out of bounds")
+                fmt.Fprintln(os.Stderr, "Error: array index out of bounds")
                 os.Exit(0)
                 return nil
             }
             if index.(NumberValue).Value < 0 {
                 if -index.(NumberValue).Value > float64(len(objectValue.(ArrayValue).Values)) {
-                    fmt.Println("Error: array index out of bounds")
+                    fmt.Fprintln(os.Stderr, "Error: array index out of bounds")
                     os.Exit(0)
                     return nil
                 }
@@ -1073,7 +1088,7 @@ func EvaluateAssignment(node ast.AssignmentExpression, env Environment) RuntimeV
             return objectValue.(NullValue)
         }
         if objectValue.Type() == String {
-            fmt.Println("Error: string does not support assignment")
+            fmt.Fprintln(os.Stderr, "Error: string does not support assignment")
             os.Exit(0)
         }
         objectValue.(ObjectValue).Properties[node.Assignee.(*ast.MemberExpression).Property.(*ast.Identifier).Symbol], _ = Evaluate(node.Value, env)
@@ -1081,7 +1096,7 @@ func EvaluateAssignment(node ast.AssignmentExpression, env Environment) RuntimeV
     }
 
     if node.Assignee.Kind() != ast.IdentifierType {
-        fmt.Println("Error: Left side of assignment must be a variable")
+        fmt.Fprintln(os.Stderr, "Error: Left side of assignment must be a variable")
         os.Exit(0)
         return nil
     }
@@ -1089,7 +1104,7 @@ func EvaluateAssignment(node ast.AssignmentExpression, env Environment) RuntimeV
     variableName := node.Assignee.(*ast.Identifier).Symbol
     environment, err := Evaluate(node.Value, env)
     if err != nil {
-        fmt.Println(err)
+        fmt.Fprintln(os.Stderr, err)
         os.Exit(0)
         return nil
     }

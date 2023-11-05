@@ -14,6 +14,7 @@ type Token struct {
 }
 
 var Keywords map[string]tokentype.TokenType = map[string]tokentype.TokenType{
+    "var": tokentype.Var,
     "let": tokentype.Let,
     "const": tokentype.Constant,
     "fn": tokentype.Function,

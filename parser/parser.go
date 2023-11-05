@@ -41,9 +41,7 @@ func (p *Parser) parseStatement() ast.Statement {
     switch p.at().Type {
     case tokentype.OpenComment:
         return p.parseComment()
-    case tokentype.Let:
-        return p.parseVariableDeclaration()
-    case tokentype.Constant:
+    case tokentype.Var, tokentype.Let, tokentype.Constant:
         return p.parseVariableDeclaration()
     case tokentype.Function:
         return p.parseFunctionDeclaration()
@@ -281,6 +279,45 @@ func (p *Parser) parseReturnStatement() ast.Statement {
     }
 }
 
+func (p *Parser) parseType() ast.VariableType {
+    switch p.at().Value {
+    case "str":
+        p.eat()
+        return ast.StringType
+    case "number":
+        p.eat()
+        return ast.NumberType
+    case "bool":
+        p.eat()
+        return ast.BoolType
+    case "any":
+        p.eat()
+        return ast.AnyType
+    case "object":
+        p.eat()
+        return ast.ObjectType
+    case "list":
+        p.eat()
+        return ast.ArrayType
+    case "tup":
+        p.eat()
+        return ast.TupleType
+    case "null":
+        p.eat()
+        return ast.NullType
+    case "fn":
+        p.eat()
+        return ast.FunctionType
+    case "file":
+        p.eat()
+        return ast.FileType
+    default:
+        fmt.Fprintln(os.Stderr, "Error: Expected type, got ", p.at().Value)
+        os.Exit(0)
+        return ast.VariableType("")
+    }
+}
+
 func (p *Parser) parseVariableDeclaration() ast.Statement {
     isConstant := p.eat().Type == tokentype.Constant
     identifier := p.expect(tokentype.Identifier, "Error: Expected identifier name after let/const keyword").Value
@@ -288,7 +325,7 @@ func (p *Parser) parseVariableDeclaration() ast.Statement {
     if p.at().Type == tokentype.SemiColon {
         p.eat()
         if isConstant {
-            fmt.Println("Error: Constant declaration without assignment is not allowed")
+            fmt.Fprintln(os.Stderr, "Error: Constant declaration without assignment is not allowed")
             os.Exit(0)
             return nil
         }
@@ -297,6 +334,30 @@ func (p *Parser) parseVariableDeclaration() ast.Statement {
             Identifier: identifier,
             Constant:   isConstant,
             Value:      &ast.NullLiteral{},
+            Type:       ast.AnyType,
+            // IsVar:      false,
+        }
+    }
+
+    var varType = ast.AnyType
+
+    if p.at().Type == tokentype.Colon {
+        p.eat()
+        varType = p.parseType()
+        if isConstant && p.at().Type == tokentype.SemiColon {
+            fmt.Fprintln(os.Stderr, "Error: Constant declaration without assignment is not allowed")
+            os.Exit(0)
+            return nil
+        }
+        if p.at().Type == tokentype.SemiColon {
+            p.eat()
+            return &ast.VariableDeclaration{
+                Identifier: identifier,
+                Constant:   isConstant,
+                Value:      &ast.NullLiteral{},
+                Type:       varType,
+                // IsVar:      false,
+            }
         }
     }
 
@@ -305,6 +366,8 @@ func (p *Parser) parseVariableDeclaration() ast.Statement {
         Identifier: identifier,
         Constant:   isConstant,
         Value:      p.parseExpression(),
+        Type:       varType,
+        // IsVar:      false,
     }
 
     if !p.isLoop {

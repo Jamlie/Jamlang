@@ -31,6 +31,7 @@ type RuntimeValue interface {
     ToString() string
     Clone() RuntimeValue
     Equals(RuntimeValue) bool
+    VarType() ast.VariableType
 }
 
 type InitialValue struct{}
@@ -58,6 +59,10 @@ func (v InitialValue) Clone() RuntimeValue {
     return v
 }
 
+func (v InitialValue) VarType() ast.VariableType {
+    return ast.NullType
+}
+
 type NullValue struct {
     Value string
 }
@@ -83,6 +88,10 @@ func (v NullValue) ToString() string {
 
 func (v NullValue) Clone() RuntimeValue {
     return v
+}
+
+func (v NullValue) VarType() ast.VariableType {
+    return ast.NullType
 }
 
 func MakeNullValue() NullValue {
@@ -117,6 +126,10 @@ func (v NumberValue) Clone() RuntimeValue {
     return v
 }
 
+func (v NumberValue) VarType() ast.VariableType {
+    return ast.NumberType
+}
+
 func MakeNumberValue(value float64) NumberValue {
     return NumberValue{Value: value}
 }
@@ -149,6 +162,10 @@ func (v StringValue) Clone() RuntimeValue {
     return v
 }
 
+func (v StringValue) VarType() ast.VariableType {
+    return ast.StringType
+}
+
 func MakeStringValue(value string) StringValue {
     return StringValue{Value: value}
 }
@@ -179,6 +196,10 @@ func (v BoolValue) ToString() string {
 
 func (v BoolValue) Clone() RuntimeValue {
     return v
+}
+
+func (v BoolValue) VarType() ast.VariableType {
+    return ast.BoolType
 }
 
 func MakeBoolValue(value bool) BoolValue {
@@ -259,6 +280,10 @@ func (v ObjectValue) Clone() RuntimeValue {
     return newObject
 }
 
+func (v ObjectValue) VarType() ast.VariableType {
+    return ast.ObjectType
+}
+
 
 
 type ArrayValue struct {
@@ -320,6 +345,10 @@ func (v ArrayValue) Clone() RuntimeValue {
     return newArray
 }
 
+func (v ArrayValue) VarType() ast.VariableType {
+    return ast.ArrayType
+}
+
 
 type TupleValue struct {
     Values []RuntimeValue
@@ -367,6 +396,10 @@ func (v TupleValue) Clone() RuntimeValue {
     return newTuple
 }
 
+func (v TupleValue) VarType() ast.VariableType {
+    return ast.TupleType
+}
+
 
 type FunctionCall func(args []RuntimeValue, env Environment) RuntimeValue
 
@@ -393,6 +426,10 @@ func (v NativeFunctionValue) ToString() string {
 
 func (v NativeFunctionValue) Clone() RuntimeValue {
     return v
+}
+
+func (v NativeFunctionValue) VarType() ast.VariableType {
+    return ast.AnyType
 }
 
 func MakeNativeFunction(call FunctionCall, name string) NativeFunctionValue {
@@ -446,6 +483,10 @@ func (v FunctionValue) Clone() RuntimeValue {
     }
 }
 
+func (v FunctionValue) VarType() ast.VariableType {
+    return ast.FunctionType
+}
+
 
 type ReturnValue struct {
     Value RuntimeValue
@@ -475,6 +516,10 @@ func (v BreakType) ToString() string {
 
 func (v BreakType) Clone() RuntimeValue {
     return v
+}
+
+func (v BreakType) VarType() ast.VariableType {
+    return ast.AnyType
 }
 
 type ClassValue struct {
@@ -512,6 +557,10 @@ func (v ClassValue) Clone() RuntimeValue {
 
     constructor := v.Constructor.Clone().(*FunctionValue)
     return ClassValue{Name: v.Name, Constructor: constructor, Methods: methods, Fields: fields}
+}
+
+func (v ClassValue) VarType() ast.VariableType {
+    return ast.AnyType
 }
 
 func MakeClassValue(name string, methods map[string]*FunctionValue) ClassValue {
@@ -574,6 +623,10 @@ func (v FileValue) ToString() string {
 
 func (v FileValue) Clone() RuntimeValue {
     return v
+}
+
+func (v FileValue) VarType() ast.VariableType {
+    return ast.AnyType
 }
 
 func MakeFileValue(name string, file *os.File) FileValue {

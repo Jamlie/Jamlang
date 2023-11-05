@@ -59,10 +59,26 @@ func (p *Program) ToString() string {
     return s
 }
 
+type VariableType string
+const (
+    StringType VariableType = "string"
+    NumberType VariableType = "number"
+    BoolType VariableType = "bool"
+    ObjectType VariableType = "object"
+    ArrayType VariableType = "array"
+    TupleType VariableType = "tuple"
+    NullType VariableType = "null"
+    FunctionType VariableType = "function"
+    FileType VariableType = "file"
+    AnyType VariableType = "any"
+)
+
 type VariableDeclaration struct {
     Constant bool
     Identifier string
     Value Expression
+    Type VariableType
+    // IsVar bool
 }
 
 func (v *VariableDeclaration) Kind() NodeType {
@@ -362,6 +378,7 @@ func (l *LogicalExpression) ToString() string {
 
 type Identifier struct {
     Symbol string
+    // VarType VariableType
 }
 
 func (i *Identifier) Kind() NodeType {

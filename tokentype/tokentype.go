@@ -29,6 +29,7 @@ const (
 
     Function
     Return
+    Var
     Let
     Constant
     If
