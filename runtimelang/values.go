@@ -10,6 +10,12 @@ import (
 type ValueType string
 
 const (
+    I8             ValueType = "i8"
+    I16            ValueType = "i16"
+    I32            ValueType = "i32"
+    I64            ValueType = "i64"
+    F32            ValueType = "f32"
+    F64            ValueType = "f64"
     Number         ValueType = "number"
     Null           ValueType = "null"
     String         ValueType = "string"
@@ -97,42 +103,298 @@ func MakeNullValue() NullValue {
     return NullValue{}
 }
 
+type NumberValue[T any] interface {
+    GetV() T
+}
 
-type NumberValue struct {
+type IntValue interface {
+    GetInt() int
+}
+
+type Int8Value struct {
+    Value int8
+}
+
+func (v Int8Value) Equals(other RuntimeValue) bool {
+    if other.Type() == I8 {
+        return v.Value == other.Get().(int8)
+    }
+    return false
+}
+
+func (v Int8Value) Type() ValueType {
+    return I8
+}
+
+func (v Int8Value) Get() any {
+    return v.Value
+}
+
+func (v Int8Value) ToString() string {
+    return strconv.FormatInt(int64(v.Value), 10)
+}
+
+func (v Int8Value) Clone() RuntimeValue {
+    return v
+}
+
+func (v Int8Value) VarType() ast.VariableType {
+    return ast.Int8Type
+}
+
+func (v Int8Value) GetV() int8 {
+    return v.Value
+}
+
+func (v Int8Value) GetInt() int {
+    return int(v.Value)
+}
+
+func MakeInt8Value(value int8) Int8Value {
+    return Int8Value{Value: value}
+}
+
+type Int16Value struct {
+    Value int16
+}
+
+func (v Int16Value) Equals(other RuntimeValue) bool {
+    if other.Type() == I16 || other.Type() == I8 {
+        return v.Value == other.Get().(int16)
+    }
+    return false
+}
+
+func (v Int16Value) Type() ValueType {
+    return I16
+}
+
+func (v Int16Value) Get() any {
+    return v.Value
+}
+
+func (v Int16Value) ToString() string {
+    return strconv.FormatInt(int64(v.Value), 10)
+}
+
+func (v Int16Value) Clone() RuntimeValue {
+    return v
+}
+
+func (v Int16Value) VarType() ast.VariableType {
+    return ast.Int16Type
+}
+
+func (v Int16Value) GetV() int16 {
+    return v.Value
+}
+
+func (v Int16Value) GetInt() int {
+    return int(v.Value)
+}
+
+func MakeInt16Value(value int16) Int16Value {
+    return Int16Value{Value: value}
+}
+
+type Int32Value struct {
+    Value int32
+}
+
+func (v Int32Value) Equals(other RuntimeValue) bool {
+    if other.Type() == I32 || other.Type() == I16 || other.Type() == I8 {
+        return v.Value == other.Get().(int32)
+    }
+    return false
+}
+
+func (v Int32Value) Type() ValueType {
+    return I32
+}
+
+func (v Int32Value) Get() any {
+    return v.Value
+}
+
+func (v Int32Value) ToString() string {
+    return strconv.FormatInt(int64(v.Value), 10)
+}
+
+func (v Int32Value) Clone() RuntimeValue {
+    return v
+}
+
+func (v Int32Value) VarType() ast.VariableType {
+    return ast.Int32Type
+}
+
+func (v Int32Value) GetV() int32 {
+    return v.Value
+}
+
+func (v Int32Value) GetInt() int {
+    return int(v.Value)
+}
+
+func MakeInt32Value(value int32) Int32Value {
+    return Int32Value{Value: value}
+}
+
+type Int64Value struct {
+    Value int64
+}
+
+func (v Int64Value) Equals(other RuntimeValue) bool {
+    if other.Type() == I64 || other.Type() == I32 || other.Type() == I16 || other.Type() == I8 {
+        return v.Value == other.Get().(int64)
+    }
+    return false
+}
+
+func (v Int64Value) Type() ValueType {
+    return I64
+}
+
+func (v Int64Value) Get() any {
+    return v.Value
+}
+
+func (v Int64Value) ToString() string {
+    return strconv.FormatInt(v.Value, 10)
+}
+
+func (v Int64Value) Clone() RuntimeValue {
+    return v
+}
+
+func (v Int64Value) VarType() ast.VariableType {
+    return ast.Int64Type
+}
+
+func (v Int64Value) GetV() int64 {
+    return v.Value
+}
+
+func (v Int64Value) GetInt() int {
+    return int(v.Value)
+}
+
+func MakeInt64Value(value int64) Int64Value {
+    return Int64Value{Value: value}
+}
+
+type Float32Value struct {
+    Value float32
+}
+
+func (v Float32Value) Equals(other RuntimeValue) bool {
+    if other.Type() == F32 {
+        return v.Value == other.Get().(float32)
+    }
+    return false
+}
+
+func (v Float32Value) Type() ValueType {
+    return F32
+}
+
+func (v Float32Value) Get() any {
+    return v.Value
+}
+
+func (v Float32Value) ToString() string {
+    return strconv.FormatFloat(float64(v.Value), 'f', -1, 32)
+}
+
+func (v Float32Value) Clone() RuntimeValue {
+    return v
+}
+
+func (v Float32Value) VarType() ast.VariableType {
+    return ast.Float32Type
+}
+
+func (v Float32Value) GetV() float32 {
+    return v.Value
+}
+
+func MakeFloat32Value(value float32) Float32Value {
+    return Float32Value{Value: value}
+}
+
+type Float64Value struct {
     Value float64
 }
 
-func (v NumberValue) Equals(other RuntimeValue) bool {
-    if other.Type() == Number {
+func (v Float64Value) Equals(other RuntimeValue) bool {
+    if other.Type() == F64 || other.Type() == F32 {
         return v.Value == other.Get().(float64)
     }
     return false
 }
 
-func (v NumberValue) Type() ValueType {
-    return Number
+func (v Float64Value) Type() ValueType {
+    return F64
 }
 
-func (v NumberValue) Get() any {
+func (v Float64Value) Get() any {
     return v.Value
 }
 
-func (v NumberValue) ToString() string {
+func (v Float64Value) ToString() string {
     return strconv.FormatFloat(v.Value, 'f', -1, 64)
 }
 
-func (v NumberValue) Clone() RuntimeValue {
+func (v Float64Value) Clone() RuntimeValue {
     return v
 }
 
-func (v NumberValue) VarType() ast.VariableType {
+func (v Float64Value) VarType() ast.VariableType {
     return ast.Float64Type
 }
 
-func MakeNumberValue(value float64) NumberValue {
-    return NumberValue{Value: value}
+func (v Float64Value) GetV() float64 {
+    return v.Value
 }
 
+func MakeFloat64Value(value float64) Float64Value {
+    return Float64Value{Value: value}
+}
+
+// func (v NumberValue) Equals(other RuntimeValue) bool {
+//     if other.Type() == Number {
+//         return v.Value == other.Get().(float64)
+//     }
+//     return false
+// }
+//
+// func (v NumberValue) Type() ValueType {
+//     return Number
+// }
+//
+// func (v NumberValue) Get() any {
+//     return v.Value
+// }
+//
+// func (v NumberValue) ToString() string {
+//     return strconv.FormatFloat(v.Value, 'f', -1, 64)
+// }
+//
+// func (v NumberValue) Clone() RuntimeValue {
+//     return v
+// }
+//
+// func (v NumberValue) VarType() ast.VariableType {
+//     return ast.Float64Type
+// }
+//
+// func MakeNumberValue(value float64) NumberValue {
+//     return NumberValue{Value: value}
+// }
+//
+// func MakeNumberValueAsInt16(value int16) NumberValue {
+//     return NumberValue{Value: float64(value)}
+// }
 
 type StringValue struct {
     Value string
@@ -169,7 +431,6 @@ func MakeStringValue(value string) StringValue {
     return StringValue{Value: value}
 }
 
-
 type BoolValue struct {
     Value bool
 }
@@ -205,10 +466,9 @@ func MakeBoolValue(value bool) BoolValue {
     return BoolValue{Value: value}
 }
 
-
 type ObjectValue struct {
     Properties map[string]RuntimeValue
-    IsClass bool
+    IsClass    bool
 }
 
 func (v ObjectValue) Equals(other RuntimeValue) bool {
@@ -241,7 +501,7 @@ func (v ObjectValue) Get() any {
         switch value.Type() {
         case Null:
             str += "null"
-        case Number:
+        case I8, I16, I32, I64, F32, F64:
             str += value.ToString()
         case String:
             str += value.ToString()
@@ -283,13 +543,11 @@ func (v ObjectValue) VarType() ast.VariableType {
     return ast.ObjectType
 }
 
-
-
 type ArrayValue struct {
     Values []RuntimeValue
 }
 
-func (v* ArrayValue) Push(value RuntimeValue) {
+func (v *ArrayValue) Push(value RuntimeValue) {
     v.Values = append(v.Values, value)
 }
 
@@ -348,7 +606,6 @@ func (v ArrayValue) VarType() ast.VariableType {
     return ast.ArrayType
 }
 
-
 type TupleValue struct {
     Values []RuntimeValue
 }
@@ -399,7 +656,6 @@ func (v TupleValue) VarType() ast.VariableType {
     return ast.TupleType
 }
 
-
 type FunctionCall func(args []RuntimeValue, env Environment) RuntimeValue
 
 type NativeFunctionValue struct {
@@ -435,13 +691,13 @@ func MakeNativeFunction(call FunctionCall, name string) NativeFunctionValue {
     return NativeFunctionValue{Call: call, Name: name}
 }
 
-
 type FunctionValue struct {
     Name                   string
     Parameters             []string
     DeclarationEnvironment Environment
     Body                   []ast.Statement
     IsAnonymous            bool
+    ReturnType             ast.VariableType
 }
 
 func (v FunctionValue) Equals(other RuntimeValue) bool {
@@ -485,7 +741,6 @@ func (v FunctionValue) Clone() RuntimeValue {
 func (v FunctionValue) VarType() ast.VariableType {
     return ast.FunctionType
 }
-
 
 type ReturnValue struct {
     Value RuntimeValue
@@ -582,8 +837,8 @@ func ToGoArrayValue(v ArrayValue) []RuntimeValue {
     return v.Values
 }
 
-func ToGoNumberValue(v NumberValue) float64 {
-    return v.Value
+func ToGoNumberValue[T any](v NumberValue[T]) T {
+    return v.GetV()
 }
 
 func ToGoStringValue(v StringValue) string {

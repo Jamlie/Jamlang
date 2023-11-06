@@ -246,6 +246,13 @@ func (p *Parser) parseFunctionDeclaration() ast.Statement {
         params = append(params, arg.(*ast.Identifier).Symbol)
     }
 
+    returnType := ast.AnyType
+
+    if p.at().Type == tokentype.Colon {
+        p.eat()
+        returnType = p.parseType()
+    }
+
     p.expect(tokentype.LSquirly, "Error: Expected '{' after function declaration")
 
     if !p.isFunction {
@@ -264,6 +271,7 @@ func (p *Parser) parseFunctionDeclaration() ast.Statement {
         Name:       name,
         Parameters: params,
         Body:       body,
+        ReturnType: returnType,
     }
 }
 
@@ -350,7 +358,6 @@ func (p *Parser) parseVariableDeclaration() ast.Statement {
             Constant:   isConstant,
             Value:      &ast.NullLiteral{},
             Type:       ast.AnyType,
-            // IsVar:      false,
         }
     }
 
@@ -712,16 +719,22 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
         return &ast.Identifier{
             Symbol: p.eat().Value,
         }
-    case tokentype.Number:
+    case tokentype.Integer:
+        value, err := strconv.ParseInt(p.eat().Value, 10, 64)
+        if err != nil {
+            fmt.Fprintln(os.Stderr, err.Error())
+            os.Exit(0)
+            return nil
+        }
+        return &ast.NumericIntegerLiteral{Value: value}
+    case tokentype.Float:
         value, err := strconv.ParseFloat(p.eat().Value, 64)
         if err != nil {
             fmt.Fprintln(os.Stderr, err.Error())
             os.Exit(0)
             return nil
         }
-        return &ast.NumericLiteral{
-            Value: value,
-        }
+        return &ast.NumericFloatLiteral{Value: value}
     case tokentype.String:
         return &ast.StringLiteral{
             Value: p.eat().Value,

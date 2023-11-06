@@ -124,7 +124,7 @@ func jamlangStringIndexOf(str string) RuntimeValue {
             os.Exit(0)
         }
 
-        return MakeNumberValue(float64(strings.Index(str, args[0].(StringValue).Value)))
+        return MakeInt32Value(int32(strings.Index(str, args[0].(StringValue).Value)))
     }, "indexOf")
 }
 
@@ -140,7 +140,7 @@ func jamlangStringLastIndexOf(str string) RuntimeValue {
             os.Exit(0)
         }
 
-        return MakeNumberValue(float64(strings.LastIndex(str, args[0].(StringValue).Value)))
+        return MakeInt32Value(int32(strings.LastIndex(str, args[0].(StringValue).Value)))
     }, "lastIndexOf")
 }
 
@@ -151,12 +151,39 @@ func jamlangStringSubstring(str string) RuntimeValue {
             os.Exit(0)
         }
 
-        if args[0].Type() != Number || args[1].Type() != Number {
-            fmt.Fprintln(os.Stderr, "Error: substring takes 2 numbers as arguments")
+        if (!isNumber(args[0])) || (!isNumber(args[1])) {
+            fmt.Fprintln(os.Stderr, "Error: substring takes 2 integers as arguments")
             os.Exit(0)
         }
 
-        return MakeStringValue(str[int(args[0].(NumberValue).Value):int(args[1].(NumberValue).Value)])
+
+        var first RuntimeValue
+        var second RuntimeValue
+
+        switch args[0].Type() {
+        case I8:
+            first = args[0].(Int8Value)
+        case I16:
+            first = args[0].(Int16Value)
+        case I32:
+            first = args[0].(Int32Value)
+        case I64:
+            first = args[0].(Int64Value)
+        }
+
+        switch args[1].Type() {
+        case I8:
+            second = args[1].(Int8Value)
+        case I16:
+            second = args[1].(Int16Value)
+        case I32:
+            second = args[1].(Int32Value)
+        case I64:
+            second = args[1].(Int64Value)
+        }
+
+        return MakeStringValue(str[first.(IntValue).GetInt():second.(IntValue).GetInt()])
+
     }, "substring")
 }
 
@@ -167,8 +194,9 @@ func jamlangStringReplace(str string) RuntimeValue {
             os.Exit(0)
         }
 
-        if args[0].Type() == Number {
-            return MakeStringValue(strings.Replace(str, string(rune(args[0].(NumberValue).Value)), args[1].(StringValue).Value, -1))
+        if isNumber(args[0]) {
+            num := args[0].(IntValue).GetInt()
+            return MakeStringValue(str[:num] + args[1].(StringValue).Value + str[num + 1:])
         }
 
         if args[0].Type() != String || args[1].Type() != String {
@@ -229,7 +257,7 @@ func jamlangStringRepeat(str string) RuntimeValue {
             os.Exit(0)
         }
 
-        return MakeStringValue(strings.Repeat(str, int(args[0].(NumberValue).Value)))
+        return MakeStringValue(strings.Repeat(str, int(args[0].(NumberValue[any]).GetV().(float64))))
     }, "repeat")
 }
 
@@ -245,7 +273,9 @@ func jamlangStringLeftPad(str string) RuntimeValue {
             os.Exit(0)
         }
 
-        return MakeStringValue(fmt.Sprintf("%"+args[0].(NumberValue).ToString()+"s", str))
+        i := args[0].(NumberValue[any]).GetV().(int32)
+        j := fmt.Sprintf("%d", i)
+        return MakeStringValue(fmt.Sprintf("%"+j+"s", str))
     }, "leftPad")
 }
 
@@ -261,7 +291,9 @@ func jamlangStringRightPad(str string) RuntimeValue {
             os.Exit(0)
         }
 
-        return MakeStringValue(fmt.Sprintf("%-"+args[0].(NumberValue).ToString()+"s", str))
+        i := args[0].(NumberValue[any]).GetV().(int32)
+        j := fmt.Sprintf("%d", i)
+        return MakeStringValue(fmt.Sprintf("%-"+j+"s", str))
     }, "rightPad")
 }
 

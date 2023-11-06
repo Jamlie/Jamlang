@@ -215,7 +215,11 @@ func Tokenize(sourceCode string) []Token {
                     src = src[1:]
                 }
 
-                tokens = append(tokens, createToken(num, tokentype.Number))
+                if isFloatNum {
+                    tokens = append(tokens, createToken(num, tokentype.Float))
+                } else {
+                    tokens = append(tokens, createToken(num, tokentype.Integer))
+                }
             } else if isAlpha(src[0]) {
                 identifier := ""
                 for len(src) > 0 && isAlpha(src[0]) {

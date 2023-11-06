@@ -3,16 +3,35 @@ package runtimelang
 import (
     "fmt"
     "os"
+    "strings"
 
     "github.com/Jamlie/Jamlang/ast"
 )
+
+func hasDecimalZero(num float64) bool {
+    strNum := fmt.Sprintf("%f", num)
+    fmt.Println(strNum)
+    return strings.HasSuffix(strNum, ".0")
+}
 
 func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     switch astNode.Kind() {
     case ast.CommentType:
         return nil, nil
-    case ast.NumericLiteralType:
-        return NumberValue{astNode.(*ast.NumericLiteral).Value}, nil
+    case ast.NumericFloatLiteralType:
+        if isFloat32(astNode.(*ast.NumericFloatLiteral).Value) {
+            return Float32Value{float32(astNode.(*ast.NumericFloatLiteral).Value)}, nil
+        }
+        return Float64Value{astNode.(*ast.NumericFloatLiteral).Value}, nil
+    case ast.NumericIntegerLiteralType:
+        if (isInt8(float64(astNode.(*ast.NumericIntegerLiteral).Value)) || isInt16(float64(astNode.(*ast.NumericIntegerLiteral).Value)) || isInt32(float64(astNode.(*ast.NumericIntegerLiteral).Value))) {
+            return Int32Value{int32(astNode.(*ast.NumericIntegerLiteral).Value)}, nil
+        }
+        if isInt64(float64(astNode.(*ast.NumericIntegerLiteral).Value)) {
+            return Int64Value{int64(astNode.(*ast.NumericIntegerLiteral).Value)}, nil
+        }
+        i := astNode.(*ast.NumericIntegerLiteral).Value
+        return Float64Value{float64(i)}, nil
     case ast.StringLiteralType:
         return StringValue{astNode.(*ast.StringLiteral).Value}, nil
     case ast.NullLiteralType:
@@ -143,7 +162,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
             return nil, nil
         }
         
-        fn, _ := EvaluateFunctionDeclaration(*functionDeclaration, &env)
+        fn, _ := EvaluateFunctionDeclaration(*functionDeclaration, &env, functionDeclaration.ReturnType)
         return fn, nil
     case ast.ConditionalStatementType:
         conditionalStatement, ok := astNode.(*ast.ConditionalStatement)

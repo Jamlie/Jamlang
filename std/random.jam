@@ -1,4 +1,240 @@
 fn Random(s) {
+    const N: i32 = 624;
+    const M: i32 = 397;
+    const A: i64 = hex("9908b0df");
+    const U: i32 = 11;
+    const D: i64 = hex("ffffffff");
+    const S: i32 = 7;
+    const B: i64 = hex("9d2c5680");
+    const T: i32 = 15;
+    const C: i64 = hex("efc60000");
+    const L: i32 = 18;
+    const F: i32 = 1812433253;
+    const LOWER_MASK: i64 = hex("7fffffff");
+    const UPPER_MASK: i64 = Bitwise.NOT(LOWER_MASK);
+    const MAX_INT: i64 = hex("ffffffff");
+    const DOUBLE_UNIT: f64 = float64(int64(1) << int64(53)); 
+
+
+    const state: list = array(N)
+    state[0] = uint32(s)
+    for let i: i32 = 1; i < N; ++i {
+        let a = Bitwise.XOR(uint32(state[i - 1]), uint32(int64(state[i - 1]) >> int64(30)))
+        state[i] = int32(uint32((int64(F) * int64(a) + int64(i))))
+    }
+
+    let index: i32 = N;
+
+    fn twist() {
+        for let i = 0; i < N; ++i {
+            let x: i32 = int32(state[i] & UPPER_MASK) + int32(state[(i + 1) % N] & LOWER_MASK)
+            let xA: i64 = x >> 1
+            if Bitwise.AND(x, 1) != 0 {
+                xA = Bitwise.XOR(xA, A)
+            }
+
+            state[i] = Bitwise.XOR(state[(i + M) % N], xA)
+        }
+    
+        index = 0
+    }
+
+    fn next(bits): i64 {
+        if index >= N {
+            twist()
+        }
+        let y = state[index]
+        ++index
+        y = Bitwise.XOR(y, y >> U)
+        y = Bitwise.XOR(y, Bitwise.AND(y << S, B))
+        y = Bitwise.XOR(y, Bitwise.AND(y << T, C))
+        y = Bitwise.XOR(y, y >> L)
+        return (y >> (32 - bits))
+    }
+
+    const this: object = {}
+
+    this.nextInt = fn(): i32 {
+        return int32(next(32))
+    }
+
+    this.nextIntBounded = fn(bound): i32 {
+        let r: i64 = next(31)
+        let m: i64 = int64(bound - 1)
+
+        if Bitwise.AND(bound, m) == 0 {
+            r = int64((bound * r) >> 31)
+        } else {
+            for let u: i64 = r; u - (r = u % int64(bound)) + m < int64(0); u = next(31) {}
+        }
+        
+        return int32(r)
+    }
+
+    this.nextIntRange = fn(min, max): i32 {
+        return int32(int64(min) + this.nextIntBounded(max - min))
+    }
+    
+    this.nextLong = fn(): i64 {
+        return int64((next(32) << int64(32)) + next(32))
+    }
+
+    this.nextLongBounded = fn(bound): i64 {
+        let r: i64 = this.nextLong()
+        let m: i64 = int64(bound) - int64(1)
+
+        if Bitwise.AND(bound, m) == int64(0) {
+            r = int64((bound * r) >> int64(31))
+        } else {
+            for let u: i64 = r; u - (r = u % int64(bound)) + m < int64(0); u = this.nextLong() {}
+        }
+        
+        return r
+    }
+
+    this.nextLongRange = fn(min, max): i64 {
+        return int64(min) + this.nextLongBounded(max - min)
+    }
+    
+    this.nextFloat = fn() {
+        return float32(next(24)) / float32(1 << 24)
+    }
+
+    this.nextFloatRange = fn(min, max) {
+        return float32(min) + this.nextFloat() * (float32(max) - float32(min))
+    }
+
+    this.nextDouble = fn(): f64 {
+        return float64((next(26) << int64(27)) + next(27)) / DOUBLE_UNIT
+    }
+
+    this.nextDoubleRange = fn(min, max) {
+        return float64(min) + this.nextDouble() * (float64(max) - float64(min))
+    }
+
+    return this
+}
+
+/*
+fn Random(s) {
+    const N: i32 = 624;
+    const M: i32 = 397;
+    const A: i64 = hex("9908b0df");
+    const U: i32 = 11;
+    const D: i64 = hex("ffffffff");
+    const S: i32 = 7;
+    const B: i64 = hex("9d2c5680");
+    const T: i32 = 15;
+    const C: i64 = hex("efc60000");
+    const L: i32 = 18;
+    const F: i32 = 1812433253;
+    const LOWER_MASK: i64 = hex("7fffffff");
+    const UPPER_MASK: i64 = Bitwise.NOT(LOWER_MASK);
+    const MAX_INT: i64 = hex("ffffffff");
+    const DOUBLE_UNIT: f64 = float64(int64(1) << int64(53)); 
+
+
+    const state: list = array(N)
+    state[0] = uint32(s)
+    for let i: i32 = 1; i < N; ++i {
+        let a = Bitwise.XOR(uint32(state[i - 1]), uint32(int64(state[i - 1]) >> int64(30)))
+        state[i] = int32(uint32((int64(F) * int64(a) + int64(i))))
+    }
+
+    let index: i32 = N;
+
+    fn twist() {
+        for let i = 0; i < N; ++i {
+            let x: i32 = int32((Bitwise.AND(state[i], UPPER_MASK)) + (Bitwise.AND(state[(i + 1) % N], LOWER_MASK)))
+            let xA: i64 = int64(x) >> int64(1)
+            if Bitwise.AND(x, 1) != 0 {
+                xA = Bitwise.XOR(xA, A)
+            }
+
+            state[i] = Bitwise.XOR(state[(i + M) % N], xA)
+        }
+    
+        index = 0
+    }
+
+    fn next(bits): i64 {
+        if index >= N {
+            twist()
+        }
+        let y = state[index]
+        ++index
+        y = Bitwise.XOR(y, y >> int64(U))
+        y = Bitwise.XOR(y, Bitwise.AND(y << int64(S), B))
+        y = Bitwise.XOR(y, Bitwise.AND(y << int64(T), C))
+        y = Bitwise.XOR(y, y >> int64(L))
+        return (y >> int64(32 - bits))
+    }
+
+    const this: object = {}
+
+    this.nextInt = fn(): i32 {
+        return int32(next(32))
+    }
+
+    this.nextIntBounded = fn(bound): i32 {
+        let r: i64 = next(31)
+        let m: i64 = int64(bound - 1)
+
+        if Bitwise.AND(bound, m) == int64(0) {
+            r = int64((int64(bound) * r) >> int64(31))
+        } else {
+            for let u: i64 = r; u - (r = u % int64(bound)) + m < int64(0); u = next(31) {}
+        }
+        
+        return int32(r)
+    }
+
+    this.nextIntRange = fn(min, max): i32 {
+        return int32(int64(min) + this.nextIntBounded(max - min))
+    }
+    
+    this.nextLong = fn(): i64 {
+        return int64((next(32) << int64(32)) + next(32))
+    }
+
+    this.nextLongBounded = fn(bound): i64 {
+        let r: i64 = this.nextLong()
+        let m: i64 = int64(bound) - int64(1)
+
+        if Bitwise.AND(bound, m) == int64(0) {
+            r = int64((bound * r) >> int64(31))
+        } else {
+            for let u: i64 = r; u - (r = u % int64(bound)) + m < int64(0); u = this.nextLong() {}
+        }
+        
+        return r
+    }
+
+    this.nextLongRange = fn(min, max): i64 {
+        return int64(min) + this.nextLongBounded(max - min)
+    }
+    
+    this.nextFloat = fn() {
+        return float32(next(24)) / float32(1 << 24)
+    }
+
+    this.nextFloatRange = fn(min, max) {
+        return float32(min) + this.nextFloat() * (float32(max) - float32(min))
+    }
+
+    this.nextDouble = fn(): f64 {
+        return float64((next(26) << int64(27)) + next(27)) / DOUBLE_UNIT
+    }
+
+    this.nextDoubleRange = fn(min, max) {
+        return float64(min) + this.nextDouble() * (float64(max) - float64(min))
+    }
+
+    return this
+}
+*/
+/*
+fn Random(s) {
     const N = 624;
     const M = 397;
     const A = hex("9908b0df");
@@ -112,3 +348,4 @@ fn Random(s) {
 
     return this
 }
+*/

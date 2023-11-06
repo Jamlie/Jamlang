@@ -11,13 +11,13 @@ It takes some parts of popular languages, such as:
 ## What does it look like?
 ```js
 import "std/linkedlist.jam" /* use jamlang -i linkedlist or jamlang install linkedlist to get the linkedlist file */
-fn Person(name, age) {
+fn Person(name, age): object {
     const this: object = {}
-    this.getName = fn() {
+    this.getName = fn(): str {
         return name
     }
 
-    this.getAge = fn() {
+    this.getAge = fn(): i32 {
         return age
     }
 
@@ -51,7 +51,7 @@ It has a very small standard library, which contains:
 
 ## Install
 ```sh
-$ go install github.com/Jamlie/Jamlang@latest # or github.com/Jamlie/Jamlang@v1.4.1
+$ go install github.com/Jamlie/Jamlang@latest # or github.com/Jamlie/Jamlang@v1.5.0
 ```
 
 ## How to add native functions to it?
@@ -80,7 +80,7 @@ import (
 func main() {
     newEnv := CreateGlobalEnvironment()
 
-    newEnv.DeclareVariable(/* name */ "foo", /* value */ MakeNumberValue(69), /* is const */ true, /* type */ ast.NumberValue)
+    newEnv.DeclareVariable(/* name */ "foo", /* value */ MakeInt32Value(69), /* is const */ true, /* type */ ast.Int32Type)
     
     sumFn := MakeNativeFunction(func(args []RuntimeValue, env Environment) RuntimeValue {
         if len(args) != 2 {
@@ -88,22 +88,22 @@ func main() {
             os.Exit(0)
         }
 
-        if _, ok := args[0].(NumberValue); !ok {
+        if _, ok := args[0].(Int32Type); !ok {
             fmt.Fprintln(os.Stderr, "Error: arguments must be of type number")
             os.Exit(0)
         }
-        num1 := args[0].(NumberValue).Value
+        num1 := args[0].(Int32Type).Value
 
-        if _, ok := args[1].(NumberValue); !ok {
+        if _, ok := args[1].(Int32Type); !ok {
             fmt.Fprintln(os.Stderr, "Error: arguments must be of type number")
             os.Exit(0)
         }
-        num2 := args[1].(NumberValue).Value
+        num2 := args[1].(Int32Type).Value
         
-        return MakeNumberValue(num1 + num2)
+        return MakeInt32Value(num1 + num2)
     }, "sum")
 
-    env.DeclareVariable("sum", sumFn, true, ast.NumberType)
+    env.DeclareVariable("sum", sumFn, true, ast.Int32Type)
     
     jamlang.CallMain(newEnv)
 }

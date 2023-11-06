@@ -28,6 +28,8 @@ const (
     ObjectLiteralType NodeType = "ObjectLiteral"
     ArrayLiteralType NodeType = "ArrayLiteral"
     NumericLiteralType NodeType = "NumericLiteral"
+    NumericIntegerLiteralType NodeType = "NumericIntegerLiteral"
+    NumericFloatLiteralType NodeType = "NumericFloatLiteral"
     IdentifierType NodeType = "Identifier"
     BinaryExpressionType NodeType = "BinaryExpression"
     UnaryExpressionType NodeType = "UnaryExpression"
@@ -106,6 +108,7 @@ type FunctionDeclaration struct {
     Parameters []string
     Name string
     Body []Statement
+    ReturnType VariableType
     IsAnonymous bool
 }
 
@@ -391,6 +394,30 @@ func (i *Identifier) Kind() NodeType {
 
 func (i *Identifier) ToString() string {
     return i.Symbol
+}
+
+type NumericIntegerLiteral struct {
+    Value int64
+}
+
+func (n *NumericIntegerLiteral) Kind() NodeType {
+    return NumericIntegerLiteralType
+}
+
+func (n *NumericIntegerLiteral) ToString() string {
+    return strconv.FormatInt(n.Value, 10)
+}
+
+type NumericFloatLiteral struct {
+    Value float64
+}
+
+func (n *NumericFloatLiteral) Kind() NodeType {
+    return NumericFloatLiteralType
+}
+
+func (n *NumericFloatLiteral) ToString() string {
+    return strconv.FormatFloat(n.Value, 'f', -1, 64)
 }
 
 type NumericLiteral struct {

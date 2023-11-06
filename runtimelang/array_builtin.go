@@ -22,12 +22,12 @@ func jamlangArrayPush(arr **[]RuntimeValue) RuntimeValue {
 func jamlangArrayPop(arr []RuntimeValue) RuntimeValue {
     return MakeNativeFunction(func(args []RuntimeValue, env Environment) RuntimeValue {
         if len(args) == 1 {
-            if args[0].Type() != Number {
-                fmt.Fprintln(os.Stderr, "Error: pop takes a number as an argument")
+            if args[0].Type() != I8 || args[0].Type() != I16 || args[0].Type() != I32 {
+                fmt.Fprintln(os.Stderr, "Error: pop takes a small int as an argument")
                 os.Exit(0)
             }
 
-            index := int(args[0].(NumberValue).Value)
+            index := int(args[0].(Int32Value).Value)
             if index < 0 || index >= len(arr) {
                 fmt.Fprintln(os.Stderr, "Error: pop index out of bounds")
                 os.Exit(0)
@@ -67,12 +67,12 @@ func jamlangArrayInsertInto(arr []RuntimeValue) RuntimeValue {
             os.Exit(0)
         }
 
-        if args[0].Type() != Number {
+        if args[0].Type() != I8 && args[0].Type() != I16 && args[0].Type() != I32 && args[0].Type() != I64 {
             fmt.Fprintln(os.Stderr, "Error: insert takes a number as an argument")
             os.Exit(0)
         }
 
-        index := int(args[0].(NumberValue).Value)
+        index := int(args[0].(Int32Value).Value)
         if index < 0 || index >= len(arr) {
             fmt.Fprintln(os.Stderr, "Error: insert index out of bounds")
             os.Exit(0)

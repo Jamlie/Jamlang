@@ -4,6 +4,8 @@ type TokenType int
 
 const (
     Number TokenType = iota
+    Integer
+    Float
     String
     Identifier
     Equals

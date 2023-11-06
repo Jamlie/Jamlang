@@ -31,10 +31,31 @@ func checkNumberTypes(value RuntimeValue, varType ast.VariableType) bool {
 func EvaluateVariableDeclaration(declaration ast.VariableDeclaration, env *Environment, varType ast.VariableType) RuntimeValue {
     value, _ := Evaluate(declaration.Value, *env)
 
-    // int8, int16, int32, int64, float32 and float64 are of type number
-    if value.VarType() != varType && varType != ast.AnyType && checkNumberTypes(value, varType) {
+    if value.VarType() != varType && varType != ast.AnyType && !isNumber(value) {
         fmt.Fprintf(os.Stderr, "Error: Expected %s, got %s\n", declaration.Type, value.VarType())
         os.Exit(0)
+    }
+
+    if isNumber(value) {
+        if declaration.Type == ast.Int8Type && value.VarType() != ast.Int8Type {
+            fmt.Fprintf(os.Stderr, "Error: Expected %s, got %s\n", declaration.Type, value.VarType())
+            os.Exit(0)
+        } else if declaration.Type == ast.Int16Type && (value.VarType() != ast.Int8Type && value.VarType() != ast.Int16Type) {
+            fmt.Fprintf(os.Stderr, "Error: Expected %s, got %s\n", declaration.Type, value.VarType())
+            os.Exit(0)
+        } else if declaration.Type == ast.Int32Type && (value.VarType() != ast.Int8Type && value.VarType() != ast.Int16Type && value.VarType() != ast.Int32Type) {
+            fmt.Fprintf(os.Stderr, "Error: Expected %s, got %s\n", declaration.Type, value.VarType())
+            os.Exit(0)
+        } else if declaration.Type == ast.Int64Type && (value.VarType() != ast.Int8Type && value.VarType() != ast.Int16Type && value.VarType() != ast.Int32Type && value.VarType() != ast.Int64Type) {
+            fmt.Fprintf(os.Stderr, "Error: Expected %s, got %s\n", declaration.Type, value.VarType())
+            os.Exit(0)
+        } else if declaration.Type == ast.Float32Type && value.VarType() != ast.Float32Type {
+            fmt.Fprintf(os.Stderr, "Error: Expected %s, got %s\n", declaration.Type, value.VarType())
+            os.Exit(0)
+        } else if declaration.Type == ast.Float64Type && (value.VarType() != ast.Float32Type && value.VarType() != ast.Float64Type) {
+            fmt.Fprintf(os.Stderr, "Error: Expected %s, got %s\n", declaration.Type, value.VarType())
+            os.Exit(0)
+        }
     }
 
     if value.Type() == Object && value.(ObjectValue).IsClass {
