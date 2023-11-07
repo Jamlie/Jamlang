@@ -55,12 +55,12 @@ func jamlangExit(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
     }
 
-    if args[0].Type() != I8 && args[0].Type() != I16 && args[0].Type() != I32 {
+    if args[0].Type() != I8 && args[0].Type() != I16 && args[0].Type() != I32 && args[0].Type() != I64 {
         fmt.Fprintln(os.Stderr, "Error: exit takes a number - exit code")
         os.Exit(0)
     }
 
-    os.Exit(int(args[0].Get().(float64)))
+    os.Exit(args[0].(IntValue).GetInt())
     return MakeNullValue()
 }
 

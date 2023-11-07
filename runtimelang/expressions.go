@@ -635,6 +635,8 @@ func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) Runtim
                 return jamlangStringShift(obj.(StringValue).Value)
             case "push":
                 return jamlangStringPush(obj.(StringValue).Value)
+            case "pop":
+                return jamlangStringPop(obj.(StringValue).Value)
             case "toUpper":
                 return jamlangStringToUpper(obj.(StringValue).Value)
             case "toLower":
@@ -754,6 +756,10 @@ func isNumber(value RuntimeValue) bool {
 
 func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environment) RuntimeValue {
     lhs, err := Evaluate(binaryExpression.Left, env)
+    if lhs == nil {
+        fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on null")
+        os.Exit(0)
+    }
     if err != nil {
         fmt.Fprintln(os.Stderr, err)
         os.Exit(0)
@@ -771,6 +777,10 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
         } else if rhs.Type() == String {
             i8Value := lhs.(Int8Value)
             return EvaluateNumericStringBinaryExpression(float64(i8Value.Value), rhs.(StringValue), binaryExpression.Operator)
+        } else if rhs.Type() == Bool {
+            return EvaluateI8BinaryExpression(lhs.(Int8Value), rhs, binaryExpression.Operator)
+        } else if rhs.Type() == Null {
+            return EvaluateI8BinaryExpression(lhs.(Int8Value), rhs, binaryExpression.Operator)
         } else {
             fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on " + lhs.Type() + " and " + rhs.Type() + ", you need to cast one of them to the other type")
             os.Exit(0)
@@ -781,6 +791,10 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
         } else if rhs.Type() == String {
             i16Value := lhs.(Int16Value)
             return EvaluateNumericStringBinaryExpression(float64(i16Value.Value), rhs.(StringValue), binaryExpression.Operator)
+        } else if rhs.Type() == Bool {
+            return EvaluateI16BinaryExpression(lhs.(Int16Value), rhs, binaryExpression.Operator)
+        } else if rhs.Type() == Null {
+            return EvaluateI16BinaryExpression(lhs.(Int16Value), rhs, binaryExpression.Operator)
         } else {
             fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on " + lhs.Type() + " and " + rhs.Type() + ", you need to cast one of them to the other type")
             os.Exit(0)
@@ -791,6 +805,10 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
         } else if rhs.Type() == String {
             i32Value := lhs.(Int32Value)
             return EvaluateNumericStringBinaryExpression(float64(i32Value.Value), rhs.(StringValue), binaryExpression.Operator)
+        } else if rhs.Type() == Bool {
+            return EvaluateI32BinaryExpression(lhs.(Int32Value), rhs, binaryExpression.Operator)
+        } else if rhs.Type() == Null {
+            return EvaluateI32BinaryExpression(lhs.(Int32Value), rhs, binaryExpression.Operator)
         } else {
             fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on " + lhs.Type() + " and " + rhs.Type() + ", you need to cast one of them to the other type")
             os.Exit(0)
@@ -801,6 +819,10 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
         } else if rhs.Type() == String {
             i64Value := lhs.(Int64Value)
             return EvaluateNumericStringBinaryExpression(float64(i64Value.Value), rhs.(StringValue), binaryExpression.Operator)
+        } else if rhs.Type() == Bool {
+            return EvaluateI64BinaryExpression(lhs.(Int64Value), rhs, binaryExpression.Operator)
+        } else if rhs.Type() == Null {
+            return EvaluateI64BinaryExpression(lhs.(Int64Value), rhs, binaryExpression.Operator)
         } else {
             fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on " + lhs.Type() + " and " + rhs.Type() + ", you need to cast one of them to the other type")
             os.Exit(0)
@@ -811,6 +833,10 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
         } else if rhs.Type() == String {
             f32Value := lhs.(Float32Value)
             return EvaluateNumericStringBinaryExpression(float64(f32Value.Value), rhs.(StringValue), binaryExpression.Operator)
+        } else if rhs.Type() == Bool {
+            return EvaluateF32BinaryExpression(lhs.(Float32Value), rhs, binaryExpression.Operator)
+        } else if rhs.Type() == Null {
+            return EvaluateF32BinaryExpression(lhs.(Float32Value), rhs, binaryExpression.Operator)
         } else {
             fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on " + lhs.Type() + " and " + rhs.Type() + ", you need to cast one of them to the other type")
             os.Exit(0)
@@ -821,6 +847,10 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
         } else if rhs.Type() == String {
             f64Value := lhs.(Float64Value)
             return EvaluateNumericStringBinaryExpression(f64Value.Value, rhs.(StringValue), binaryExpression.Operator)
+        } else if rhs.Type() == Bool {
+            return EvaluateF64BinaryExpression(lhs.(Float64Value), rhs, binaryExpression.Operator)
+        } else if rhs.Type() == Null {
+            return EvaluateF64BinaryExpression(lhs.(Float64Value), rhs, binaryExpression.Operator)
         } else {
             fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on " + lhs.Type() + " and " + rhs.Type() + ", you need to cast one of them to the other type")
             os.Exit(0)
@@ -1150,12 +1180,25 @@ func EvaluateLogicalExpression(node ast.LogicalExpression, env Environment) Runt
         if err != nil {
             return nil
         }
-        if operand.Type() != Bool {
-            fmt.Fprintln(os.Stderr, "Error: not operator can only be applied to boolean values")
-            os.Exit(0)
-            return nil
+
+        if operand != nil {
+            if isNumber(operand) {
+                if operand.(IntValue).GetInt() == 0 {
+                    return BoolValue{true}
+                }
+                return BoolValue{false}
+            }
+            if operand.Type() == Null {
+                return BoolValue{true}
+            }
+            if operand.Type() != Bool {
+                fmt.Fprintln(os.Stderr, "Error: not operator can only be applied to boolean values")
+                os.Exit(0)
+                return nil
+            }
+            return BoolValue{!operand.(BoolValue).Value}
         }
-        return BoolValue{!operand.(BoolValue).Value}
+        return BoolValue{false}
     default:
         fmt.Fprintln(os.Stderr, "Error: unknown operator")
         os.Exit(0)

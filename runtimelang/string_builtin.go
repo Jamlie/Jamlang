@@ -297,3 +297,40 @@ func jamlangStringRightPad(str string) RuntimeValue {
     }, "rightPad")
 }
 
+func jamlangStringShift(str string) RuntimeValue {
+    return MakeNativeFunction(func(args []RuntimeValue, env Environment) RuntimeValue {
+        if len(args) != 0 {
+            fmt.Fprintln(os.Stderr, "Error: shift takes 0 arguments")
+            os.Exit(0)
+        }
+
+        return MakeStringValue(str[1:])
+    }, "shift")
+}
+
+func jamlangStringPush(str string) RuntimeValue {
+    return MakeNativeFunction(func(args []RuntimeValue, env Environment) RuntimeValue {
+        if len(args) != 1 {
+            fmt.Fprintln(os.Stderr, "Error: push takes 1 argument")
+            os.Exit(0)
+        }
+
+        if args[0].Type() != String {
+            fmt.Fprintln(os.Stderr, "Error: push takes a string as an argument")
+            os.Exit(0)
+        }
+
+        return MakeStringValue(str + args[0].(StringValue).Value)
+    }, "push")
+}
+
+func jamlangStringPop(str string) RuntimeValue {
+    return MakeNativeFunction(func(args []RuntimeValue, env Environment) RuntimeValue {
+        if len(args) != 0 {
+            fmt.Fprintln(os.Stderr, "Error: pop takes 0 arguments")
+            os.Exit(0)
+        }
+
+        return MakeStringValue(str[:len(str) - 1])
+    }, "pop")
+}

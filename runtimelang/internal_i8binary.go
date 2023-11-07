@@ -574,6 +574,23 @@ func internal_I8Equal(lhs Int8Value, rhs RuntimeValue) RuntimeValue {
             return BoolValue{true}
         }
         return BoolValue{false}
+    case Bool:
+        isEqual := false
+        if rhs.(BoolValue).Value {
+            isEqual = lhs.Value == int8(1)
+        } else {
+            isEqual = lhs.Value == int8(0)
+        }
+        if isEqual {
+            return BoolValue{true}
+        }
+        return BoolValue{false}
+    case Null:
+        isEqual := lhs.Value == int8(0)
+        if isEqual {
+            return BoolValue{true}
+        }
+        return BoolValue{false}
     default:
         fmt.Fprintf(os.Stderr, "Error: Unknown type for rhs of binary expression: %s\n", rhs.Type())
         os.Exit(0)

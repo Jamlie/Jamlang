@@ -17,7 +17,7 @@ func hasDecimalZero(num float64) bool {
 func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
     switch astNode.Kind() {
     case ast.CommentType:
-        return nil, nil
+        return MakeNullValue(), nil
     case ast.NumericFloatLiteralType:
         if isFloat32(astNode.(*ast.NumericFloatLiteral).Value) {
             return Float32Value{float32(astNode.(*ast.NumericFloatLiteral).Value)}, nil

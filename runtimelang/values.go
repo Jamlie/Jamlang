@@ -412,7 +412,12 @@ func (v StringValue) Type() ValueType {
 }
 
 func (v StringValue) Get() any {
-    return v.Value
+    str := v.Value
+    decodedStr, err := strconv.Unquote(`"` + str + `"`)
+    if err != nil {
+        return str
+    }
+    return decodedStr
 }
 
 func (v StringValue) ToString() string {
