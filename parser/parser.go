@@ -41,7 +41,7 @@ func (p *Parser) parseStatement() ast.Statement {
     switch p.at().Type {
     case tokentype.OpenComment:
         return p.parseComment()
-    case tokentype.Var, tokentype.Let, tokentype.Constant:
+    case tokentype.Let, tokentype.Constant:
         return p.parseVariableDeclaration()
     case tokentype.Function:
         return p.parseFunctionDeclaration()
@@ -92,6 +92,7 @@ func (p *Parser) parseComment() ast.Statement {
 func (p *Parser) parseImportStatement() ast.Statement {
     p.eat()
     path := p.expect(tokentype.String, "Error: Expected string after import statement").Value
+    p.expect(tokentype.SemiColon, "Error: Expected ';' after import statement")
     return &ast.ImportStatement{Path: path}
 }
 
@@ -182,6 +183,24 @@ func (p *Parser) parseIfStatement() ast.Statement {
     }
 
     p.expect(tokentype.RSquirly, "Error: Expected } after if statement")
+
+    if p.at().Type == tokentype.ElseIf {
+        p.eat()
+        condition := p.parseExpression()
+        p.expect(tokentype.LSquirly, "Error: Expected { after else if statement")
+
+        var body []ast.Statement
+        for p.at().Type != tokentype.RSquirly {
+            body = append(body, p.parseStatement())
+        }
+
+        p.expect(tokentype.RSquirly, "Error: Expected } after else if statement")
+
+        return &ast.ConditionalStatement{
+            Condition: condition,
+            Body:      body,
+        }
+    }
 
     if p.at().Type == tokentype.Else {
         p.eat()
@@ -378,7 +397,6 @@ func (p *Parser) parseVariableDeclaration() ast.Statement {
                 Constant:   isConstant,
                 Value:      &ast.NullLiteral{},
                 Type:       varType,
-                // IsVar:      false,
             }
         }
     }
@@ -389,7 +407,6 @@ func (p *Parser) parseVariableDeclaration() ast.Statement {
         Constant:   isConstant,
         Value:      p.parseExpression(),
         Type:       varType,
-        // IsVar:      false,
     }
 
     if !p.isLoop {
@@ -397,6 +414,9 @@ func (p *Parser) parseVariableDeclaration() ast.Statement {
             p.eat()
         }
     }
+
+    // p.expect(tokentype.SemiColon, "Expected ; after variable declaration")
+
     return declaration
 }
 

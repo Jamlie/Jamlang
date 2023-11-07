@@ -80,7 +80,7 @@ func (v NullValue) Equals(other RuntimeValue) bool {
 }
 
 func (v NullValue) Type() ValueType {
-    return Null
+    return Object
 }
 
 func (v NullValue) Get() any {
@@ -96,7 +96,7 @@ func (v NullValue) Clone() RuntimeValue {
 }
 
 func (v NullValue) VarType() ast.VariableType {
-    return ast.NullType
+    return ast.ObjectType
 }
 
 func MakeNullValue() NullValue {
@@ -283,6 +283,10 @@ func MakeInt64Value(value int64) Int64Value {
     return Int64Value{Value: value}
 }
 
+type FloatValue interface {
+    GetFloat() float64
+}
+
 type Float32Value struct {
     Value float32
 }
@@ -316,6 +320,10 @@ func (v Float32Value) VarType() ast.VariableType {
 
 func (v Float32Value) GetV() float32 {
     return v.Value
+}
+
+func (v Float32Value) GetFloat() float64 {
+    return float64(v.Value)
 }
 
 func MakeFloat32Value(value float32) Float32Value {
@@ -354,6 +362,10 @@ func (v Float64Value) VarType() ast.VariableType {
 }
 
 func (v Float64Value) GetV() float64 {
+    return v.Value
+}
+
+func (v Float64Value) GetFloat() float64 {
     return v.Value
 }
 

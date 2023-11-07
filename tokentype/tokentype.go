@@ -35,6 +35,7 @@ const (
     Let
     Constant
     If
+    ElseIf
     Else
     While
     Loop

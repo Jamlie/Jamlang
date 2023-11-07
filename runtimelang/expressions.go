@@ -890,6 +890,9 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
         }
     case Object:
         if rhs.Type() == Object {
+            if _, ok := rhs.(NullValue); ok {
+                return EvaluateNullBinaryExpression(lhs, rhs, binaryExpression.Operator)
+            }
             return EvaluateObjectBinaryExpression(lhs.(ObjectValue), rhs.(ObjectValue), binaryExpression.Operator)
         } else if rhs.Type() == Null {
             return EvaluateNullBinaryExpression(lhs, rhs, binaryExpression.Operator)
@@ -1085,20 +1088,59 @@ func EvaluateUnaryExpression(node ast.UnaryExpression, env Environment) RuntimeV
             os.Exit(0)
         }
     case "--":
-        if value.Type() != Number {
+        switch value.Type() {
+        case I8:
+            i8Value := value.(Int8Value)
+            env.AssignVariable(node.Value.(*ast.Identifier).Symbol, Int8Value{i8Value.Value - 1})
+            return Int8Value{i8Value.Value - 1}
+        case I16:
+            i16Value := value.(Int16Value)
+            env.AssignVariable(node.Value.(*ast.Identifier).Symbol, Int16Value{i16Value.Value - 1})
+            return Int16Value{i16Value.Value - 1}
+        case I32:
+            i32Value := value.(Int32Value)
+            env.AssignVariable(node.Value.(*ast.Identifier).Symbol, Int32Value{i32Value.Value - 1})
+            return Int32Value{i32Value.Value - 1}
+        case I64:
+            i64Value := value.(Int64Value)
+            env.AssignVariable(node.Value.(*ast.Identifier).Symbol, Int64Value{i64Value.Value - 1})
+            return Int64Value{i64Value.Value - 1}
+        case F32:
+            f32Value := value.(Float32Value)
+            env.AssignVariable(node.Value.(*ast.Identifier).Symbol, Float32Value{f32Value.Value - 1})
+            return Float32Value{f32Value.Value - 1}
+        case F64:
+            f64Value := value.(Float64Value)
+            env.AssignVariable(node.Value.(*ast.Identifier).Symbol, Float64Value{f64Value.Value - 1})
+            return Float64Value{f64Value.Value - 1}
+        default:
             fmt.Fprintln(os.Stderr, "Error: -- operator can only be applied to number values")
             os.Exit(0)
-            return nil
         }
-        env.AssignVariable(node.Value.(*ast.Identifier).Symbol, Float64Value{value.(NumberValue[any]).GetV().(float64) - 1})
-        return Float64Value{value.(NumberValue[any]).GetV().(float64) - 1}
     case "-":
-        if value.Type() != Number {
+        switch value.Type() {
+        case I8:
+            i8Value := value.(Int8Value)
+            return Int8Value{-i8Value.Value}
+        case I16:
+            i16Value := value.(Int16Value)
+            return Int16Value{-i16Value.Value}
+        case I32:
+            i32Value := value.(Int32Value)
+            return Int32Value{-i32Value.Value}
+        case I64:
+            i64Value := value.(Int64Value)
+            return Int64Value{-i64Value.Value}
+        case F32:
+            f32Value := value.(Float32Value)
+            return Float32Value{-f32Value.Value}
+        case F64:
+            f64Value := value.(Float64Value)
+            return Float64Value{-f64Value.Value}
+        default:
             fmt.Fprintln(os.Stderr, "Error: - operator can only be applied to number values")
             os.Exit(0)
-            return nil
         }
-        return Float64Value{-value.(NumberValue[any]).GetV().(float64)}
     default:
         fmt.Fprintf(os.Stderr, "Error: Unknown operator: %s\n", node.Operator)
         os.Exit(0)
@@ -1215,64 +1257,28 @@ func EvaluateAssignment(node ast.AssignmentExpression, env Environment) RuntimeV
         objectValue, _ := Evaluate(objectLiteral, env)
         if objectValue.Type() == Array {
             index, _ := Evaluate(node.Assignee.(*ast.MemberExpression).Property, env)
-            if index.Type() != I32 && index.Type() != I16 && index.Type() != I32 {
+            if index.Type() != I8 && index.Type() != I16 && index.Type() != I32 && index.Type() != I64 {
                 fmt.Fprintln(os.Stderr, "Error: array index must be a number")
                 os.Exit(0)
                 return nil
             }
-            switch index.Type() {
-            case I8:
-                if index.(Int8Value).Value < 0 {
-                    if -index.(Int8Value).Value > int8(len(objectValue.(ArrayValue).Values)) {
+            if val, ok := index.(IntValue); ok {
+                if val.GetInt() < 0 {
+                    if -val.GetInt() > len(objectValue.(ArrayValue).Values) {
                         fmt.Fprintln(os.Stderr, "Error: array index out of bounds")
                         os.Exit(0)
                         return nil
                     }
-                    objectValue.(ArrayValue).Values[len(objectValue.(ArrayValue).Values) + int(index.(Int8Value).Value)], _ = Evaluate(node.Value, env)
+
+                    objectValue.(ArrayValue).Values[len(objectValue.(ArrayValue).Values) + val.GetInt()], _ = Evaluate(node.Value, env)
                     return objectValue
                 }
-                objectValue.(ArrayValue).Values[int(index.(Int8Value).Value)], _ = Evaluate(node.Value, env)
+
+                objectValue.(ArrayValue).Values[val.GetInt()], _ = Evaluate(node.Value, env)
                 return objectValue
-            case I16:
-                if index.(Int16Value).Value < 0 {
-                    if -index.(Int16Value).Value > int16(len(objectValue.(ArrayValue).Values)) {
-                        fmt.Fprintln(os.Stderr, "Error: array index out of bounds")
-                        os.Exit(0)
-                        return nil
-                    }
-                    objectValue.(ArrayValue).Values[len(objectValue.(ArrayValue).Values) + int(index.(Int16Value).Value)], _ = Evaluate(node.Value, env)
-                    return objectValue
-                }
-                objectValue.(ArrayValue).Values[int(index.(Int16Value).Value)], _ = Evaluate(node.Value, env)
-                return objectValue
-            case I32:
-                if index.(Int32Value).Value < 0 {
-                    if -index.(Int32Value).Value > int32(len(objectValue.(ArrayValue).Values)) {
-                        fmt.Fprintln(os.Stderr, "Error: array index out of bounds")
-                        os.Exit(0)
-                        return nil
-                    }
-                    objectValue.(ArrayValue).Values[len(objectValue.(ArrayValue).Values) + int(index.(Int32Value).Value)], _ = Evaluate(node.Value, env)
-                    return objectValue
-                }
-                objectValue.(ArrayValue).Values[int(index.(Int32Value).Value)], _ = Evaluate(node.Value, env)
-                return objectValue
-            case I64:
-                if index.(Int64Value).Value < 0 {
-                    if -index.(Int64Value).Value > int64(len(objectValue.(ArrayValue).Values)) {
-                        fmt.Fprintln(os.Stderr, "Error: array index out of bounds")
-                        os.Exit(0)
-                        return nil
-                    }
-                    objectValue.(ArrayValue).Values[len(objectValue.(ArrayValue).Values) + int(index.(Int64Value).Value)], _ = Evaluate(node.Value, env)
-                    return objectValue
-                }
-                objectValue.(ArrayValue).Values[int(index.(Int64Value).Value)], _ = Evaluate(node.Value, env)
-                return objectValue
-            default:
-                fmt.Fprintln(os.Stderr, "Error: array index must be an integer")
+            } else {
+                fmt.Fprintln(os.Stderr, "Error: array index must be a number")
                 os.Exit(0)
-                return nil
             }
         }
         if objectValue.Type() == Null {

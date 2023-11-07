@@ -1125,3 +1125,61 @@ func jamlangWrite(args []RuntimeValue, environment Environment) RuntimeValue {
 
     return MakeNullValue()
 }
+
+func jamlangObjectKeys(args []RuntimeValue, environment Environment) RuntimeValue {
+    if len(args) != 1 {
+        fmt.Fprintln(os.Stderr, "Object.keys takes 1 argument")
+        os.Exit(0)
+    }
+
+    if args[0].Type() != "object" {
+        fmt.Fprintln(os.Stderr, "Object.keys takes an object")
+        os.Exit(0)
+    }
+
+    keys := make([]RuntimeValue, 0)
+    for key, _ := range args[0].(ObjectValue).Properties {
+        keys = append(keys, MakeStringValue(key))
+    }
+
+    return MakeArrayValue(keys)
+}
+
+func jamlangObjectValues(args []RuntimeValue, environment Environment) RuntimeValue {
+    if len(args) != 1 {
+        fmt.Fprintln(os.Stderr, "Object.values takes 1 argument")
+        os.Exit(0)
+    }
+
+    if args[0].Type() != "object" {
+        fmt.Fprintln(os.Stderr, "Object.values takes an object")
+        os.Exit(0)
+    }
+
+    values := make([]RuntimeValue, 0)
+    for _, value := range args[0].(ObjectValue).Properties {
+        values = append(values, value)
+    }
+
+    return MakeArrayValue(values)
+}
+
+func jamlangObjectHas(args []RuntimeValue, environment Environment) RuntimeValue {
+    if len(args) != 2 {
+        fmt.Fprintln(os.Stderr, "Object.has takes 2 arguments")
+        os.Exit(0)
+    }
+
+    if args[0].Type() != "object" {
+        fmt.Fprintln(os.Stderr, "Object.has takes an object")
+        os.Exit(0)
+    }
+
+    if args[1].Type() != String {
+        fmt.Fprintln(os.Stderr, "Object.has takes a string")
+        os.Exit(0)
+    }
+
+    _, ok := args[0].(ObjectValue).Properties[args[1].(StringValue).Value]
+    return MakeBoolValue(ok)
+}

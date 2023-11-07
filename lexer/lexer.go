@@ -20,6 +20,7 @@ var Keywords map[string]tokentype.TokenType = map[string]tokentype.TokenType{
     "fn": tokentype.Function,
     "return": tokentype.Return,
     "if": tokentype.If,
+    "elseif": tokentype.ElseIf,
     "else": tokentype.Else,
     "while": tokentype.While,
     "loop": tokentype.Loop,

@@ -28,8 +28,66 @@ func checkNumberTypes(value RuntimeValue, varType ast.VariableType) bool {
     return !(value.Type() == Number && varType == ast.Float64Type) && !(value.Type() == Number && varType == ast.Float32Type) && !(value.Type() == Number && varType == ast.Int64Type) && !(value.Type() == Number && varType == ast.Int32Type) && !(value.Type() == Number && varType == ast.Int16Type) && !(value.Type() == Number && varType == ast.Int8Type)
 } 
 
+func makeValueWithVarType(value RuntimeValue, varType ast.VariableType) RuntimeValue {
+    switch varType {
+    case ast.Float64Type:
+        if _, ok := value.(FloatValue); !ok {
+            fmt.Fprintf(os.Stderr, "Error: Expected %s, got %s\n", ast.Float64Type, value.VarType())
+            os.Exit(0)
+        }
+        return MakeFloat64Value(float64(value.(FloatValue).GetFloat()))
+    case ast.Float32Type:
+        if _, ok := value.(FloatValue); !ok {
+            fmt.Fprintf(os.Stderr, "Error: Expected %s, got %s\n", ast.Float32Type, value.VarType())
+            os.Exit(0)
+        }
+        return MakeFloat32Value(float32(value.(FloatValue).GetFloat()))
+    case ast.Int64Type:
+        if _, ok := value.(IntValue); !ok {
+            fmt.Fprintf(os.Stderr, "Error: Expected %s, got %s\n", ast.Int64Type, value.VarType())
+            os.Exit(0)
+        }
+        return MakeInt64Value(int64(value.(IntValue).GetInt()))
+    case ast.Int32Type:
+        if _, ok := value.(IntValue); !ok {
+            fmt.Fprintf(os.Stderr, "Error: Expected %s, got %s\n", ast.Int32Type, value.VarType())
+            os.Exit(0)
+        }
+        return MakeInt32Value(int32(value.(IntValue).GetInt()))
+    case ast.Int16Type:
+        if _, ok := value.(IntValue); !ok {
+            fmt.Fprintf(os.Stderr, "Error: Expected %s, got %s\n", ast.Int16Type, value.VarType())
+            os.Exit(0)
+        }
+        return MakeInt16Value(int16(value.(IntValue).GetInt()))
+    case ast.Int8Type:
+        if _, ok := value.(IntValue); !ok {
+            fmt.Fprintf(os.Stderr, "Error: Expected %s, got %s\n", ast.Int8Type, value.VarType())
+            os.Exit(0)
+        }
+        return MakeInt8Value(int8(value.(IntValue).GetInt()))
+    case ast.ObjectType:
+        if _, ok := value.(NullValue); ok {
+            return value
+        }
+        if _, ok := value.(ObjectValue); !ok {
+            fmt.Fprintf(os.Stderr, "Error: Expected %s, got %s\n", ast.ObjectType, value.VarType())
+            os.Exit(0)
+        }
+        return value
+    case ast.NullType:
+        return value
+    case ast.AnyType:
+        return value
+    default:
+        return value
+    }
+}
+
 func EvaluateVariableDeclaration(declaration ast.VariableDeclaration, env *Environment, varType ast.VariableType) RuntimeValue {
     value, _ := Evaluate(declaration.Value, *env)
+
+    actualValue := makeValueWithVarType(value, varType)
 
     if value.VarType() != varType && varType != ast.AnyType && !isNumber(value) {
         fmt.Fprintf(os.Stderr, "Error: Expected %s, got %s\n", declaration.Type, value.VarType())
@@ -58,10 +116,11 @@ func EvaluateVariableDeclaration(declaration ast.VariableDeclaration, env *Envir
         }
     }
 
-    if value.Type() == Object && value.(ObjectValue).IsClass {
-        value = value.(ObjectValue).Clone()
-    }
-    return env.DeclareVariable(declaration.Identifier, value, declaration.Constant, varType)
+    // if value.Type() == Object && value.(ObjectValue).IsClass {
+    //     value = value.(ObjectValue).Clone()
+    // }
+
+    return env.DeclareVariable(declaration.Identifier, actualValue, declaration.Constant, varType)
 }
 
 func EvaluateVariableDeclarationDeprecated(declaration ast.VariableDeclaration, env *Environment) RuntimeValue {
