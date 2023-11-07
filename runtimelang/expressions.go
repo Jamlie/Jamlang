@@ -586,6 +586,9 @@ func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) Runtim
             return MakeStringValue(string(obj.(StringValue).Value[property.(IntValue).GetInt()]))
         }
 
+        if _, ok := obj.(ObjectValue).Properties[property.(StringValue).Value]; !ok {
+            return MakeNullValue()
+        }
         return obj.(ObjectValue).Properties[property.(StringValue).Value]
     } else {
         if _, ok := obj.(NullValue); ok {
