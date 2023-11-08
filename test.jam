@@ -1,38 +1,11 @@
-import "std/random.jam"
+let x: i32 = 3
 
-const rand = Random(Time.now())
-
-println(rand.nextIntRange(0, 100))
-println(rand.nextLongRange(1000000000000, 10000000000000))
-println(rand.nextFloatRange(0, 1))
-println(rand.nextDoubleRange(0, 1))
-
-println("------------------------------------")
-
-const languageName = "Jamlang"
-let versions = [1.0, 1.1, 1.2]
-versions = versions.push(1.3)
-
-println(languageName)
-println(languageName.length)
-println(versions)
-println(versions.length)
-
-/*
-fn Car(year, location) {
-    const this = {}
-    this.year = year
-    this.location = location
-    this.drive = fn(distance) {
-        this.location = this.location + distance
-    }
-    if (location == null) {
-        this.location = 10
-    }
-    return this
+if x >= 10 {
+    println("Hello")
+} elseif x > 5 {
+    println("World")
+} elseif x > 2 {
+    println("?")
+} else {
+    println("!")
 }
-
-let c = Car(1985, null)
-c.drive(10)
-println(Car)
-*/

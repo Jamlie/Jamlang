@@ -33,6 +33,7 @@ var Keywords map[string]tokentype.TokenType = map[string]tokentype.TokenType{
     "or": tokentype.LogicalOperator,
     "import": tokentype.Import,
     "class": tokentype.Class,
+    "type": tokentype.Type,
 }
 
 

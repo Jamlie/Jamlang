@@ -36,6 +36,7 @@ const (
     LogicalExpressionType NodeType = "LogicalExpression"
     StringLiteralType NodeType = "StringLiteral"
     NullLiteralType NodeType = "NullLiteral"
+    TypeDeclarationType NodeType = "TypeDeclaration"
 )
 
 
@@ -85,6 +86,8 @@ type VariableDeclaration struct {
     Identifier string
     Value Expression
     Type VariableType
+    IsUserDefinedType bool
+    UserDefinedType Expression
 }
 
 func (v *VariableDeclaration) Kind() NodeType {
@@ -226,6 +229,8 @@ type Expression interface {
 type ConditionalStatement struct {
     Condition Expression
     Body []Statement
+    ElseIfConditions []Expression
+    ElseIfBodies [][]Statement
     Alternate []Statement
 }
 
@@ -549,3 +554,17 @@ func (m *MemberExpression) ToString() string {
         return m.Object.ToString() + "." + m.Property.ToString()
     }
 }
+
+type TypeDeclaration struct {
+    Name string
+    Type Expression
+}
+
+func (t *TypeDeclaration) Kind() NodeType {
+    return TypeDeclarationType
+}
+
+func (t *TypeDeclaration) ToString() string {
+    return t.Name + ": " + t.Type.ToString()
+}
+

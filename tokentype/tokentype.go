@@ -7,6 +7,7 @@ const (
     Integer
     Float
     String
+    Type
     Identifier
     Equals
     OpenParen

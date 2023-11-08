@@ -1,13 +1,13 @@
 package parser
 
 import (
-    "fmt"
-    "os"
-    "strconv"
+	"fmt"
+	"os"
+	"strconv"
 
-    "github.com/Jamlie/Jamlang/ast"
-    "github.com/Jamlie/Jamlang/lexer"
-    "github.com/Jamlie/Jamlang/tokentype"
+	"github.com/Jamlie/Jamlang/ast"
+	"github.com/Jamlie/Jamlang/lexer"
+	"github.com/Jamlie/Jamlang/tokentype"
 )
 
 type Parser struct {
@@ -60,6 +60,8 @@ func (p *Parser) parseStatement() ast.Statement {
         }
         return p.parseBreakStatement()
     case tokentype.If:
+        return p.parseIfStatement()
+    case tokentype.ElseIf:
         return p.parseIfStatement()
     case tokentype.Else:
         return p.parseIfStatement()
@@ -184,22 +186,51 @@ func (p *Parser) parseIfStatement() ast.Statement {
 
     p.expect(tokentype.RSquirly, "Error: Expected } after if statement")
 
+    var elseifCondition []ast.Expression
+    var elseifBody [][]ast.Statement
     if p.at().Type == tokentype.ElseIf {
         p.eat()
-        condition := p.parseExpression()
+        elseifCondition = append(elseifCondition, p.parseExpression())
         p.expect(tokentype.LSquirly, "Error: Expected { after else if statement")
 
-        var body []ast.Statement
+        var elseifBodyTemp []ast.Statement
         for p.at().Type != tokentype.RSquirly {
-            body = append(body, p.parseStatement())
+            elseifBodyTemp = append(elseifBodyTemp, p.parseStatement())
         }
-
+        elseifBody = append(elseifBody, elseifBodyTemp)
         p.expect(tokentype.RSquirly, "Error: Expected } after else if statement")
 
-        return &ast.ConditionalStatement{
-            Condition: condition,
-            Body:      body,
+        for p.at().Type == tokentype.ElseIf {
+            p.eat()
+            elseifCondition = append(elseifCondition, p.parseExpression())
+            p.expect(tokentype.LSquirly, "Error: Expected { after else if statement")
+
+            var elseifBodyTemp []ast.Statement
+            for p.at().Type != tokentype.RSquirly {
+                elseifBodyTemp = append(elseifBodyTemp, p.parseStatement())
+            }
+            elseifBody = append(elseifBody, elseifBodyTemp)
+            p.expect(tokentype.RSquirly, "Error: Expected } after else if statement")
         }
+        // p.eat()
+        // elseifCondition = p.parseExpression()
+        // p.expect(tokentype.LSquirly, "Error: Expected { after else if statement")
+        //
+        // for p.at().Type != tokentype.RSquirly {
+        //     var elseifBodyTemp []ast.Statement
+        //     for p.at().Type != tokentype.RSquirly {
+        //         elseifBodyTemp = append(elseifBodyTemp, p.parseStatement())
+        //     }
+        //     elseifBody = append(elseifBody, elseifBodyTemp)
+        //     p.expect(tokentype.RSquirly, "Error: Expected } after else if statement")
+        //     if p.at().Type == tokentype.ElseIf {
+        //         p.eat()
+        //         elseifCondition = p.parseExpression()
+        //         p.expect(tokentype.LSquirly, "Error: Expected { after else if statement")
+        //     }
+        // }
+        //
+        // p.expect(tokentype.RSquirly, "Error: Expected } after else if statement")
     }
 
     if p.at().Type == tokentype.Else {
@@ -217,12 +248,16 @@ func (p *Parser) parseIfStatement() ast.Statement {
             Condition: condition,
             Body:      body,
             Alternate: elseBody,
+            ElseIfBodies:    elseifBody,
+            ElseIfConditions: elseifCondition,
         }
     }
 
     return &ast.ConditionalStatement{
         Condition: condition,
         Body:      body,
+        ElseIfConditions: elseifCondition,
+        ElseIfBodies:    elseifBody,
     }
 }
 
@@ -269,7 +304,12 @@ func (p *Parser) parseFunctionDeclaration() ast.Statement {
 
     if p.at().Type == tokentype.Colon {
         p.eat()
-        returnType = p.parseType()
+        var err error
+        returnType, err = p.parseType()
+        if err != nil {
+            fmt.Printf("Error: %s\n", err.Error())
+            os.Exit(0)
+        }
     }
 
     p.expect(tokentype.LSquirly, "Error: Expected '{' after function declaration")
@@ -306,59 +346,51 @@ func (p *Parser) parseReturnStatement() ast.Statement {
     }
 }
 
-func (p *Parser) parseType() ast.VariableType {
-    switch p.at().Value {
-    case "str":
-        p.eat()
-        return ast.StringType
-    case "i8":
-        p.eat()
-        return ast.Int8Type
-    case "i16":
-        p.eat()
-        return ast.Int16Type
-    case "i32":
-        p.eat()
-        return ast.Int32Type
-    case "i64":
-        p.eat()
-        return ast.Int64Type
-    case "f32":
-        p.eat()
-        return ast.Float32Type
-    case "f64":
-        p.eat()
-        return ast.Float64Type
-    case "bool":
-        p.eat()
-        return ast.BoolType
-    case "any":
-        p.eat()
-        return ast.AnyType
-    case "object":
-        p.eat()
-        return ast.ObjectType
-    case "list":
-        p.eat()
-        return ast.ArrayType
-    case "tup":
-        p.eat()
-        return ast.TupleType
-    case "null":
-        p.eat()
-        return ast.NullType
-    case "fn":
-        p.eat()
-        return ast.FunctionType
-    case "file":
-        p.eat()
-        return ast.FileType
-    default:
-        fmt.Fprintln(os.Stderr, "Error: Expected type, got ", p.at().Value)
-        os.Exit(0)
-        return ast.VariableType("")
-    }
+var Types = map[string]ast.VariableType{
+    "str":    ast.StringType,
+    "i8":     ast.Int8Type,
+    "i16":    ast.Int16Type,
+    "i32":    ast.Int32Type,
+    "i64":    ast.Int64Type,
+    "f32":    ast.Float32Type,
+    "f64":    ast.Float64Type,
+    "bool":   ast.BoolType,
+    "list":   ast.ArrayType,
+    "tuple":  ast.TupleType,
+    "fn":     ast.FunctionType,
+    "object": ast.ObjectType,
+    "any":    ast.AnyType,
 }
+
+// var UserTypes = map[string]ast.Expression{}
+
+func (p *Parser) parseType() (ast.VariableType, error) {
+    if p.at().Type == tokentype.Identifier {
+        if t, ok := Types[p.at().Value]; ok {
+            p.eat()
+            return t, nil
+        }
+    }
+
+    return ast.VariableType(""), fmt.Errorf("Error: Expected type")
+}
+
+// func (p *Parser) parseTypeDeclaration() ast.Statement {
+//     p.eat()
+//     identifier := p.expect(tokentype.Identifier, "Error: Expected identifier name after type keyword").Value
+//     p.expect(tokentype.Equals, "Error: Expected = after type name")
+//
+//     var expressionType ast.Expression = nil
+//
+//     expressionType = p.parseExpression()
+//
+//     UserTypes[identifier] = expressionType
+//
+//     return &ast.TypeDeclaration{
+//         Name: identifier,
+//         Type: expressionType,
+//     }
+// }
 
 func (p *Parser) parseVariableDeclaration() ast.Statement {
     isConstant := p.eat().Type == tokentype.Constant
@@ -384,7 +416,12 @@ func (p *Parser) parseVariableDeclaration() ast.Statement {
 
     if p.at().Type == tokentype.Colon {
         p.eat()
-        varType = p.parseType()
+        varType, err := p.parseType()
+        if err != nil {
+            fmt.Fprintln(os.Stderr, "Error: Unknown type")
+            os.Exit(0)
+        }
+
         if isConstant && p.at().Type == tokentype.SemiColon {
             fmt.Fprintln(os.Stderr, "Error: Constant declaration without assignment is not allowed")
             os.Exit(0)
@@ -393,20 +430,30 @@ func (p *Parser) parseVariableDeclaration() ast.Statement {
         if p.at().Type == tokentype.SemiColon {
             p.eat()
             return &ast.VariableDeclaration{
-                Identifier: identifier,
-                Constant:   isConstant,
-                Value:      &ast.NullLiteral{},
-                Type:       varType,
+                Identifier:        identifier,
+                Constant:          isConstant,
+                Value:             &ast.NullLiteral{},
+                Type:              varType,
+                IsUserDefinedType: false,
             }
         }
     }
 
     p.expect(tokentype.Equals, "Expected = after identifier name")
-    declaration := &ast.VariableDeclaration{
-        Identifier: identifier,
-        Constant:   isConstant,
-        Value:      p.parseExpression(),
-        Type:       varType,
+    // declaration := &ast.VariableDeclaration{
+    //     Identifier: identifier,
+    //     Constant:   isConstant,
+    //     Value:      p.parseExpression(),
+    //     Type:       varType,
+    // }
+
+    var declaration ast.Statement
+    declaration = &ast.VariableDeclaration{
+        Identifier:        identifier,
+        Constant:          isConstant,
+        Value:             p.parseExpression(),
+        Type:              varType,
+        IsUserDefinedType: false,
     }
 
     if !p.isLoop {
@@ -414,8 +461,6 @@ func (p *Parser) parseVariableDeclaration() ast.Statement {
             p.eat()
         }
     }
-
-    // p.expect(tokentype.SemiColon, "Expected ; after variable declaration")
 
     return declaration
 }
@@ -540,7 +585,7 @@ func (p *Parser) parseObjectExpression() ast.Expression {
             continue
         }
 
-        p.expect(tokentype.Colon, "Expected : after object key")
+        p.expect(tokentype.Colon, "Error: Expected : after object key")
         value := p.parseExpression()
         properties = append(properties, ast.Property{
             Key:   key,

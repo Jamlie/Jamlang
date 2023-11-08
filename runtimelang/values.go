@@ -28,6 +28,7 @@ const (
     Break          ValueType = "break"
     Class          ValueType = "class"
     File           ValueType = "file"
+    Type           ValueType = "type"
 )
 
 type RuntimeValue interface {
@@ -902,4 +903,37 @@ func (v FileValue) VarType() ast.VariableType {
 
 func MakeFileValue(name string, file *os.File) FileValue {
     return FileValue{Name: name, File: file, IsClosed: false}
+}
+
+type TypeValue struct {
+    Name  string
+    Value ast.Expression
+}
+
+func (v TypeValue) Equals(other RuntimeValue) bool {
+    return false
+}
+
+func (v TypeValue) Type() ValueType {
+    return Type
+}
+
+func (v TypeValue) Get() any {
+    return v.Value
+}
+
+func (v TypeValue) ToString() string {
+    return "type"
+}
+
+func (v TypeValue) Clone() RuntimeValue {
+    return v
+}
+
+func (v TypeValue) VarType() ast.VariableType {
+    return ast.AnyType
+}
+
+func MakeTypeValue(name string, value ast.Expression) TypeValue {
+    return TypeValue{Name: name, Value: value}
 }

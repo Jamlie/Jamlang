@@ -8,10 +8,10 @@ import (
 )
 
 type Environment struct {
-    parent    *Environment
-    variables map[string]RuntimeValue
-    constants map[string]bool
-    types     map[string]ast.VariableType
+    parent           *Environment
+    variables        map[string]RuntimeValue
+    constants        map[string]bool
+    types            map[string]ast.VariableType
 }
 
 func CreateGlobalEnvironment() *Environment {
@@ -71,10 +71,10 @@ func CreateGlobalEnvironment() *Environment {
 
 func NewEnvironment(parent *Environment) *Environment {
     return &Environment{
-        parent:    parent,
-        variables: make(map[string]RuntimeValue),
-        constants: make(map[string]bool),
-        types:     make(map[string]ast.VariableType),
+        parent:           parent,
+        variables:        make(map[string]RuntimeValue),
+        constants:        make(map[string]bool),
+        types:            make(map[string]ast.VariableType),
     }
 }
 

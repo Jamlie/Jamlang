@@ -367,10 +367,9 @@ func EvaluateConditionalExpression(expr ast.ConditionalStatement, env *Environme
     }
 
     scope := NewEnvironment(env)
-    // scope.variables = env.variables
 
     if condition.Type() != Bool {
-        return MakeNullValue(), fmt.Errorf("if statement condition must be a boolean")
+        return MakeNullValue(), fmt.Errorf("Error: if statement condition must be a boolean")
     }
 
     if condition.Get() == true {
@@ -405,35 +404,74 @@ func EvaluateConditionalExpression(expr ast.ConditionalStatement, env *Environme
 
         scope = NewEnvironment(env)
     } else {
-        for _, statement := range expr.Alternate {
-            if statement.Kind() == ast.ReturnStatementType {
-                result, err := Evaluate(statement, *scope)
-                if err != nil {
-                    fmt.Fprintln(os.Stderr, err)
-                    os.Exit(0)
-                }
-
-                return result, IsReturnError
-            } else if statement.Kind() == ast.BreakStatementType {
-                return MakeNullValue(), IsBreakError
-            }
-            _, err := Evaluate(statement, *scope)
-            if err == IsBreakError {
-                return MakeNullValue(), nil
-            }
+        trueCondIdx := -1
+        for idx, elseifCond := range expr.ElseIfConditions {
+            cond, err := Evaluate(elseifCond, *env)
             if err != nil {
                 fmt.Fprintln(os.Stderr, err)
                 os.Exit(0)
             }
+
+            if cond.Type() != Bool {
+                return MakeNullValue(), fmt.Errorf("Error: elseif statement condition must be a boolean")
+            }
+
+            if cond.Get() == true {
+                trueCondIdx = idx
+                break
+            }
         }
 
-        // for k, v := range scope.variables {
-        //     if _, ok := env.variables[k]; ok {
-        //         env.variables[k] = v
-        //     }
-        // }
+        if trueCondIdx != -1 {
+            for _, statement := range expr.ElseIfBodies[trueCondIdx] {
+                if statement.Kind() == ast.ReturnStatementType {
+                    result, err := Evaluate(statement, *scope)
+                    if err != nil {
+                        fmt.Fprintln(os.Stderr, err)
+                        os.Exit(0)
+                    }
 
-        scope = NewEnvironment(env)
+                    // IsReturnError is a special error that is used to indicate that a return statement has been reached
+                    return result, IsReturnError
+                } else if statement.Kind() == ast.BreakStatementType {
+                    return MakeNullValue(), IsBreakError
+                }
+                _, err := Evaluate(statement, *scope)
+                if err == IsBreakError {
+                    return MakeNullValue(), nil
+                }
+                if err != nil {
+                    fmt.Fprintln(os.Stderr, err)
+                    os.Exit(0)
+                }
+            }
+
+            scope = NewEnvironment(env)
+        } else {
+            for _, statement := range expr.Alternate {
+                if statement.Kind() == ast.ReturnStatementType {
+                    result, err := Evaluate(statement, *scope)
+                    if err != nil {
+                        fmt.Fprintln(os.Stderr, err)
+                        os.Exit(0)
+                    }
+
+                    return result, IsReturnError
+                } else if statement.Kind() == ast.BreakStatementType {
+                    return MakeNullValue(), IsBreakError
+                }
+                _, err := Evaluate(statement, *scope)
+                if err == IsBreakError {
+                    return MakeNullValue(), nil
+                }
+                if err != nil {
+                    fmt.Fprintln(os.Stderr, err)
+                    os.Exit(0)
+                }
+            }
+
+            scope = NewEnvironment(env)
+        }
     }
 
 
