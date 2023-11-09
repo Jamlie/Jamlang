@@ -7,7 +7,6 @@ const (
     Integer
     Float
     String
-    Type
     Identifier
     Equals
     OpenParen
@@ -44,6 +43,7 @@ const (
     For
     In
     Break
+    Continue
     Not
     And
     Or

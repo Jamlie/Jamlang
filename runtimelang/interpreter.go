@@ -130,6 +130,14 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
             return nil, nil
         }
         return EvaluateBreakStatement(*breakStatement, env), nil
+    case ast.ContinueStatementType:
+        continueStatement, ok := astNode.(*ast.ContinueStatement)
+        if !ok {
+            fmt.Fprintf(os.Stderr, "Error: Expected ContinueStatement, got %T\n", astNode)
+            os.Exit(0)
+            return nil, nil
+        }
+        return EvaluateContinueStatement(*continueStatement, env), nil
     case ast.AssignmentExpressionType:
         assignmentExpression, ok := astNode.(*ast.AssignmentExpression)
         if !ok {
@@ -182,6 +190,10 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
             return result, IsBreakError
         }
 
+        if err == IsContinueError {
+            return result, IsContinueError
+        }
+
         if err != nil {
             fmt.Fprintf(os.Stderr, "Error: %s\n", err.Error())
             os.Exit(0)
@@ -204,6 +216,10 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
         }
 
         if err == IsBreakError {
+            return result, nil
+        }
+
+        if err == IsContinueError {
             return result, nil
         }
 

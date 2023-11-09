@@ -1,11 +1,4 @@
-let x: i32 = 3
-
-if x >= 10 {
-    println("Hello")
-} elseif x > 5 {
-    println("World")
-} elseif x > 2 {
-    println("?")
-} else {
-    println("!")
+let i: i32 = 0
+for let x = 0; true; ++i {
+    println(i)
 }

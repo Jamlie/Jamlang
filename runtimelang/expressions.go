@@ -13,6 +13,7 @@ import (
 var (
     IsReturnError = fmt.Errorf("return statement error")
     IsBreakError = fmt.Errorf("break statement error")
+    IsContinueError = fmt.Errorf("continue statement error")
 )
 
 func EvaluateFunctionDeclaration(expr ast.FunctionDeclaration, env *Environment, returnType ast.VariableType) (RuntimeValue, error) {
@@ -209,14 +210,14 @@ func EvaluateForExpression(expr ast.ForStatement, env *Environment) (RuntimeValu
 func EvaluateForEachExpression(expr ast.ForEachStatement, env *Environment) (RuntimeValue, error) {
     scope := NewEnvironment(env)
 
-    array, err := Evaluate(expr.Collection, *env)
+    collection, err := Evaluate(expr.Collection, *env)
     if err != nil {
         return MakeNullValue(), err
     }
 
-    if array.Type() == Array {
+    if collection.Type() == Array {
         scope.DeclareVariable(expr.Variable, MakeNullValue(), false, ast.AnyType)
-        for _, element := range array.(ArrayValue).Values {
+        for _, element := range collection.(ArrayValue).Values {
             scope.AssignVariable(expr.Variable, element)
 
             for _, statement := range expr.Body {
@@ -229,9 +230,9 @@ func EvaluateForEachExpression(expr ast.ForEachStatement, env *Environment) (Run
                 }
             }
         }
-    } else if array.Type() == Tuple {
+    } else if collection.Type() == Tuple {
         scope.DeclareVariable(expr.Variable, MakeNullValue(), false, ast.AnyType)
-        for _, element := range array.(TupleValue).Values {
+        for _, element := range collection.(TupleValue).Values {
             scope.AssignVariable(expr.Variable, element)
 
             for _, statement := range expr.Body {
@@ -244,10 +245,27 @@ func EvaluateForEachExpression(expr ast.ForEachStatement, env *Environment) (Run
                 }
             }
         }
-    } else if array.Type() == String {
+    } else if collection.Type() == String {
         scope.DeclareVariable(expr.Variable, MakeNullValue(), false, ast.StringType)
-        for _, element := range array.(StringValue).Value {
+        for _, element := range collection.(StringValue).Value {
             scope.AssignVariable(expr.Variable, StringValue{Value: string(element)})
+
+            for _, statement := range expr.Body {
+                if statement.Kind() == ast.ReturnStatementType {
+                    return Evaluate(statement, *scope)
+                }
+                _, err := Evaluate(statement, *scope)
+                if err != nil {
+                    return MakeNullValue(), err
+                }
+            }
+        }
+    } else if collection.Type() == Object {
+        scope.DeclareVariable(expr.Key, MakeNullValue(), false, ast.AnyType)
+        scope.DeclareVariable(expr.Value, MakeNullValue(), false, ast.AnyType)
+        for key, value := range collection.(ObjectValue).Properties {
+            scope.AssignVariable(expr.Key, StringValue{Value: key})
+            scope.AssignVariable(expr.Value, value)
 
             for _, statement := range expr.Body {
                 if statement.Kind() == ast.ReturnStatementType {
@@ -287,18 +305,14 @@ func EvaluateLoopExpression(expr ast.LoopStatement, env *Environment) (RuntimeVa
             if err == IsBreakError {
                 return MakeNullValue(), nil
             }
+            if err == IsContinueError {
+                continue
+            }
             if err != nil {
                 fmt.Fprintln(os.Stderr, err)
                 os.Exit(0)
             }
         }
-
-        // ! why is this here?
-        // for k, v := range scope.variables {
-        //     if _, ok := env.variables[k]; ok {
-        //         env.variables[k] = v
-        //     }
-        // }
 
         scope = NewEnvironment(env)
     }
@@ -385,6 +399,8 @@ func EvaluateConditionalExpression(expr ast.ConditionalStatement, env *Environme
                 return result, IsReturnError
             } else if statement.Kind() == ast.BreakStatementType {
                 return MakeNullValue(), IsBreakError
+            } else if statement.Kind() == ast.ContinueStatementType {
+                return MakeNullValue(), IsContinueError
             }
             _, err := Evaluate(statement, *scope)
             if err == IsBreakError {
@@ -431,7 +447,6 @@ func EvaluateConditionalExpression(expr ast.ConditionalStatement, env *Environme
                         os.Exit(0)
                     }
 
-                    // IsReturnError is a special error that is used to indicate that a return statement has been reached
                     return result, IsReturnError
                 } else if statement.Kind() == ast.BreakStatementType {
                     return MakeNullValue(), IsBreakError
@@ -459,6 +474,8 @@ func EvaluateConditionalExpression(expr ast.ConditionalStatement, env *Environme
                     return result, IsReturnError
                 } else if statement.Kind() == ast.BreakStatementType {
                     return MakeNullValue(), IsBreakError
+                } else if statement.Kind() == ast.ContinueStatementType {
+                    return MakeNullValue(), IsContinueError
                 }
                 _, err := Evaluate(statement, *scope)
                 if err == IsBreakError {
@@ -624,6 +641,12 @@ func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) Runtim
             return MakeStringValue(string(obj.(StringValue).Value[property.(IntValue).GetInt()]))
         }
 
+        if v, ok := property.(IntValue); ok {
+            if _, ok := obj.(ObjectValue).Properties[strconv.Itoa(v.GetInt())]; !ok {
+                return MakeNullValue()
+            }
+            return obj.(ObjectValue).Properties[strconv.Itoa(v.GetInt())]
+        }
         if _, ok := obj.(ObjectValue).Properties[property.(StringValue).Value]; !ok {
             return MakeNullValue()
         }

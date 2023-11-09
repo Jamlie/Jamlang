@@ -1,13 +1,13 @@
 package parser
 
 import (
-	"fmt"
-	"os"
-	"strconv"
+    "fmt"
+    "os"
+    "strconv"
 
-	"github.com/Jamlie/Jamlang/ast"
-	"github.com/Jamlie/Jamlang/lexer"
-	"github.com/Jamlie/Jamlang/tokentype"
+    "github.com/Jamlie/Jamlang/ast"
+    "github.com/Jamlie/Jamlang/lexer"
+    "github.com/Jamlie/Jamlang/tokentype"
 )
 
 type Parser struct {
@@ -59,12 +59,22 @@ func (p *Parser) parseStatement() ast.Statement {
             os.Exit(0)
         }
         return p.parseBreakStatement()
+    case tokentype.Continue:
+        if !p.isLoop {
+            fmt.Fprintln(os.Stderr, "Error: Continue statement outside of loop")
+            os.Exit(0)
+        }
+        return p.parseContinueStatement()
     case tokentype.If:
         return p.parseIfStatement()
     case tokentype.ElseIf:
-        return p.parseIfStatement()
+        fmt.Fprintln(os.Stderr, "Error: Else if statement outside of if statement")
+        os.Exit(0)
+        return nil
     case tokentype.Else:
-        return p.parseIfStatement()
+        fmt.Fprintln(os.Stderr, "Error: Else statement outside of if statement")
+        os.Exit(0)
+        return nil
     case tokentype.While:
         return p.parseWhileStatement()
     case tokentype.Loop:
@@ -123,6 +133,24 @@ func (p *Parser) parseForEachStatement() ast.Statement {
     defer func() { p.isLoop = false }()
 
     value := p.expect(tokentype.Identifier, "Error: Expected identifier in for each statement").Value
+    if p.at().Type == tokentype.Comma {
+        key := value
+        p.eat()
+        val := p.expect(tokentype.Identifier, "Error: Expected identifier in for each statement").Value
+        p.expect(tokentype.In, "Error: Expected in after identifier in for each statement")
+        obj := p.parseExpression()
+
+        p.expect(tokentype.LSquirly, "Error: Expected { after for each statement")
+
+        var body []ast.Statement
+        for p.at().Type != tokentype.RSquirly {
+            body = append(body, p.parseStatement())
+        }
+
+        p.expect(tokentype.RSquirly, "Error: Expected } after for each statement")
+
+        return &ast.ForEachStatement{Key: key, Value: val, Variable: "", Collection: obj, Body: body}
+    }
     p.expect(tokentype.In, "Error: Expected in after identifier in for each statement")
     array := p.parseExpression()
 
@@ -135,7 +163,7 @@ func (p *Parser) parseForEachStatement() ast.Statement {
 
     p.expect(tokentype.RSquirly, "Error: Expected } after for each statement")
 
-    return &ast.ForEachStatement{Variable: value, Collection: array, Body: body}
+    return &ast.ForEachStatement{Variable: value, Key: "", Value: "", Collection: array, Body: body}
 }
 
 func (p *Parser) parseLoopStatement() ast.Statement {
@@ -334,6 +362,11 @@ func (p *Parser) parseFunctionDeclaration() ast.Statement {
     }
 }
 
+func (p *Parser) parseContinueStatement() ast.Statement {
+    p.eat()
+    return &ast.ContinueStatement{}
+}
+
 func (p *Parser) parseBreakStatement() ast.Statement {
     p.eat()
     return &ast.BreakStatement{}
@@ -362,8 +395,6 @@ var Types = map[string]ast.VariableType{
     "any":    ast.AnyType,
 }
 
-// var UserTypes = map[string]ast.Expression{}
-
 func (p *Parser) parseType() (ast.VariableType, error) {
     if p.at().Type == tokentype.Identifier {
         if t, ok := Types[p.at().Value]; ok {
@@ -374,23 +405,6 @@ func (p *Parser) parseType() (ast.VariableType, error) {
 
     return ast.VariableType(""), fmt.Errorf("Error: Expected type")
 }
-
-// func (p *Parser) parseTypeDeclaration() ast.Statement {
-//     p.eat()
-//     identifier := p.expect(tokentype.Identifier, "Error: Expected identifier name after type keyword").Value
-//     p.expect(tokentype.Equals, "Error: Expected = after type name")
-//
-//     var expressionType ast.Expression = nil
-//
-//     expressionType = p.parseExpression()
-//
-//     UserTypes[identifier] = expressionType
-//
-//     return &ast.TypeDeclaration{
-//         Name: identifier,
-//         Type: expressionType,
-//     }
-// }
 
 func (p *Parser) parseVariableDeclaration() ast.Statement {
     isConstant := p.eat().Type == tokentype.Constant
@@ -570,27 +584,49 @@ func (p *Parser) parseObjectExpression() ast.Expression {
     properties := []ast.Property{}
 
     for p.notEndOfFile() && p.at().Type != tokentype.RSquirly {
-        key := p.expect(tokentype.Identifier, "Expected identifier as object key").Value
+        if p.at().Type == tokentype.Integer {
+            v := p.parsePrimaryExpression()
+            key := v.(*ast.NumericIntegerLiteral)
+            p.expect(tokentype.Colon, "Error: Expected : after object key")
+            value := p.parseExpression()
+            properties = append(properties, ast.Property{
+                Key:   strconv.Itoa(int(key.Value)),
+                Value: value,
+            })
+        } else if p.at().Type == tokentype.Float {
+            fmt.Fprintln(os.Stderr, "Error: Floats are not allowed as object keys")
+            os.Exit(0)
+        } else if p.at().Type == tokentype.String {
+            v := p.parsePrimaryExpression()
+            key := v.(*ast.StringLiteral)
+            p.expect(tokentype.Colon, "Error: Expected : after object key")
+            value := p.parseExpression()
+            properties = append(properties, ast.Property{
+                Key:   key.Value,
+                Value: value,
+            })
+        } else if p.at().Type == tokentype.Identifier {
+            key := p.expect(tokentype.Identifier, "Error: Expected identifier as object key").Value
+            if p.at().Type == tokentype.Comma {
+                p.eat()
+                properties = append(properties, ast.Property{
+                    Key: key,
+                })
+                continue
+            } else if p.at().Type == tokentype.RSquirly {
+                properties = append(properties, ast.Property{
+                    Key: key,
+                })
+                continue
+            }
 
-        if p.at().Type == tokentype.Comma {
-            p.eat()
+            p.expect(tokentype.Colon, "Error: Expected : after object key")
+            value := p.parseExpression()
             properties = append(properties, ast.Property{
-                Key: key,
+                Key:   key,
+                Value: value,
             })
-            continue
-        } else if p.at().Type == tokentype.RSquirly {
-            properties = append(properties, ast.Property{
-                Key: key,
-            })
-            continue
         }
-
-        p.expect(tokentype.Colon, "Error: Expected : after object key")
-        value := p.parseExpression()
-        properties = append(properties, ast.Property{
-            Key:   key,
-            Value: value,
-        })
 
         if p.at().Type != tokentype.RSquirly {
             p.expect(tokentype.Comma, "Expected , after object property")

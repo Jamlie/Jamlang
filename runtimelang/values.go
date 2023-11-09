@@ -26,6 +26,7 @@ const (
     NativeFunction ValueType = "native_function"
     Function       ValueType = "function"
     Break          ValueType = "break"
+    Continue       ValueType = "continue"
     Class          ValueType = "class"
     File           ValueType = "file"
     Type           ValueType = "type"
@@ -791,6 +792,32 @@ func (v BreakType) Clone() RuntimeValue {
 }
 
 func (v BreakType) VarType() ast.VariableType {
+    return ast.AnyType
+}
+
+type ContinueType struct{}
+
+func (v ContinueType) Equals(other RuntimeValue) bool {
+    return false
+}
+
+func (v ContinueType) Type() ValueType {
+    return Continue
+}
+
+func (v ContinueType) Get() any {
+    return nil
+}
+
+func (v ContinueType) ToString() string {
+    return "continue"
+}
+
+func (v ContinueType) Clone() RuntimeValue {
+    return v
+}
+
+func (v ContinueType) VarType() ast.VariableType {
     return ast.AnyType
 }
 

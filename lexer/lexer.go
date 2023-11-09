@@ -14,7 +14,6 @@ type Token struct {
 }
 
 var Keywords map[string]tokentype.TokenType = map[string]tokentype.TokenType{
-    "var": tokentype.Var,
     "let": tokentype.Let,
     "const": tokentype.Constant,
     "fn": tokentype.Function,
@@ -28,12 +27,12 @@ var Keywords map[string]tokentype.TokenType = map[string]tokentype.TokenType{
     "for": tokentype.For,
     "in": tokentype.In,
     "break": tokentype.Break,
+    "continue": tokentype.Continue,
     "not": tokentype.LogicalOperator,
     "and": tokentype.LogicalOperator,
     "or": tokentype.LogicalOperator,
     "import": tokentype.Import,
     "class": tokentype.Class,
-    "type": tokentype.Type,
 }
 
 

@@ -19,6 +19,7 @@ const (
     FunctionDeclarationType NodeType = "FunctionDeclaration"
     ReturnStatementType NodeType = "ReturnStatement"
     BreakStatementType NodeType = "BreakStatement"
+    ContinueStatementType NodeType = "ContinueStatement"
     ImportStatementType NodeType = "ImportStatement"
     ClassDeclarationType NodeType = "ClassDeclaration"
     CommentType NodeType = "Comment"
@@ -177,6 +178,16 @@ func (b *BreakStatement) ToString() string {
     return "break"
 }
 
+type ContinueStatement struct {}
+
+func (c *ContinueStatement) Kind() NodeType {
+    return ContinueStatementType
+}
+
+func (c *ContinueStatement) ToString() string {
+    return "continue"
+}
+
 type ImportStatement struct {
     Path string
 }
@@ -291,6 +302,8 @@ func (l *LoopStatement) ToString() string {
 
 type ForEachStatement struct {
     Variable string
+    Key string
+    Value string
     Collection Expression
     Body []Statement
 }

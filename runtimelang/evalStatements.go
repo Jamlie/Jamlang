@@ -19,6 +19,10 @@ func EvaluateBreakStatement(statement ast.BreakStatement, env Environment) Runti
     return &BreakType{}
 }
 
+func EvaluateContinueStatement(statement ast.ContinueStatement, env Environment) RuntimeValue {
+    return &ContinueType{}
+}
+
 func EvaluateReturnStatement(statement ast.ReturnStatement, env Environment) RuntimeValue {
     returnValue, _ := Evaluate(statement.Value, env)
     return returnValue
