@@ -5,6 +5,7 @@ import (
     "fmt"
     "os"
     "strconv"
+    "strings"
     "time"
 
     "github.com/Jamlie/Jamlang/parser"
@@ -73,6 +74,7 @@ func jamlangInput(args []RuntimeValue, environment Environment) RuntimeValue {
     fmt.Print(args[0].Get())
     scanner := bufio.NewReader(os.Stdin)
     input, err := scanner.ReadString('\n')
+    input = strings.Trim(input, "\n")
     if err != nil {
         fmt.Fprintln(os.Stderr, "Error: reading input")
         os.Exit(0)
@@ -334,7 +336,9 @@ func jamlangToInt8(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
     }
 
-    intString := args[0].ToString()
+    getInt := args[0].Get()
+    intString := getInt.(string)
+    intString = strings.Trim(intString, "\r")
 
     intInt, err := strconv.ParseInt(intString, 10, 8)
     if err != nil {
@@ -380,7 +384,9 @@ func jamlangToInt16(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
     }
 
-    intString := args[0].ToString()
+    getInt := args[0].Get()
+    intString := getInt.(string)
+    intString = strings.Trim(intString, "\r")
 
     intInt, err := strconv.ParseInt(intString, 10, 16)
     if err != nil {
@@ -426,7 +432,9 @@ func jamlangToInt32(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
     }
 
-    intString := args[0].ToString()
+    getInt := args[0].Get()
+    intString := getInt.(string)
+    intString = strings.Trim(intString, "\r")
 
     intInt, err := strconv.ParseInt(intString, 10, 32)
     if err != nil {
@@ -473,7 +481,9 @@ func jamlangToInt64(args []RuntimeValue, environment Environment) RuntimeValue {
         os.Exit(0)
     }
 
-    intString := args[0].ToString()
+    getInt := args[0].Get()
+    intString := getInt.(string)
+    intString = strings.Trim(intString, "\r")
 
     intInt, err := strconv.ParseInt(intString, 10, 64)
     if err != nil {
@@ -519,7 +529,9 @@ func jamlangToFloat32(args []RuntimeValue, environment Environment) RuntimeValue
         os.Exit(0)
     }
 
-    floatString := args[0].ToString()
+    getFloat := args[0].Get()
+    floatString := getFloat.(string)
+    floatString = strings.Trim(floatString, "\r")
 
     floatFloat, err := strconv.ParseFloat(floatString, 32)
     if err != nil {
@@ -565,7 +577,9 @@ func jamlangToFloat64(args []RuntimeValue, environment Environment) RuntimeValue
         os.Exit(0)
     }
 
-    floatString := args[0].ToString()
+    getFloat := args[0].Get()
+    floatString := getFloat.(string)
+    floatString = strings.Trim(floatString, "\r")
 
     floatFloat, err := strconv.ParseFloat(floatString, 64)
     if err != nil {

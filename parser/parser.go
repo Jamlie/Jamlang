@@ -858,7 +858,7 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
     case tokentype.Function:
         return p.parseFunctionDeclaration()
     default:
-        fmt.Fprintln(os.Stderr, "Unexpected token found: ", p.at())
+        fmt.Fprintln(os.Stderr, "Error: Unexpected token found:", p.at().Value)
         os.Exit(0)
         return nil
     }

@@ -690,4 +690,3 @@ func internal_I64RightShift(lhs Int64Value, rhs RuntimeValue) RuntimeValue {
     return nil
 }
 
-
