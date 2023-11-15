@@ -1,4 +1,2 @@
-let i: i32 = 0
-for let x = 0; true; ++i {
-    println(i)
+if "" {
 }

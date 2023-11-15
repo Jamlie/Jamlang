@@ -1066,12 +1066,12 @@ func jamlangEval(args []RuntimeValue, environment Environment) RuntimeValue {
 
 func jamlangOpen(args []RuntimeValue, environment Environment) RuntimeValue {
     if len(args) != 1 {
-        fmt.Fprintln(os.Stderr, "open takes 1 argument")
+        fmt.Fprintln(os.Stderr, "Error: open takes 1 argument")
         os.Exit(0)
     }
 
     if args[0].Type() != String {
-        fmt.Fprintln(os.Stderr, "open takes a string")
+        fmt.Fprintln(os.Stderr, "Error: open takes a string")
         os.Exit(0)
     }
 
@@ -1079,66 +1079,74 @@ func jamlangOpen(args []RuntimeValue, environment Environment) RuntimeValue {
 
     file, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
     if err != nil {
-        fmt.Fprintln(os.Stderr, "Error opening file")
+        fmt.Fprintln(os.Stderr, "Error: couldn't open file")
         os.Exit(0)
     }
 
-    return MakeFileValue(file.Name(), file)
+    var properties = make(map[string]RuntimeValue)
+    properties["close"] = jamlangClose(file)
+    properties["name"] = MakeStringValue(file.Name())
+    properties["file"] = MakeFileValue(file.Name(), file)
+    properties["append"] = jamlangAppend(file)
+    properties["read"] = jamlangRead(&file)
+    
+    return MakeObjectValue(properties)
 }
 
-func jamlangClose(args []RuntimeValue, environment Environment) RuntimeValue {
-    if len(args) != 1 {
-        fmt.Fprintln(os.Stderr, "close takes 1 argument")
-        os.Exit(0)
-    }
+func jamlangClose(file *os.File) RuntimeValue {
+    return MakeNativeFunction(func(args []RuntimeValue, environment Environment) RuntimeValue {
+        if len(args) != 0 {
+            fmt.Fprintln(os.Stderr, "Error: close doesn't take any argument")
+            os.Exit(0)
+        }
 
-    if args[0].Type() != "file" {
-        fmt.Fprintln(os.Stderr, "close takes a file")
-        os.Exit(0)
-    }
-
-    if args[0].(FileValue).IsClosed {
-        fmt.Fprintln(os.Stderr, "File is already closed")
-        os.Exit(0)
-    }
-
-    f, _ := args[0].(FileValue)
-    f.IsClosed = true
-    args[0].(FileValue).File.Close()
-    f.File.Close()
-    return MakeNullValue()
+        err := file.Close()
+        if err != nil {
+            fmt.Fprintln(os.Stderr, "Error: couldn't close file")
+            os.Exit(0)
+        }
+        return MakeNullValue()
+    }, "close")
 }
 
-func jamlangWrite(args []RuntimeValue, environment Environment) RuntimeValue {
-    if len(args) != 2 {
-        fmt.Fprintln(os.Stderr, "write takes 2 arguments")
-        os.Exit(0)
-    }
+func jamlangAppend(file *os.File) RuntimeValue {
+    return MakeNativeFunction(func(args []RuntimeValue, environment Environment) RuntimeValue {
+        if len(args) != 1 {
+            fmt.Fprintln(os.Stderr, "Error: write takes 1 argument")
+            os.Exit(0)
+        }
 
-    if args[0].Type() != "file" {
-        fmt.Fprintln(os.Stderr, "write takes a file")
-        os.Exit(0)
-    }
+        if args[0].Type() != String {
+            fmt.Fprintln(os.Stderr, "Error: write takes a string")
+            os.Exit(0)
+        }
 
-    if args[0].(FileValue).IsClosed {
-        fmt.Fprintln(os.Stderr, "File is closed")
-        os.Exit(0)
-    }
-
-    if args[1].Type() != String {
-        fmt.Fprintln(os.Stderr, "write takes a string")
-        os.Exit(0)
-    }
-
-    file := ToGoFileValue(args[0].(FileValue))
-
-    file.Truncate(0)
-    file.Seek(0, 0)
-
-    file.WriteString(args[1].(StringValue).ToString())
-
-    return MakeNullValue()
+        _, err := file.WriteString(args[0].(StringValue).Get().(string))
+        if err != nil {
+            fmt.Fprintln(os.Stderr, "Error: couldn't write to file")
+            os.Exit(0)
+        }
+        return MakeNullValue()
+    }, "append")
 }
+
+func jamlangRead(file **os.File) RuntimeValue {
+    return MakeNativeFunction(func(args []RuntimeValue, environment Environment) RuntimeValue {
+        if len(args) != 0 {
+            fmt.Fprintln(os.Stderr, "Error: read doesn't take any argument")
+            os.Exit(0)
+        }
+
+        reader := bufio.NewReader(*file)
+        line, err := reader.ReadString('\n')
+        if err != nil {
+            fmt.Fprintln(os.Stderr, "Error: couldn't read from file")
+            os.Exit(0)
+        }
+        return MakeStringValue(line)
+    }, "read")
+}
+
 
 func jamlangObjectKeys(args []RuntimeValue, environment Environment) RuntimeValue {
     if len(args) != 1 {
@@ -1152,7 +1160,7 @@ func jamlangObjectKeys(args []RuntimeValue, environment Environment) RuntimeValu
     }
 
     keys := make([]RuntimeValue, 0)
-    for key, _ := range args[0].(ObjectValue).Properties {
+    for key := range args[0].(ObjectValue).Properties {
         keys = append(keys, MakeStringValue(key))
     }
 
