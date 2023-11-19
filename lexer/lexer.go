@@ -1,44 +1,44 @@
 package lexer
 
 import (
-	"strings"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/Jamlie/Jamlang/internal"
 	"github.com/Jamlie/Jamlang/tokentype"
 )
 
 type Token struct {
-	Type tokentype.TokenType
+	Type  tokentype.TokenType
 	Value string
 }
 
 var Keywords map[string]tokentype.TokenType = map[string]tokentype.TokenType{
-	"let": tokentype.Let,
-	"const": tokentype.Constant,
-	"fn": tokentype.Function,
-	"return": tokentype.Return,
-	"if": tokentype.If,
-	"elseif": tokentype.ElseIf,
-	"else": tokentype.Else,
-	"while": tokentype.While,
-	"loop": tokentype.Loop,
+	"let":     tokentype.Let,
+	"const":   tokentype.Constant,
+	"fn":      tokentype.Function,
+	"return":  tokentype.Return,
+	"if":      tokentype.If,
+	"elseif":  tokentype.ElseIf,
+	"else":    tokentype.Else,
+	"while":   tokentype.While,
+	"loop":    tokentype.Loop,
 	"foreach": tokentype.ForEach,
-	"for": tokentype.For,
-	"in": tokentype.In,
-	"break": tokentype.Break,
-	"not": tokentype.LogicalOperator,
-	"and": tokentype.LogicalOperator,
-	"or": tokentype.LogicalOperator,
-	"import": tokentype.Import,
-	"class": tokentype.Class,
+	"for":     tokentype.For,
+	"in":      tokentype.In,
+	"break":   tokentype.Break,
+	"not":     tokentype.LogicalOperator,
+	"and":     tokentype.LogicalOperator,
+	"or":      tokentype.LogicalOperator,
+	"import":  tokentype.Import,
+	"class":   tokentype.Class,
 }
 
 func createToken(value string, tokenType tokentype.TokenType) Token {
 	return Token{
-		Type: tokenType,
+		Type:  tokenType,
 		Value: value,
 	}
 }
@@ -68,14 +68,14 @@ func Tokenize(sourceCode string) []Token {
 	for len(src) > 0 {
 		if src[0] == "(" {
 			tokens = append(tokens, createToken(src[0], tokentype.OpenParen))
-			src = src[1:] 
+			src = src[1:]
 		} else if src[0] == ")" {
 			tokens = append(tokens, createToken(src[0], tokentype.CloseParen))
 			src = src[1:]
-		}  else if src[0] == "{" {
+		} else if src[0] == "{" {
 			tokens = append(tokens, createToken(src[0], tokentype.LSquirly))
 			src = src[1:]
-		}  else if src[0] == "}" {
+		} else if src[0] == "}" {
 			tokens = append(tokens, createToken(src[0], tokentype.RSquirly))
 			src = src[1:]
 		} else if src[0] == "[" {
@@ -258,4 +258,3 @@ func Tokenize(sourceCode string) []Token {
 	tokens = append(tokens, createToken("EndOfFile", tokentype.EndOfFile))
 	return tokens
 }
-

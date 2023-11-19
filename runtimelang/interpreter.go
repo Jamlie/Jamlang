@@ -25,7 +25,7 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
 		}
 		return Float64Value{astNode.(*ast.NumericFloatLiteral).Value}, nil
 	case ast.NumericIntegerLiteralType:
-		if (isInt8(float64(astNode.(*ast.NumericIntegerLiteral).Value)) || isInt16(float64(astNode.(*ast.NumericIntegerLiteral).Value)) || isInt32(float64(astNode.(*ast.NumericIntegerLiteral).Value))) {
+		if isInt8(float64(astNode.(*ast.NumericIntegerLiteral).Value)) || isInt16(float64(astNode.(*ast.NumericIntegerLiteral).Value)) || isInt32(float64(astNode.(*ast.NumericIntegerLiteral).Value)) {
 			return Int32Value{int32(astNode.(*ast.NumericIntegerLiteral).Value)}, nil
 		}
 		if isInt64(float64(astNode.(*ast.NumericIntegerLiteral).Value)) {
@@ -85,6 +85,14 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
 			return nil, nil
 		}
 		return EvaluateArrayExpression(*arrayLiteral, env), nil
+	case ast.TupleLiteralType:
+		tupleLiteral, ok := astNode.(*ast.TupleLiteral)
+		if !ok {
+			fmt.Fprintf(os.Stderr, "Error on line %d: Expected TupleLiteral, got %T\n", internal.Line(), astNode)
+			os.Exit(0)
+			return nil, nil
+		}
+		return EvaluateTupleExpression(*tupleLiteral, env), nil
 	case ast.MemberExpressionType:
 		memberExpression, ok := astNode.(*ast.MemberExpression)
 		if !ok {
@@ -312,5 +320,5 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
 		fmt.Fprintf(os.Stderr, "Error on line %d: Unknown AST node type %T\n", internal.Line(), astNode)
 		os.Exit(0)
 		return nil, nil
-}
+	}
 }

@@ -6,578 +6,598 @@ import "bytes"
 type NodeType string
 
 const (
-    ProgramType NodeType = "Program"
-    VariableDeclarationType NodeType = "VariableDeclaration"
-    AssignmentExpressionType NodeType = "AssignmentExpression"
-    MemberExpressionType NodeType = "MemberExpression"
-    CallExpressionType NodeType = "CallExpression"
-    ConditionalStatementType NodeType = "ConditionalStatement"
-    WhileStatementType NodeType = "WhileStatement"
-    LoopStatementType NodeType = "LoopStatement"
-    ForEachStatementType NodeType = "ForEachStatement"
-    ForStatementType NodeType = "ForStatement"
-    FunctionDeclarationType NodeType = "FunctionDeclaration"
-    ReturnStatementType NodeType = "ReturnStatement"
-    BreakStatementType NodeType = "BreakStatement"
-    ContinueStatementType NodeType = "ContinueStatement"
-    ImportStatementType NodeType = "ImportStatement"
-    ClassDeclarationType NodeType = "ClassDeclaration"
-    CommentType NodeType = "Comment"
+	ProgramType              NodeType = "Program"
+	VariableDeclarationType  NodeType = "VariableDeclaration"
+	AssignmentExpressionType NodeType = "AssignmentExpression"
+	MemberExpressionType     NodeType = "MemberExpression"
+	CallExpressionType       NodeType = "CallExpression"
+	ConditionalStatementType NodeType = "ConditionalStatement"
+	WhileStatementType       NodeType = "WhileStatement"
+	LoopStatementType        NodeType = "LoopStatement"
+	ForEachStatementType     NodeType = "ForEachStatement"
+	ForStatementType         NodeType = "ForStatement"
+	FunctionDeclarationType  NodeType = "FunctionDeclaration"
+	ReturnStatementType      NodeType = "ReturnStatement"
+	BreakStatementType       NodeType = "BreakStatement"
+	ContinueStatementType    NodeType = "ContinueStatement"
+	ImportStatementType      NodeType = "ImportStatement"
+	ClassDeclarationType     NodeType = "ClassDeclaration"
+	CommentType              NodeType = "Comment"
 
-
-    PropertyType NodeType = "Property"
-    ObjectLiteralType NodeType = "ObjectLiteral"
-    ArrayLiteralType NodeType = "ArrayLiteral"
-    NumericLiteralType NodeType = "NumericLiteral"
-    NumericIntegerLiteralType NodeType = "NumericIntegerLiteral"
-    NumericFloatLiteralType NodeType = "NumericFloatLiteral"
-    IdentifierType NodeType = "Identifier"
-    BinaryExpressionType NodeType = "BinaryExpression"
-    UnaryExpressionType NodeType = "UnaryExpression"
-    LogicalExpressionType NodeType = "LogicalExpression"
-    StringLiteralType NodeType = "StringLiteral"
-    NullLiteralType NodeType = "NullLiteral"
-    TypeDeclarationType NodeType = "TypeDeclaration"
+	PropertyType              NodeType = "Property"
+	ObjectLiteralType         NodeType = "ObjectLiteral"
+	ArrayLiteralType          NodeType = "ArrayLiteral"
+	TupleLiteralType          NodeType = "tupleLiteral"
+	NumericLiteralType        NodeType = "NumericLiteral"
+	NumericIntegerLiteralType NodeType = "NumericIntegerLiteral"
+	NumericFloatLiteralType   NodeType = "NumericFloatLiteral"
+	IdentifierType            NodeType = "Identifier"
+	BinaryExpressionType      NodeType = "BinaryExpression"
+	UnaryExpressionType       NodeType = "UnaryExpression"
+	LogicalExpressionType     NodeType = "LogicalExpression"
+	StringLiteralType         NodeType = "StringLiteral"
+	NullLiteralType           NodeType = "NullLiteral"
+	TypeDeclarationType       NodeType = "TypeDeclaration"
 )
 
-
 type Statement interface {
-    Kind() NodeType
-    ToString() string
+	Kind() NodeType
+	ToString() string
 }
 
 type Program struct {
-    Body []Statement
+	Body []Statement
 }
 
 func (p *Program) Kind() NodeType {
-    return ProgramType
+	return ProgramType
 }
 
 func (p *Program) ToString() string {
-    s := ""
-    for _, statement := range p.Body {
-        s += statement.ToString()
-    }
+	s := ""
+	for _, statement := range p.Body {
+		s += statement.ToString()
+	}
 
-    return s
+	return s
 }
 
 type VariableType string
+
 const (
-    StringType VariableType = "string"
-    Int8Type VariableType = "i8"
-    Int16Type VariableType = "i16"
-    Int32Type VariableType = "i32"
-    Int64Type VariableType = "i64"
-    Float32Type VariableType = "f32"
-    Float64Type VariableType = "f64"
-    BoolType VariableType = "bool"
-    ObjectType VariableType = "object"
-    ArrayType VariableType = "array"
-    TupleType VariableType = "tuple"
-    NullType VariableType = "null"
-    FunctionType VariableType = "function"
-    FileType VariableType = "file"
-    AnyType VariableType = "any"
+	StringType   VariableType = "string"
+	Int8Type     VariableType = "i8"
+	Int16Type    VariableType = "i16"
+	Int32Type    VariableType = "i32"
+	Int64Type    VariableType = "i64"
+	Float32Type  VariableType = "f32"
+	Float64Type  VariableType = "f64"
+	BoolType     VariableType = "bool"
+	ObjectType   VariableType = "object"
+	ArrayType    VariableType = "array"
+	TupleType    VariableType = "tuple"
+	NullType     VariableType = "null"
+	FunctionType VariableType = "function"
+	FileType     VariableType = "file"
+	AnyType      VariableType = "any"
 )
 
 type VariableDeclaration struct {
-    Constant bool
-    Identifier string
-    Value Expression
-    Type VariableType
-    IsUserDefinedType bool
-    UserDefinedType Expression
+	Constant          bool
+	Identifier        string
+	Value             Expression
+	Type              VariableType
+	IsUserDefinedType bool
+	UserDefinedType   Expression
 }
 
 func (v *VariableDeclaration) Kind() NodeType {
-    return VariableDeclarationType
+	return VariableDeclarationType
 }
 
 func (v *VariableDeclaration) ToString() string {
-    s := ""
-    if v.Constant {
-        s += "const "
-    } else {
-        s += "let "
-    }
+	s := ""
+	if v.Constant {
+		s += "const "
+	} else {
+		s += "let "
+	}
 
-    s += v.Identifier + " = " + v.Value.ToString() + ";\n"
+	s += v.Identifier + " = " + v.Value.ToString() + ";\n"
 
-    return s
+	return s
 }
 
 type FunctionDeclaration struct {
-    Parameters []string
-    Name string
-    Body []Statement
-    ReturnType VariableType
-    IsAnonymous bool
+	Parameters  []string
+	Name        string
+	Body        []Statement
+	ReturnType  VariableType
+	IsAnonymous bool
 }
 
 func (f *FunctionDeclaration) Kind() NodeType {
-    return FunctionDeclarationType
+	return FunctionDeclarationType
 }
 
 func (f *FunctionDeclaration) ToString() string {
-    var s string
-    if f.IsAnonymous {
-        s = "function("
-    } else {
-        s = "function " + f.Name + "("
-    }
-    for i, param := range f.Parameters {
-        if i > 0 {
-            s += ", "
-        }
-        s += param
-    }
-    s += ") {\n"
+	var s string
+	if f.IsAnonymous {
+		s = "function("
+	} else {
+		s = "function " + f.Name + "("
+	}
+	for i, param := range f.Parameters {
+		if i > 0 {
+			s += ", "
+		}
+		s += param
+	}
+	s += ") {\n"
 
-    for _, statement := range f.Body {
-        s += statement.ToString()
-    }
+	for _, statement := range f.Body {
+		s += statement.ToString()
+	}
 
-    s += "}\n"
+	s += "}\n"
 
-    return s
+	return s
 }
 
 func (f *FunctionDeclaration) CloneBody() []Statement {
-    body := make([]Statement, len(f.Body))
-    copy(body, f.Body)
-    return body
+	body := make([]Statement, len(f.Body))
+	copy(body, f.Body)
+	return body
 }
 
 func (f *FunctionDeclaration) CloneParameters() []string {
-    params := make([]string, len(f.Parameters))
-    copy(params, f.Parameters)
-    return params
+	params := make([]string, len(f.Parameters))
+	copy(params, f.Parameters)
+	return params
 }
 
 type ReturnStatement struct {
-    Value Expression
+	Value Expression
 }
 
 func (r *ReturnStatement) Kind() NodeType {
-    return ReturnStatementType
+	return ReturnStatementType
 }
 
 func (r *ReturnStatement) ToString() string {
-    return "return " + r.Value.ToString()
+	return "return " + r.Value.ToString()
 }
 
-type BreakStatement struct {}
+type BreakStatement struct{}
 
 func (b *BreakStatement) Kind() NodeType {
-    return BreakStatementType
+	return BreakStatementType
 }
 
 func (b *BreakStatement) ToString() string {
-    return "break"
+	return "break"
 }
 
-type ContinueStatement struct {}
+type ContinueStatement struct{}
 
 func (c *ContinueStatement) Kind() NodeType {
-    return ContinueStatementType
+	return ContinueStatementType
 }
 
 func (c *ContinueStatement) ToString() string {
-    return "continue"
+	return "continue"
 }
 
 type ImportStatement struct {
-    Path string
+	Path string
 }
 
 func (i *ImportStatement) Kind() NodeType {
-    return ImportStatementType
+	return ImportStatementType
 }
 
 func (i *ImportStatement) ToString() string {
-    return "import " + i.Path
+	return "import " + i.Path
 }
 
 type ClassDeclaration struct {
-    Name string
-    Body []Statement
+	Name string
+	Body []Statement
 }
 
 func (c *ClassDeclaration) Kind() NodeType {
-    return ClassDeclarationType
+	return ClassDeclarationType
 }
 
 func (c *ClassDeclaration) ToString() string {
-    s := "class " + c.Name + " {\n"
+	s := "class " + c.Name + " {\n"
 
-    for _, statement := range c.Body {
-        s += statement.ToString()
-    }
+	for _, statement := range c.Body {
+		s += statement.ToString()
+	}
 
-    s += "}\n"
+	s += "}\n"
 
-    return s
+	return s
 }
 
 type Comment struct {
-    Text string
+	Text string
 }
 
 func (c *Comment) Kind() NodeType {
-    return CommentType
+	return CommentType
 }
 
 func (c *Comment) ToString() string {
-    return "/*" + c.Text + "*/"
+	return "/*" + c.Text + "*/"
 }
 
 type Expression interface {
-    Statement
+	Statement
 }
 
 type ConditionalStatement struct {
-    Condition Expression
-    Body []Statement
-    ElseIfConditions []Expression
-    ElseIfBodies [][]Statement
-    Alternate []Statement
+	Condition        Expression
+	Body             []Statement
+	ElseIfConditions []Expression
+	ElseIfBodies     [][]Statement
+	Alternate        []Statement
 }
 
 func (c *ConditionalStatement) Kind() NodeType {
-    return ConditionalStatementType
+	return ConditionalStatementType
 }
 
 func (c *ConditionalStatement) ToString() string {
-    s := "if (" + c.Condition.ToString() + ") {\n"
-    for _, statement := range c.Body {
-        s += statement.ToString()
-    }
-    s += "} else {\n"
-    for _, statement := range c.Alternate {
-        s += statement.ToString()
-    }
-    s += "}\n"
+	s := "if (" + c.Condition.ToString() + ") {\n"
+	for _, statement := range c.Body {
+		s += statement.ToString()
+	}
+	s += "} else {\n"
+	for _, statement := range c.Alternate {
+		s += statement.ToString()
+	}
+	s += "}\n"
 
-    return s
+	return s
 }
 
 type WhileStatement struct {
-    Condition Expression
-    Body []Statement
+	Condition Expression
+	Body      []Statement
 }
 
 func (w *WhileStatement) Kind() NodeType {
-    return WhileStatementType
+	return WhileStatementType
 }
 
 func (w *WhileStatement) ToString() string {
-    s := "while (" + w.Condition.ToString() + ") {\n"
-    for _, statement := range w.Body {
-        s += statement.ToString()
-    }
-    s += "}\n"
+	s := "while (" + w.Condition.ToString() + ") {\n"
+	for _, statement := range w.Body {
+		s += statement.ToString()
+	}
+	s += "}\n"
 
-    return s
+	return s
 }
 
 type LoopStatement struct {
-    Body []Statement
+	Body []Statement
 }
 
 func (l *LoopStatement) Kind() NodeType {
-    return LoopStatementType
+	return LoopStatementType
 }
 
 func (l *LoopStatement) ToString() string {
-    s := "loop {\n"
-    for _, statement := range l.Body {
-        s += statement.ToString()
-    }
-    s += "}\n"
+	s := "loop {\n"
+	for _, statement := range l.Body {
+		s += statement.ToString()
+	}
+	s += "}\n"
 
-    return s
+	return s
 }
 
 type ForEachStatement struct {
-    Variable string
-    Key string
-    Value string
-    Collection Expression
-    Body []Statement
+	Variable   string
+	Key        string
+	Value      string
+	Collection Expression
+	Body       []Statement
 }
 
 func (f *ForEachStatement) Kind() NodeType {
-    return ForEachStatementType
+	return ForEachStatementType
 }
 
 func (f *ForEachStatement) ToString() string {
-    s := "foreach (" + f.Variable + " in " + f.Collection.ToString() + ") {\n"
-    for _, statement := range f.Body {
-        s += statement.ToString()
-    }
-    s += "}\n"
+	s := "foreach (" + f.Variable + " in " + f.Collection.ToString() + ") {\n"
+	for _, statement := range f.Body {
+		s += statement.ToString()
+	}
+	s += "}\n"
 
-    return s
+	return s
 }
 
 type ForStatement struct {
-    Init Statement
-    Condition Expression
-    Update Expression
-    Body []Statement
+	Init      Statement
+	Condition Expression
+	Update    Expression
+	Body      []Statement
 }
 
 func (f *ForStatement) Kind() NodeType {
-    return ForStatementType
+	return ForStatementType
 }
 
 func (f *ForStatement) ToString() string {
-    s := "for (" + f.Init.ToString() + "; " + f.Condition.ToString() + "; " + f.Update.ToString() + ") {\n"
-    for _, statement := range f.Body {
-        s += statement.ToString()
-    }
-    s += "}\n"
+	s := "for (" + f.Init.ToString() + "; " + f.Condition.ToString() + "; " + f.Update.ToString() + ") {\n"
+	for _, statement := range f.Body {
+		s += statement.ToString()
+	}
+	s += "}\n"
 
-    return s
+	return s
 }
 
 type AssignmentExpression struct {
-    Assignee Expression
-    Value Expression
+	Assignee Expression
+	Value    Expression
 }
 
 func (a *AssignmentExpression) Kind() NodeType {
-    return AssignmentExpressionType
+	return AssignmentExpressionType
 }
 
 func (a *AssignmentExpression) ToString() string {
-    return a.Assignee.ToString() + " = " + a.Value.ToString()
+	return a.Assignee.ToString() + " = " + a.Value.ToString()
 }
 
 type BinaryExpression struct {
-    Left Expression
-    Right Expression
-    Operator string
+	Left     Expression
+	Right    Expression
+	Operator string
 }
 
 func (b *BinaryExpression) Kind() NodeType {
-    return BinaryExpressionType
+	return BinaryExpressionType
 }
 
 func (b *BinaryExpression) ToString() string {
-    return "(" + b.Left.ToString() + " " + b.Operator + " " + b.Right.ToString() + ")"
+	return "(" + b.Left.ToString() + " " + b.Operator + " " + b.Right.ToString() + ")"
 }
 
 type UnaryExpression struct {
-    Value Expression
-    Operator string
+	Value    Expression
+	Operator string
 }
 
 func (u *UnaryExpression) Kind() NodeType {
-    return UnaryExpressionType
+	return UnaryExpressionType
 }
 
 func (u *UnaryExpression) ToString() string {
-    return u.Operator + u.Value.ToString()
+	return u.Operator + u.Value.ToString()
 }
 
 type LogicalExpression struct {
-    Left Expression
-    Right Expression
-    Operator string
+	Left     Expression
+	Right    Expression
+	Operator string
 }
 
 func (l *LogicalExpression) Kind() NodeType {
-    return LogicalExpressionType
+	return LogicalExpressionType
 }
 
 func (l *LogicalExpression) ToString() string {
-    if l.Operator == "not" {
-        return l.Operator + l.Right.ToString()
-    } else {
-        return "(" + l.Left.ToString() + " " + l.Operator + " " + l.Right.ToString() + ")"
-    }
+	if l.Operator == "not" {
+		return l.Operator + l.Right.ToString()
+	} else {
+		return "(" + l.Left.ToString() + " " + l.Operator + " " + l.Right.ToString() + ")"
+	}
 }
 
 type Identifier struct {
-    Symbol string
-    // VarType VariableType
+	Symbol string
+	// VarType VariableType
 }
 
 func (i *Identifier) Kind() NodeType {
-    return IdentifierType
+	return IdentifierType
 }
 
 func (i *Identifier) ToString() string {
-    return i.Symbol
+	return i.Symbol
 }
 
 type NumericIntegerLiteral struct {
-    Value int64
+	Value int64
 }
 
 func (n *NumericIntegerLiteral) Kind() NodeType {
-    return NumericIntegerLiteralType
+	return NumericIntegerLiteralType
 }
 
 func (n *NumericIntegerLiteral) ToString() string {
-    return strconv.FormatInt(n.Value, 10)
+	return strconv.FormatInt(n.Value, 10)
 }
 
 type NumericFloatLiteral struct {
-    Value float64
+	Value float64
 }
 
 func (n *NumericFloatLiteral) Kind() NodeType {
-    return NumericFloatLiteralType
+	return NumericFloatLiteralType
 }
 
 func (n *NumericFloatLiteral) ToString() string {
-    return strconv.FormatFloat(n.Value, 'f', -1, 64)
+	return strconv.FormatFloat(n.Value, 'f', -1, 64)
 }
 
 type NumericLiteral struct {
-    Value float64
+	Value float64
 }
 
 func (n *NumericLiteral) Kind() NodeType {
-    return NumericLiteralType
+	return NumericLiteralType
 }
 
 func (n *NumericLiteral) ToString() string {
-    return strconv.FormatFloat(n.Value, 'f', -1, 64)
+	return strconv.FormatFloat(n.Value, 'f', -1, 64)
 }
 
 type StringLiteral struct {
-    Value string
+	Value string
 }
 
 func (s *StringLiteral) Kind() NodeType {
-    return StringLiteralType
+	return StringLiteralType
 }
 
 func (s *StringLiteral) ToString() string {
-    return "\"" + s.Value + "\""
+	return "\"" + s.Value + "\""
 }
 
-type NullLiteral struct {}
+type NullLiteral struct{}
 
 func (n *NullLiteral) Kind() NodeType {
-    return NullLiteralType
+	return NullLiteralType
 }
 
 func (n *NullLiteral) ToString() string {
-    return "null"
+	return "null"
 }
 
 type Property struct {
-    Key string
-    Value Expression
+	Key   string
+	Value Expression
 }
 
 func (p *Property) Kind() NodeType {
-    return PropertyType
+	return PropertyType
 }
 
 func (p *Property) ToString() string {
-    return p.Key + ": " + p.Value.ToString()
+	return p.Key + ": " + p.Value.ToString()
 }
 
 type ObjectLiteral struct {
-    Properties []Property
+	Properties []Property
 }
 
 func (o *ObjectLiteral) Kind() NodeType {
-    return ObjectLiteralType
+	return ObjectLiteralType
 }
 
 func (o *ObjectLiteral) ToString() string {
-    var buffer bytes.Buffer
-    buffer.WriteString("{")
-    for i, p := range o.Properties {
-        buffer.WriteString(p.ToString())
-        if i < len(o.Properties) - 1 {
-            buffer.WriteString(", ")
-        }
-    }
-    buffer.WriteString("}")
-    return buffer.String()
+	var buffer bytes.Buffer
+	buffer.WriteString("{")
+	for i, p := range o.Properties {
+		buffer.WriteString(p.ToString())
+		if i < len(o.Properties)-1 {
+			buffer.WriteString(", ")
+		}
+	}
+	buffer.WriteString("}")
+	return buffer.String()
 }
 
 type ArrayLiteral struct {
-    Elements []Expression
+	Elements []Expression
 }
 
 func (a *ArrayLiteral) Kind() NodeType {
-    return ArrayLiteralType
+	return ArrayLiteralType
 }
 
 func (a *ArrayLiteral) ToString() string {
-    var buffer bytes.Buffer
-    buffer.WriteString("[")
-    for i, e := range a.Elements {
-        buffer.WriteString(e.ToString())
-        if i < len(a.Elements) - 1 {
-            buffer.WriteString(", ")
-        }
-    }
-    buffer.WriteString("]")
-    return buffer.String()
+	var buffer bytes.Buffer
+	buffer.WriteString("[")
+	for i, e := range a.Elements {
+		buffer.WriteString(e.ToString())
+		if i < len(a.Elements)-1 {
+			buffer.WriteString(", ")
+		}
+	}
+	buffer.WriteString("]")
+	return buffer.String()
+}
+
+type TupleLiteral struct {
+	Elements []Expression
+}
+
+func (t *TupleLiteral) Kind() NodeType {
+	return TupleLiteralType
+}
+
+func (t *TupleLiteral) ToString() string {
+	var buffer bytes.Buffer
+	buffer.WriteString("(")
+	for i, e := range t.Elements {
+		buffer.WriteString(e.ToString())
+		if i < len(t.Elements)-1 {
+			buffer.WriteString(", ")
+		}
+	}
+	buffer.WriteString(")")
+	return buffer.String()
 }
 
 type CallExpression struct {
-    Args []Expression
-    Caller Expression
+	Args   []Expression
+	Caller Expression
 }
 
 func (c CallExpression) Kind() NodeType {
-    return CallExpressionType
+	return CallExpressionType
 }
 
 func (c CallExpression) ToString() string {
-    var buffer bytes.Buffer
-    buffer.WriteString(c.Caller.ToString())
-    buffer.WriteString("(")
-    for i, arg := range c.Args {
-        buffer.WriteString(arg.ToString())
-        if i < len(c.Args) - 1 {
-            buffer.WriteString(", ")
-        }
-    }
-    buffer.WriteString(")")
-    return buffer.String()
+	var buffer bytes.Buffer
+	buffer.WriteString(c.Caller.ToString())
+	buffer.WriteString("(")
+	for i, arg := range c.Args {
+		buffer.WriteString(arg.ToString())
+		if i < len(c.Args)-1 {
+			buffer.WriteString(", ")
+		}
+	}
+	buffer.WriteString(")")
+	return buffer.String()
 }
 
 type MemberExpression struct {
-    Object Expression
-    Property Expression
-    Computed bool
+	Object   Expression
+	Property Expression
+	Computed bool
 }
 
 func (m *MemberExpression) Kind() NodeType {
-    return MemberExpressionType
+	return MemberExpressionType
 }
 
 func (m *MemberExpression) ToString() string {
-    if m.Computed {
-        return m.Object.ToString() + "[" + m.Property.ToString() + "]"
-    } else {
-        return m.Object.ToString() + "." + m.Property.ToString()
-    }
+	if m.Computed {
+		return m.Object.ToString() + "[" + m.Property.ToString() + "]"
+	} else {
+		return m.Object.ToString() + "." + m.Property.ToString()
+	}
 }
 
 type TypeDeclaration struct {
-    Name string
-    Type Expression
+	Name string
+	Type Expression
 }
 
 func (t *TypeDeclaration) Kind() NodeType {
-    return TypeDeclarationType
+	return TypeDeclarationType
 }
 
 func (t *TypeDeclaration) ToString() string {
-    return t.Name + ": " + t.Type.ToString()
+	return t.Name + ": " + t.Type.ToString()
 }
-

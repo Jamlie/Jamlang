@@ -1,16 +1,16 @@
 package main
 
 import (
-    "github.com/Jamlie/Jamlang/jamlang"
-    "github.com/Jamlie/Jamlang/runtimelang"
+	"github.com/Jamlie/Jamlang/jamlang"
+	"github.com/Jamlie/Jamlang/runtimelang"
 )
 
 var (
-    env = runtimelang.CreateGlobalEnvironment()
+	env = runtimelang.CreateGlobalEnvironment()
 )
 
 func main() {
-    jamlang.CallMain(env)
+	jamlang.CallMain(env)
 }
 
 /*

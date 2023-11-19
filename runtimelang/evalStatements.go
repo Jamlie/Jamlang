@@ -2,12 +2,12 @@ package runtimelang
 
 import (
 	"fmt"
-	"os"
 	"io"
+	"os"
 
 	"github.com/Jamlie/Jamlang/ast"
-	"github.com/Jamlie/Jamlang/parser"
 	"github.com/Jamlie/Jamlang/internal"
+	"github.com/Jamlie/Jamlang/parser"
 )
 
 func EvaluateProgram(program ast.Program, env Environment) RuntimeValue {
@@ -41,7 +41,6 @@ func EvaluateImportStatement(expr ast.ImportStatement, env *Environment) (Runtim
 	if path[0] == '/' {
 		path = path[1:]
 	}
-
 
 	program := parser.ProduceAST(fileString)
 	for _, statement := range program.Body {
@@ -401,7 +400,6 @@ func EvaluateConditionalStatement(expr ast.ConditionalStatement, env *Environmen
 		}
 	}
 
-
 	return MakeNullValue(), nil
 }
 
@@ -426,7 +424,7 @@ func makeValueWithVarType(value RuntimeValue, varType ast.VariableType) RuntimeV
 	switch varType {
 	case ast.Int8Type:
 		if _, ok := value.(IntValue); !ok {
-			fmt.Fprintf(os.Stderr, "Error on line %d: Expected %s, got %s\n", internal.Line(),ast.Int8Type, value.VarType())
+			fmt.Fprintf(os.Stderr, "Error on line %d: Expected %s, got %s\n", internal.Line(), ast.Int8Type, value.VarType())
 			os.Exit(0)
 		}
 		return MakeInt8Value(int8(value.(IntValue).GetInt()))
@@ -438,13 +436,13 @@ func makeValueWithVarType(value RuntimeValue, varType ast.VariableType) RuntimeV
 		return MakeInt16Value(int16(value.(IntValue).GetInt()))
 	case ast.Int32Type:
 		if _, ok := value.(IntValue); !ok {
-			fmt.Fprintf(os.Stderr, "Error on line %d: Expected %s, got %s\n", internal.Line(),ast.Int32Type, value.VarType())
+			fmt.Fprintf(os.Stderr, "Error on line %d: Expected %s, got %s\n", internal.Line(), ast.Int32Type, value.VarType())
 			os.Exit(0)
 		}
 		return MakeInt32Value(int32(value.(IntValue).GetInt()))
 	case ast.Int64Type:
 		if _, ok := value.(IntValue); !ok {
-			fmt.Fprintf(os.Stderr, "Error on line %d: Expected %s, got %s\n", internal.Line(),ast.Int64Type, value.VarType())
+			fmt.Fprintf(os.Stderr, "Error on line %d: Expected %s, got %s\n", internal.Line(), ast.Int64Type, value.VarType())
 			os.Exit(0)
 		}
 		return MakeInt64Value(int64(value.(IntValue).GetInt()))

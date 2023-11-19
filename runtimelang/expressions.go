@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	IsReturnError = fmt.Errorf("Error on line %d: return statement error", internal.Line())
-	IsBreakError = fmt.Errorf("Error on line %d: break statement error", internal.Line())
+	IsReturnError   = fmt.Errorf("Error on line %d: return statement error", internal.Line())
+	IsBreakError    = fmt.Errorf("Error on line %d: break statement error", internal.Line())
 	IsContinueError = fmt.Errorf("Error on line %d: continue statement error", internal.Line())
 )
 
@@ -22,20 +22,20 @@ func EvaluateFunctionDeclaration(expr ast.FunctionDeclaration, env *Environment,
 	}
 	if expr.IsAnonymous {
 		fn = FunctionValue{
-			Body: expr.CloneBody(),
-			Parameters: expr.CloneParameters(),
+			Body:                   expr.CloneBody(),
+			Parameters:             expr.CloneParameters(),
 			DeclarationEnvironment: *env,
-			IsAnonymous: true,
-			ReturnType: returnType,
+			IsAnonymous:            true,
+			ReturnType:             returnType,
 		}
 	} else {
 		fn = FunctionValue{
-			Name: expr.Name,
-			Body: expr.CloneBody(),
-			Parameters: expr.CloneParameters(),
+			Name:                   expr.Name,
+			Body:                   expr.CloneBody(),
+			Parameters:             expr.CloneParameters(),
 			DeclarationEnvironment: *env,
-			IsAnonymous: false,
-			ReturnType: returnType,
+			IsAnonymous:            false,
+			ReturnType:             returnType,
 		}
 
 		env.DeclareVariable(expr.Name, fn, true, ast.FunctionType)
@@ -146,7 +146,7 @@ func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) Runtim
 						fmt.Fprintln(os.Stderr, "Error: Index out of bounds")
 						os.Exit(0)
 					}
-					return obj.(ArrayValue).Values[val + len(obj.(ArrayValue).Values)]
+					return obj.(ArrayValue).Values[val+len(obj.(ArrayValue).Values)]
 				}
 
 				return obj.(ArrayValue).Values[int(val)]
@@ -169,7 +169,7 @@ func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) Runtim
 						fmt.Fprintln(os.Stderr, "Error: Index out of bounds")
 						os.Exit(0)
 					}
-					return obj.(TupleValue).Values[val + len(obj.(TupleValue).Values)]
+					return obj.(TupleValue).Values[val+len(obj.(TupleValue).Values)]
 				}
 
 				return obj.(TupleValue).Values[int(val)]
@@ -189,7 +189,7 @@ func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) Runtim
 					fmt.Fprintln(os.Stderr, "Error: Index out of bounds")
 					os.Exit(0)
 				}
-				return MakeStringValue(string(obj.(StringValue).Value[property.(IntValue).GetInt() + len(obj.(StringValue).Value)]))
+				return MakeStringValue(string(obj.(StringValue).Value[property.(IntValue).GetInt()+len(obj.(StringValue).Value)]))
 			}
 
 			return MakeStringValue(string(obj.(StringValue).Value[property.(IntValue).GetInt()]))
@@ -230,7 +230,7 @@ func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) Runtim
 			case "pushAll":
 				return jamlangArrayPushAll(obj.(ArrayValue).Values)
 			default:
-				fmt.Fprintln(os.Stderr, "Error: Array does not have property " + expr.Property.(*ast.Identifier).Symbol)
+				fmt.Fprintln(os.Stderr, "Error: Array does not have property "+expr.Property.(*ast.Identifier).Symbol)
 				os.Exit(0)
 			}
 		}
@@ -240,7 +240,7 @@ func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) Runtim
 			case "length":
 				return MakeInt64Value(int64(len(obj.(TupleValue).Values)))
 			default:
-				fmt.Fprintln(os.Stderr, "Error: Tuple does not have property " + expr.Property.(*ast.Identifier).Symbol)
+				fmt.Fprintln(os.Stderr, "Error: Tuple does not have property "+expr.Property.(*ast.Identifier).Symbol)
 				os.Exit(0)
 			}
 		}
@@ -290,9 +290,9 @@ func EvaluateMemberExpression(expr ast.MemberExpression, env Environment) Runtim
 			case "rightPad":
 				return jamlangStringRightPad(obj.(StringValue).Value)
 			default:
-				fmt.Fprintln(os.Stderr, "Error: String has no property " + expr.Property.(*ast.Identifier).Symbol)
+				fmt.Fprintln(os.Stderr, "Error: String has no property "+expr.Property.(*ast.Identifier).Symbol)
 				os.Exit(0)
-		}
+			}
 		}
 
 		if _, ok := obj.(ObjectValue); !ok {
@@ -314,6 +314,18 @@ func EvaluateArrayExpression(expr ast.ArrayLiteral, env Environment) RuntimeValu
 	}
 
 	return array
+}
+
+func EvaluateTupleExpression(expr ast.TupleLiteral, env Environment) RuntimeValue {
+	tuple := TupleValue{
+		Values: make([]RuntimeValue, len(expr.Elements)),
+	}
+
+	for i, element := range expr.Elements {
+		tuple.Values[i], _ = Evaluate(element, env)
+	}
+
+	return tuple
 }
 
 func EvaluateObjectExpression(obj ast.ObjectLiteral, env Environment) RuntimeValue {
@@ -369,7 +381,7 @@ func isNumber(value RuntimeValue) bool {
 		return true
 	default:
 		return false
-}
+	}
 }
 
 func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environment) RuntimeValue {
@@ -400,7 +412,7 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
 		} else if rhs.Type() == Null {
 			return EvaluateI8BinaryExpression(lhs.(Int8Value), rhs, binaryExpression.Operator)
 		} else {
-			fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on " + lhs.Type() + " and " + rhs.Type() + ", you need to cast one of them to the other type")
+			fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on "+lhs.Type()+" and "+rhs.Type()+", you need to cast one of them to the other type")
 			os.Exit(0)
 		}
 	case I16:
@@ -414,7 +426,7 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
 		} else if rhs.Type() == Null {
 			return EvaluateI16BinaryExpression(lhs.(Int16Value), rhs, binaryExpression.Operator)
 		} else {
-			fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on " + lhs.Type() + " and " + rhs.Type() + ", you need to cast one of them to the other type")
+			fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on "+lhs.Type()+" and "+rhs.Type()+", you need to cast one of them to the other type")
 			os.Exit(0)
 		}
 	case I32:
@@ -428,7 +440,7 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
 		} else if rhs.Type() == Null {
 			return EvaluateI32BinaryExpression(lhs.(Int32Value), rhs, binaryExpression.Operator)
 		} else {
-			fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on " + lhs.Type() + " and " + rhs.Type() + ", you need to cast one of them to the other type")
+			fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on "+lhs.Type()+" and "+rhs.Type()+", you need to cast one of them to the other type")
 			os.Exit(0)
 		}
 	case I64:
@@ -442,7 +454,7 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
 		} else if rhs.Type() == Null {
 			return EvaluateI64BinaryExpression(lhs.(Int64Value), rhs, binaryExpression.Operator)
 		} else {
-			fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on " + lhs.Type() + " and " + rhs.Type() + ", you need to cast one of them to the other type")
+			fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on "+lhs.Type()+" and "+rhs.Type()+", you need to cast one of them to the other type")
 			os.Exit(0)
 		}
 	case F32:
@@ -456,7 +468,7 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
 		} else if rhs.Type() == Null {
 			return EvaluateF32BinaryExpression(lhs.(Float32Value), rhs, binaryExpression.Operator)
 		} else {
-			fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on " + lhs.Type() + " and " + rhs.Type() + ", you need to cast one of them to the other type")
+			fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on "+lhs.Type()+" and "+rhs.Type()+", you need to cast one of them to the other type")
 			os.Exit(0)
 		}
 	case F64:
@@ -470,7 +482,7 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
 		} else if rhs.Type() == Null {
 			return EvaluateF64BinaryExpression(lhs.(Float64Value), rhs, binaryExpression.Operator)
 		} else {
-			fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on " + lhs.Type() + " and " + rhs.Type() + ", you need to cast one of them to the other type")
+			fmt.Fprintln(os.Stderr, "Error: Cannot perform operation on "+lhs.Type()+" and "+rhs.Type()+", you need to cast one of them to the other type")
 			os.Exit(0)
 		}
 	case String:
@@ -497,7 +509,7 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
 			case F64:
 				f64Value := rhs.(Float64Value)
 				return EvaluateStringNumericBinaryExpression(lhs.(StringValue), f64Value.Value, binaryExpression.Operator)
-		}
+			}
 		}
 	case Null:
 		if rhs.Type() == Null {
@@ -512,14 +524,13 @@ func EvaluateBinaryExpression(binaryExpression ast.BinaryExpression, env Environ
 		} else if rhs.Type() == Null {
 			return EvaluateNullBinaryExpression(lhs, rhs, binaryExpression.Operator)
 		} else {
-			fmt.Fprintln(os.Stderr, "Error: Cannot use operator " + binaryExpression.Operator + " on " + string(lhs.Type()) + " and " + string(rhs.Type()))
+			fmt.Fprintln(os.Stderr, "Error: Cannot use operator "+binaryExpression.Operator+" on "+string(lhs.Type())+" and "+string(rhs.Type()))
 			os.Exit(0)
 		}
-}
+	}
 
 	return MakeNullValue()
 }
-
 
 func EvaluateObjectBinaryExpression(lhs ObjectValue, rhs ObjectValue, op string) RuntimeValue {
 	if op == "==" {
@@ -669,7 +680,7 @@ func EvaluateUnaryExpression(node ast.UnaryExpression, env Environment) RuntimeV
 			default:
 				fmt.Fprintln(os.Stderr, "Error: ++ operator can only be applied to number values")
 				os.Exit(0)
-		}
+			}
 		}
 		// env.AssignVariable(node.Value.(*ast.Identifier).Symbol, Float64Value{value.Get().(float64) + 1})
 		// return Float64Value{value.(NumberValue[any]).GetV().(float64) + 1}
@@ -701,7 +712,7 @@ func EvaluateUnaryExpression(node ast.UnaryExpression, env Environment) RuntimeV
 		default:
 			fmt.Fprintln(os.Stderr, "Error: ++ operator can only be applied to number values")
 			os.Exit(0)
-	}
+		}
 	case "--":
 		switch value.Type() {
 		case I8:
@@ -731,7 +742,7 @@ func EvaluateUnaryExpression(node ast.UnaryExpression, env Environment) RuntimeV
 		default:
 			fmt.Fprintln(os.Stderr, "Error: -- operator can only be applied to number values")
 			os.Exit(0)
-	}
+		}
 	case "-":
 		switch value.Type() {
 		case I8:
@@ -755,12 +766,12 @@ func EvaluateUnaryExpression(node ast.UnaryExpression, env Environment) RuntimeV
 		default:
 			fmt.Fprintln(os.Stderr, "Error: - operator can only be applied to number values")
 			os.Exit(0)
-	}
+		}
 	default:
 		fmt.Fprintf(os.Stderr, "Error: Unknown operator: %s\n", node.Operator)
 		os.Exit(0)
 		return nil
-}
+	}
 	return nil
 }
 
@@ -863,7 +874,7 @@ func EvaluateLogicalExpression(node ast.LogicalExpression, env Environment) Runt
 		fmt.Fprintln(os.Stderr, "Error: unknown operator")
 		os.Exit(0)
 		return nil
-}
+	}
 }
 
 func EvaluateAssignment(node ast.AssignmentExpression, env Environment) RuntimeValue {
@@ -885,7 +896,7 @@ func EvaluateAssignment(node ast.AssignmentExpression, env Environment) RuntimeV
 						return nil
 					}
 
-					objectValue.(ArrayValue).Values[len(objectValue.(ArrayValue).Values) + val.GetInt()], _ = Evaluate(node.Value, env)
+					objectValue.(ArrayValue).Values[len(objectValue.(ArrayValue).Values)+val.GetInt()], _ = Evaluate(node.Value, env)
 					return objectValue
 				}
 

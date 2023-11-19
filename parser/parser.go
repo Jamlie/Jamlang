@@ -85,7 +85,7 @@ func (p *Parser) parseStatement() ast.Statement {
 		return &ast.NullLiteral{}
 	default:
 		return p.parseExpression()
-}
+	}
 }
 
 func (p *Parser) parseComment() ast.Statement {
@@ -268,19 +268,19 @@ func (p *Parser) parseIfStatement() ast.Statement {
 		p.expect(tokentype.RSquirly, fmt.Sprintf("Error on line %d: Expected } after else statement", internal.Line()))
 
 		return &ast.ConditionalStatement{
-			Condition: condition,
-			Body:      body,
-			Alternate: elseBody,
-			ElseIfBodies:    elseifBody,
+			Condition:        condition,
+			Body:             body,
+			Alternate:        elseBody,
+			ElseIfBodies:     elseifBody,
 			ElseIfConditions: elseifCondition,
 		}
 	}
 
 	return &ast.ConditionalStatement{
-		Condition: condition,
-		Body:      body,
+		Condition:        condition,
+		Body:             body,
 		ElseIfConditions: elseifCondition,
-		ElseIfBodies:    elseifBody,
+		ElseIfBodies:     elseifBody,
 	}
 }
 
@@ -399,7 +399,6 @@ func (p *Parser) parseType() (ast.VariableType, error) {
 func (p *Parser) parseVariableDeclaration() ast.Statement {
 	isConstant := p.eat().Type == tokentype.Constant
 	identifier := p.expect(tokentype.Identifier, fmt.Sprintf("Error on line %d: Expected identifier name after let/const keyword", internal.Line())).Value
-
 
 	if p.at().Type == tokentype.SemiColon {
 		p.eat()
@@ -554,7 +553,7 @@ func (p *Parser) parseAssignmentExpression() ast.Expression {
 		value := p.parseAssignmentExpression()
 		return &ast.AssignmentExpression{
 			Assignee: left,
-			Value:   value,
+			Value:    value,
 		}
 	}
 
@@ -832,6 +831,24 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
 	case tokentype.OpenParen:
 		p.eat()
 		value := p.parseExpression()
+
+		// Tuple case
+		if p.at().Type == tokentype.Comma {
+			p.eat()
+			elements := []ast.Expression{value}
+			for p.at().Type != tokentype.CloseParen {
+				elements = append(elements, p.parseExpression())
+				if p.at().Type == tokentype.Comma {
+					p.eat()
+				}
+			}
+
+			p.expect(tokentype.CloseParen, fmt.Sprintf("Error on line %d: Expected closing parenthesis", internal.Line()))
+			return &ast.TupleLiteral{
+				Elements: elements,
+			}
+		}
+
 		p.expect(tokentype.CloseParen, fmt.Sprintf("Error on line %d: Expected closing parenthesis", internal.Line()))
 		return value
 	case tokentype.UnaryOperator:
@@ -847,7 +864,7 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
 		fmt.Fprintf(os.Stderr, "Error on line %d: Unexpected token found: %s", internal.Line(), p.at().Value)
 		os.Exit(0)
 		return nil
-}
+	}
 }
 
 func (p *Parser) at() lexer.Token {
