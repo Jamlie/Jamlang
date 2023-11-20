@@ -520,15 +520,7 @@ func (v ObjectValue) Get() any {
 		switch value.Type() {
 		case Null:
 			str += "null"
-		case I8, I16, I32, I64, F32, F64:
-			str += value.ToString()
-		case String:
-			str += value.ToString()
-		case Bool:
-			str += value.ToString()
-		case Object:
-			str += value.ToString()
-		case Array:
+		case I8, I16, I32, I64, F32, F64, String, Bool, Object, Array, Tuple:
 			str += value.ToString()
 		case Function:
 			str += value.Get().(string)
@@ -717,6 +709,7 @@ type FunctionValue struct {
 	Body                   []ast.Statement
 	IsAnonymous            bool
 	ReturnType             ast.VariableType
+	Call									 FunctionCall
 }
 
 func (v FunctionValue) Equals(other RuntimeValue) bool {

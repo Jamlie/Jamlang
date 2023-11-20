@@ -10,6 +10,12 @@ import (
 	"github.com/Jamlie/Jamlang/parser"
 )
 
+var (
+	IsReturnError   = fmt.Errorf("Error on line %d: return statement error", internal.Line())
+	IsBreakError    = fmt.Errorf("Error on line %d: break statement error", internal.Line())
+	IsContinueError = fmt.Errorf("Error on line %d: continue statement error", internal.Line())
+)
+
 func EvaluateProgram(program ast.Program, env Environment) RuntimeValue {
 	var lastEvaluated RuntimeValue = &InitialValue{}
 	for _, statement := range program.Body {

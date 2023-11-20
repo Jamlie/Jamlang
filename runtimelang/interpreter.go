@@ -243,6 +243,10 @@ func Evaluate(astNode ast.Statement, env Environment) (RuntimeValue, error) {
 			return result, nil
 		}
 
+		if err == IsContinueError {
+			return result, nil
+		}
+
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error on line %d: %s\n", internal.Line(), err.Error())
 			os.Exit(0)

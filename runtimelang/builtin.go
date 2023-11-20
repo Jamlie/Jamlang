@@ -37,7 +37,7 @@ func jamlangSleep(args []RuntimeValue, environment Environment) RuntimeValue {
 		os.Exit(0)
 	}
 
-	time.Sleep(time.Duration(args[0].Get().(float64)) * time.Millisecond)
+	time.Sleep(time.Duration(args[0].(IntValue).GetInt()) * time.Millisecond)
 	return MakeNullValue()
 }
 
@@ -169,6 +169,11 @@ func jamlangArray(args []RuntimeValue, environment Environment) RuntimeValue {
 		os.Exit(0)
 	}
 
+	if args[0].Type() == Tuple {
+		goTuple := ToGoTupleValue(args[0].(TupleValue))
+		return MakeArrayValue(goTuple)
+	}
+
 	if args[0].Type() != I8 && args[0].Type() != I16 && args[0].Type() != I32 {
 		fmt.Fprintln(os.Stderr, "Error: array takes a number")
 		os.Exit(0)
@@ -197,7 +202,41 @@ func jamlangArray(args []RuntimeValue, environment Environment) RuntimeValue {
 }
 
 func jamlangTuple(args []RuntimeValue, environment Environment) RuntimeValue {
-	return MakeTupleValue(args)
+	if len(args) != 1 {
+		fmt.Fprintln(os.Stderr, "Error: tuple takes 1 argument")
+		os.Exit(0)
+	}
+
+	if args[0].Type() == Array {
+		goArray := ToGoArrayValue(args[0].(ArrayValue))
+		return MakeTupleValue(goArray)
+	}
+
+	if args[0].Type() != I8 && args[0].Type() != I16 && args[0].Type() != I32 {
+		fmt.Fprintln(os.Stderr, "Error: tuple takes a number")
+		os.Exit(0)
+	}
+
+	var size int
+	switch args[0].Type() {
+	case I8:
+		size = int(ToGoNumberValue(args[0].(Int8Value)))
+	case I16:
+		size = int(ToGoNumberValue(args[0].(Int16Value)))
+	case I32:
+		size = int(ToGoNumberValue(args[0].(Int32Value)))
+	default:
+		fmt.Fprintln(os.Stderr, "Error: tuple takes a number")
+		os.Exit(0)
+	}
+
+	if size < 0 {
+		fmt.Fprintln(os.Stderr, "Error: tuple takes a positive number")
+		os.Exit(0)
+	}
+
+	goArray := make([]RuntimeValue, size)
+	return MakeTupleValue(goArray)
 }
 
 func jamlangToString(args []RuntimeValue, environment Environment) RuntimeValue {

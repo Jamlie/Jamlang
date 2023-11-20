@@ -6,13 +6,6 @@ import (
 	"strconv"
 
 	"github.com/Jamlie/Jamlang/ast"
-	"github.com/Jamlie/Jamlang/internal"
-)
-
-var (
-	IsReturnError   = fmt.Errorf("Error on line %d: return statement error", internal.Line())
-	IsBreakError    = fmt.Errorf("Error on line %d: break statement error", internal.Line())
-	IsContinueError = fmt.Errorf("Error on line %d: continue statement error", internal.Line())
 )
 
 func EvaluateFunctionDeclaration(expr ast.FunctionDeclaration, env *Environment, returnType ast.VariableType) (RuntimeValue, error) {
@@ -682,8 +675,6 @@ func EvaluateUnaryExpression(node ast.UnaryExpression, env Environment) RuntimeV
 				os.Exit(0)
 			}
 		}
-		// env.AssignVariable(node.Value.(*ast.Identifier).Symbol, Float64Value{value.Get().(float64) + 1})
-		// return Float64Value{value.(NumberValue[any]).GetV().(float64) + 1}
 		switch value.Type() {
 		case I8:
 			i8Value := value.(Int8Value)
@@ -763,6 +754,30 @@ func EvaluateUnaryExpression(node ast.UnaryExpression, env Environment) RuntimeV
 		case F64:
 			f64Value := value.(Float64Value)
 			return Float64Value{-f64Value.Value}
+		default:
+			fmt.Fprintln(os.Stderr, "Error: - operator can only be applied to number values")
+			os.Exit(0)
+		}
+	case "+":
+		switch value.Type() {
+		case I8:
+			i8Value := value.(Int8Value)
+			return Int8Value{i8Value.Value}
+		case I16:
+			i16Value := value.(Int16Value)
+			return Int16Value{i16Value.Value}
+		case I32:
+			i32Value := value.(Int32Value)
+			return Int32Value{i32Value.Value}
+		case I64:
+			i64Value := value.(Int64Value)
+			return Int64Value{i64Value.Value}
+		case F32:
+			f32Value := value.(Float32Value)
+			return Float32Value{f32Value.Value}
+		case F64:
+			f64Value := value.(Float64Value)
+			return Float64Value{f64Value.Value}
 		default:
 			fmt.Fprintln(os.Stderr, "Error: - operator can only be applied to number values")
 			os.Exit(0)

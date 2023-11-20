@@ -52,14 +52,18 @@ func (p *Parser) parseStatement() ast.Statement {
 			os.Exit(0)
 		}
 		return p.parseReturnStatement()
-	// case tokentype.Class:
-	// 	return p.parseClassDeclaration()
 	case tokentype.Break:
 		if !p.isLoop {
 			fmt.Fprintf(os.Stderr, "Error on line %d: Break statement outside of loop\n", internal.Line())
 			os.Exit(0)
 		}
 		return p.parseBreakStatement()
+	case tokentype.Continue:
+		if !p.isLoop {
+			fmt.Fprintf(os.Stderr, "Error on line %d: Continue statement outside of loop\n", internal.Line())
+			os.Exit(0)
+		}
+		return p.parseContinueStatement()
 	case tokentype.If:
 		return p.parseIfStatement()
 	case tokentype.ElseIf:
@@ -355,6 +359,11 @@ func (p *Parser) parseFunctionDeclaration() ast.Statement {
 		Body:       body,
 		ReturnType: returnType,
 	}
+}
+
+func (p *Parser) parseContinueStatement() ast.Statement {
+	p.eat()
+	return &ast.ContinueStatement{}
 }
 
 func (p *Parser) parseBreakStatement() ast.Statement {
@@ -830,6 +839,13 @@ func (p *Parser) parsePrimaryExpression() ast.Expression {
 		return p.parsePrimaryExpression()
 	case tokentype.OpenParen:
 		p.eat()
+		// Empty tuple case
+		if p.at().Type == tokentype.CloseParen {
+			p.eat()
+			return &ast.TupleLiteral{
+				Elements: []ast.Expression{},
+			}
+		}
 		value := p.parseExpression()
 
 		// Tuple case
