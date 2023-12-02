@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -59,7 +58,7 @@ func CallMain(env *runtimelang.Environment) {
 				os.Exit(0)
 			}
 
-			data, err := ioutil.ReadFile(args[0])
+			data, err := os.ReadFile(args[0])
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(0)
@@ -115,7 +114,7 @@ func CallMain(env *runtimelang.Environment) {
 					os.Exit(0)
 				}
 
-				data, err := ioutil.ReadFile(args[1])
+				data, err := os.ReadFile(args[1])
 				if err != nil {
 					fmt.Println(err)
 					os.Exit(0)

@@ -30,6 +30,7 @@ const (
 	Class          ValueType = "class"
 	File           ValueType = "file"
 	Type           ValueType = "type"
+	JSON      		 ValueType = "json_value"
 )
 
 type RuntimeValue interface {
@@ -923,6 +924,39 @@ func (v FileValue) VarType() ast.VariableType {
 
 func MakeFileValue(name string, file *os.File) FileValue {
 	return FileValue{Name: name, File: file, IsClosed: false}
+}
+
+type JSONValue struct {
+	Value any
+}
+
+func (v JSONValue) Equals(other RuntimeValue) bool {
+	return false
+}
+
+func (v JSONValue) Type() ValueType {
+	return JSON
+}
+
+func (v JSONValue) Get() any {
+	return v.Value
+}
+
+func (v JSONValue) ToString() string {
+	return "json"
+}
+
+func (v JSONValue) Clone() RuntimeValue {
+	return v
+}
+
+func (v JSONValue) VarType() ast.VariableType {
+	return ast.AnyType
+}
+
+
+func MakeJSONValue(value any) JSONValue {
+	return JSONValue{Value: value}
 }
 
 type TypeValue struct {

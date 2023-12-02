@@ -1,1 +1,4 @@
-()
+const http = HTTP.new()
+http.get("http://localhost:8080")
+
+http.listen(":3000")

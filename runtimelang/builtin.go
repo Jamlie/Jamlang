@@ -2,7 +2,10 @@ package runtimelang
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -1241,4 +1244,160 @@ func jamlangObjectHas(args []RuntimeValue, environment Environment) RuntimeValue
 
 	_, ok := args[0].(ObjectValue).Properties[args[1].(StringValue).Value]
 	return MakeBoolValue(ok)
+}
+
+func jamlangHttpGet(args []RuntimeValue, environment Environment) RuntimeValue {
+	if len(args) != 1 {
+		fmt.Fprintln(os.Stderr, "Error: http.get takes 1 argument")
+		os.Exit(0)
+	}
+
+	if args[0].Type() != String {
+		fmt.Fprintln(os.Stderr, "Error: http.get takes a string")
+		os.Exit(0)
+	}
+
+	resp, err := http.Get(args[0].(StringValue).Value)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error: couldn't get url")
+		os.Exit(0)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error: couldn't read response")
+		os.Exit(0)
+	}
+
+	return MakeStringValue(string(body))
+}
+
+func jamlangHttpPost(args []RuntimeValue, environment Environment) RuntimeValue {
+	if len(args) != 2 {
+		fmt.Fprintln(os.Stderr, "Error: http.post takes 2 arguments")
+		os.Exit(0)
+	}
+
+	if args[0].Type() != String {
+		fmt.Fprintln(os.Stderr, "Error: http.post takes a string")
+		os.Exit(0)
+	}
+
+	if args[1].Type() != String {
+		fmt.Fprintln(os.Stderr, "Error: http.post takes a string")
+		os.Exit(0)
+	}
+
+	resp, err := http.Post(args[0].(StringValue).Value, "application/json", strings.NewReader(args[1].(StringValue).Get().(string)))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error: couldn't post url")
+		os.Exit(0)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error: couldn't read response")
+		os.Exit(0)
+	}
+
+	return MakeStringValue(string(body))
+}
+
+func jamlangHttpListen(args []RuntimeValue, environment Environment) RuntimeValue {
+	if len(args) != 1 {
+		fmt.Fprintln(os.Stderr, "Error: http.listen takes 1 argument")
+		os.Exit(0)
+	}
+
+	if args[0].Type() != String {
+		fmt.Fprintln(os.Stderr, "Error: http.listen takes a string")
+		os.Exit(0)
+	}
+
+	err := http.ListenAndServe(args[0].(StringValue).Value, nil)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error: couldn't listen on port")
+		os.Exit(0)
+	}
+
+	return MakeNullValue()
+}
+
+func jamlangHttpNew(args []RuntimeValue, environment Environment) RuntimeValue {
+	if len(args) != 0 {
+		fmt.Fprintln(os.Stderr, "Error: http.new takes 0 arguments")
+		os.Exit(0)
+	}
+
+	httpObject := make(map[string]RuntimeValue)
+	httpObject["listen"] = MakeNativeFunction(jamlangHttpListen, "listen")
+	httpObject["get"] = MakeNativeFunction(jamlangHttpGet, "get")
+	httpObject["post"] = MakeNativeFunction(jamlangHttpPost, "post")
+
+	return MakeObjectValue(httpObject)
+}
+
+func jamlangJsonParse(args []RuntimeValue, environment Environment) RuntimeValue {
+	if len(args) != 1 {
+		fmt.Fprintln(os.Stderr, "Error: json.parse takes 1 argument")
+		os.Exit(0)
+	}
+
+	if args[0].Type() != String {
+		fmt.Fprintln(os.Stderr, "Error: json.parse takes a string")
+		os.Exit(0)
+	}
+
+	var data any
+	err := json.Unmarshal([]byte(args[0].(StringValue).Value), &data)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error: couldn't parse json")
+		os.Exit(0)
+	}
+
+	return MakeJSONValue(data)
+}
+
+func jamlangJsonStringify(args []RuntimeValue, environment Environment) RuntimeValue {
+	if len(args) != 1 {
+		fmt.Fprintln(os.Stderr, "Error: json.stringify takes 1 argument")
+		os.Exit(0)
+	}
+
+	var data []byte
+	var err error
+	switch args[0].Type() {
+	case String:
+		data, err = json.Marshal(args[0].(StringValue).Value)
+	case I8:
+		data, err = json.Marshal(args[0].(Int8Value).Value)
+	case I16:
+		data, err = json.Marshal(args[0].(Int16Value).Value)
+	case I32:
+		data, err = json.Marshal(args[0].(Int32Value).Value)
+	case I64:
+		data, err = json.Marshal(args[0].(Int64Value).Value)
+	case F32:
+ 		data, err = json.Marshal(args[0].(Float32Value).Value)
+	case F64:
+		data, err = json.Marshal(args[0].(Float64Value).Value)
+	case Bool:
+		data, err = json.Marshal(args[0].(BoolValue).Value)
+	case Null:
+		data, err = json.Marshal(args[0].(NullValue).Value)
+	case Array:
+		data, err = json.Marshal(args[0].(ArrayValue).Values)
+	case Object:
+		data, err = json.Marshal(args[0].(ObjectValue).Properties)
+	default:
+		fmt.Fprintln(os.Stderr, "Error: json.stringify takes a string, number, boolean, null, array or object")
+		os.Exit(0)
+	}
+
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error: couldn't stringify json")
+		os.Exit(0)
+	}
+
+	return MakeStringValue(string(data))
 }
