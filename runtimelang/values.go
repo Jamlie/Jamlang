@@ -488,12 +488,14 @@ func MakeBoolValue(value bool) BoolValue {
 
 type ObjectValue struct {
 	Properties map[string]RuntimeValue
-	IsClass    bool
 }
 
 func (v ObjectValue) Equals(other RuntimeValue) bool {
 	if other.Type() == Object {
-		otherObj := other.Get().(ObjectValue)
+		otherObj, ok := other.(ObjectValue)
+		if !ok {
+			return false
+		}
 		if len(v.Properties) != len(otherObj.Properties) {
 			return false
 		}

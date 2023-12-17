@@ -1,4 +1,8 @@
-const http = HTTP.new()
-http.get("http://localhost:8080")
+fn doSomething(num) {
+	println(typeof(num))
+}
 
-http.listen(":3000")
+let x = 3
+
+doSomething(x)
+

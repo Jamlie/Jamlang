@@ -519,9 +519,6 @@ func EvaluateVariableDeclaration(declaration ast.VariableDeclaration, env *Envir
 
 func EvaluateVariableDeclarationDeprecated(declaration ast.VariableDeclaration, env *Environment) RuntimeValue {
 	value, _ := Evaluate(declaration.Value, *env)
-	if value.Type() == Object && value.(ObjectValue).IsClass {
-		value = value.(ObjectValue).Clone()
-	}
 	return env.DeclareVariable(declaration.Identifier, value, declaration.Constant, ast.AnyType)
 }
 
